@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id              String       @id @default(uuid())
+  name            String?      @default("Untitled Project")
+  originalImageUrl String      // Store the base/original image URL
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  generations     Generation[]
+}
+
+model Template {
+  id          String   @id @default(uuid())
+  name        String
+  prompt      String
+  description String?
+  category    String   @default("custom")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  generations Generation[]
+}
+
+model Generation {
+  id            String   @id @default(uuid())
+  imageUrl      String
+  promptUsed    String?  // Snapshot of the prompt used (from template or ad-hoc)
+  
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  templateId    String?
+  template      Template? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  
+  createdAt     DateTime @default(now())
+}
