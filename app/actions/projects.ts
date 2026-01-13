@@ -6,20 +6,27 @@ import { revalidatePath } from 'next/cache';
 import { uploadImageToStorage } from '@/lib/supabase';
 
 export async function createProject(formData: FormData): Promise<Project> {
-    const imageUrl = formData.get('imageUrl') as string;
-    const name = formData.get('name') as string;
+    try {
+        const imageUrl = formData.get('imageUrl') as string;
+        const name = formData.get('name') as string;
 
-    if (!imageUrl) throw new Error("No image URL provided");
+        if (!imageUrl) throw new Error("No image URL provided");
 
-    const project = await prisma.project.create({
-        data: {
-            originalImageUrl: imageUrl,
-            name: name || "Untitled Project"
-        }
-    });
+        console.log(`[createProject] Creating project with URL: ${imageUrl.substring(0, 50)}...`);
 
-    revalidatePath('/');
-    return project;
+        const project = await prisma.project.create({
+            data: {
+                originalImageUrl: imageUrl,
+                name: name || "Untitled Project"
+            }
+        });
+
+        revalidatePath('/');
+        return project;
+    } catch (e) {
+        console.error("[createProject] Failed:", e);
+        throw e;
+    }
 }
 
 export async function getProjects() {
