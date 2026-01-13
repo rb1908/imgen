@@ -10,113 +10,123 @@ export async function generateVariations(
     mode: 'template' | 'custom',
     input: string[] | string // templateIds[] OR customPrompt
 ) {
-    // 1. Get Project & Image
-    const project = await prisma.project.findUnique({
-        where: { id: projectId }
-    });
-
-    if (!project) throw new Error('Project not found');
-
-    const dataUrl = project.originalImageUrl;
-    // Extract base64 (remove "data:image/xyz;base64," prefix)
-    const base64Data = dataUrl.split(',')[1];
-    const mimeType = dataUrl.split(';')[0].split(':')[1];
-
-    // Prepare tasks
-    const tasks: { prompt: string, templateId?: string }[] = [];
-
-    if (mode === 'template' && Array.isArray(input)) {
-        const templates = await prisma.template.findMany({
-            where: { id: { in: input } }
+    try {
+        // 1. Get Project & Image
+        const project = await prisma.project.findUnique({
+            where: { id: projectId }
         });
-        templates.forEach((t: { prompt: string; id: string }) => tasks.push({ prompt: t.prompt, templateId: t.id }));
-    } else if (mode === 'custom' && typeof input === 'string') {
-        tasks.push({ prompt: input });
-    }
 
-    if (tasks.length === 0) throw new Error("No properties to generate");
+        if (!project) throw new Error('Project not found');
 
-    // Generic Generation Function
-    const generateTask = async (task: { prompt: string, templateId?: string }) => {
-        const generatedImages = [];
-        const modelsToTry = ["gemini-3-pro-image-preview", "gemini-2.0-flash-exp"];
+        const dataUrl = project.originalImageUrl;
+        // Extract base64 (remove "data:image/xyz;base64," prefix)
+        const base64Data = dataUrl.split(',')[1];
+        const mimeType = dataUrl.split(';')[0].split(':')[1];
 
-        for (const modelName of modelsToTry) {
+        // Prepare tasks
+        const tasks: { prompt: string, templateId?: string }[] = [];
+
+        if (mode === 'template' && Array.isArray(input)) {
+            const templates = await prisma.template.findMany({
+                where: { id: { in: input } }
+            });
+            templates.forEach((t: { prompt: string; id: string }) => tasks.push({ prompt: t.prompt, templateId: t.id }));
+        } else if (mode === 'custom' && typeof input === 'string') {
+            tasks.push({ prompt: input });
+        }
+
+        if (tasks.length === 0) throw new Error("No properties to generate");
+
+        // Generic Generation Function
+        const generateTask = async (task: { prompt: string, templateId?: string }) => {
+            const generatedImages = [];
+            const modelsToTry = ["gemini-3-pro-image-preview", "gemini-2.0-flash-exp"];
+
+            for (const modelName of modelsToTry) {
+                try {
+                    console.log(`[Generate] Attempting with ${modelName} for prompt: "${task.prompt.substring(0, 20)}..."`);
+                    const imageModel = genAI.getGenerativeModel({ model: modelName });
+
+                    const result = await imageModel.generateContent([
+                        task.prompt,
+                        { inlineData: { data: base64Data, mimeType } }
+                    ]);
+                    const response = await result.response;
+
+                    if (response.candidates && response.candidates[0].content.parts) {
+                        const parts = response.candidates[0].content.parts;
+                        const imageParts = parts.filter(p => p.inlineData && p.inlineData.mimeType.startsWith('image/'));
+                        if (imageParts.length > 0) {
+                            for (const part of imageParts) {
+                                if (part.inlineData) {
+                                    const imageUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+                                    generatedImages.push(await prisma.generation.create({
+                                        data: {
+                                            imageUrl: imageUrl,
+                                            promptUsed: task.prompt,
+                                            projectId: projectId,
+                                            templateId: task.templateId,
+                                        }
+                                    }));
+                                }
+                            }
+                            break;
+                        }
+                    }
+                } catch (e) {
+                    console.error(`[Generate] Model ${modelName} failed:`, e);
+                }
+            }
+
+            if (generatedImages.length > 0) return generatedImages;
+
+            // Fallback: Agent Mode (URL)
             try {
-                // console.log(`Attempting generation with ${modelName} for prompt: "${task.prompt.substring(0, 20)}..."`);
-                const imageModel = genAI.getGenerativeModel({ model: modelName });
+                console.log("[Generate] Falling back to Agent Mode...");
+                const agentModel = genAI.getGenerativeModel({ model: "gemini-3-pro-preview" });
+                const agentPrompt = `You are a high-fidelity image renderer.
+                 Instruction: "${task.prompt}"
+                 STRICT OUTPUT RULES:
+                 1. Return generated images DIRECTLY.
+                 2. If you generate an image via formatting, output the URL.
+                 3. If you cannot generate, say "ERROR".`;
 
-                const result = await imageModel.generateContent([
-                    task.prompt,
+                const result = await agentModel.generateContent([
+                    agentPrompt,
                     { inlineData: { data: base64Data, mimeType } }
                 ]);
-                const response = await result.response;
-
-                if (response.candidates && response.candidates[0].content.parts) {
-                    const parts = response.candidates[0].content.parts;
-                    const imageParts = parts.filter(p => p.inlineData && p.inlineData.mimeType.startsWith('image/'));
-                    if (imageParts.length > 0) {
-                        for (const part of imageParts) {
-                            if (part.inlineData) {
-                                const imageUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
-                                generatedImages.push(await prisma.generation.create({
-                                    data: {
-                                        imageUrl: imageUrl,
-                                        promptUsed: task.prompt,
-                                        projectId: projectId,
-                                        templateId: task.templateId,
-                                    }
-                                }));
-                            }
+                const text = result.response.text();
+                // Simple URL regex extraction
+                const urlMatch = text.match(/https?:\/\/[^\s"']+\.(?:png|jpg|jpeg|webp|gif)/i);
+                if (urlMatch) {
+                    generatedImages.push(await prisma.generation.create({
+                        data: {
+                            imageUrl: urlMatch[0],
+                            promptUsed: task.prompt,
+                            projectId: projectId,
+                            templateId: task.templateId
                         }
-                        break;
-                    }
+                    }));
                 }
             } catch (e) {
-                // console.warn(`Model ${modelName} failed`, e); 
+                console.error("[Generate] Agent fallback failed:", e);
             }
+
+            return generatedImages;
+        };
+
+        // Execute
+        const results = await Promise.all(tasks.map(t => generateTask(t)));
+        const flat = results.flat();
+
+        if (flat.length === 0) {
+            console.error("[Generate] All attempts failed. No images generated.");
+            throw new Error("Generation failed - Helper Logs checked.");
         }
+        return flat;
 
-        if (generatedImages.length > 0) return generatedImages;
-
-        // Fallback: Agent Mode (URL)
-        try {
-            // console.log("Falling back to Agent Mode...");
-            const agentModel = genAI.getGenerativeModel({ model: "gemini-3-pro-preview" });
-            const agentPrompt = `You are a high-fidelity image renderer.
-             Instruction: "${task.prompt}"
-             STRICT OUTPUT RULES:
-             1. Return generated images DIRECTLY.
-             2. If you generate an image via formatting, output the URL.
-             3. If you cannot generate, say "ERROR".`;
-
-            const result = await agentModel.generateContent([
-                agentPrompt,
-                { inlineData: { data: base64Data, mimeType } }
-            ]);
-            const text = result.response.text();
-            const urlMatch = text.match(/https?:\/\/[^\s"']+\.(?:png|jpg|jpeg|webp|gif)/i);
-            if (urlMatch) {
-                generatedImages.push(await prisma.generation.create({
-                    data: {
-                        imageUrl: urlMatch[0],
-                        promptUsed: task.prompt,
-                        projectId: projectId,
-                        templateId: task.templateId
-                    }
-                }));
-            }
-        } catch (e) {
-            console.error("Agent fallback failed", e);
-        }
-
-        return generatedImages;
-    };
-
-    // Execute
-    const results = await Promise.all(tasks.map(t => generateTask(t)));
-    const flat = results.flat();
-
-    if (flat.length === 0) throw new Error("Generation failed.");
-    return flat;
+    } catch (error) {
+        console.error("[Fatal Generate Error]:", error);
+        throw error; // Re-throw to show 500, but now we have logs
+    }
 }
