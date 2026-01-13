@@ -9,6 +9,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { createClient } from '@supabase/supabase-js';
 
 interface ProjectListProps {
     initialProjects: (Project & { generations: Generation[] })[];
@@ -26,43 +27,30 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
         setIsUploading(true);
 
         try {
-            // 1. Client-Side Upload to Supabase 
-            // (Requires "Allow Anon Uploads" Policy in Supabase Storage)
+            // Initialize Client (Client-side safe)
+            const supabase = createClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+            );
+
             const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
 
-            // We use a dynamic import or direct fetch to avoid "Buffer" issues on client if using the lib helper directly.
-            // But since we installed @supabase/supabase-js, we can construct a lightweight client here or import one.
-            // Let's use a quick fetch to the Supabase REST API or just import the lib helper if it's safe (it uses createClient).
-            // Actually, `lib/supabase.ts` uses `createClient` which is isomorphic.
-            // BUT `uploadImageToStorage` in `lib/supabase.ts` might be node-specific if we aren't careful.
-            // Let's implement the upload directly here to be 100% safe and simple.
+            // SDK Upload
+            const { data, error } = await supabase.storage
+                .from('images')
+                .upload(fileName, file, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
 
-            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-            const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+            if (error) throw error;
 
-            if (!supabaseUrl || !supabaseKey) throw new Error("Missing Supabase Config");
+            // Get Public URL
+            const { data: { publicUrl } } = supabase.storage
+                .from('images')
+                .getPublicUrl(fileName);
 
-            // Simple Fetch Upload (works everywhere)
-            const uploadUrl = `${supabaseUrl}/storage/v1/object/images/${fileName}`;
-            const uploadRes = await fetch(uploadUrl, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${supabaseKey}`,
-                    'Content-Type': file.type,
-                    'x-upsert': 'true'
-                },
-                body: file
-            });
-
-            if (!uploadRes.ok) {
-                const err = await uploadRes.json();
-                throw new Error(`Upload Failed: ${err.message || 'Unknown error'}`);
-            }
-
-            // 2. Get Public URL
-            const publicUrl = `${supabaseUrl}/storage/v1/object/public/images/${fileName}`;
-
-            // 3. Save to DB via Server Action
+            // Save to DB
             const formData = new FormData();
             formData.append('imageUrl', publicUrl);
             formData.append('name', file.name);
