@@ -43,12 +43,19 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                     upsert: false
                 });
 
-            if (error) throw error;
+            if (error) {
+                console.error("Supabase Upload Error Details:", error);
+                throw error;
+            }
+
+            console.log("Supabase Upload Success:", data);
 
             // Get Public URL
             const { data: { publicUrl } } = supabase.storage
                 .from('images')
                 .getPublicUrl(fileName);
+
+            console.log("Generated Public URL:", publicUrl);
 
             // Save to DB
             const formData = new FormData();
