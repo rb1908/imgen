@@ -1,6 +1,8 @@
 import { getTemplates, createTemplate, deleteTemplate } from '@/app/actions/templates';
 import { TemplateManager } from '@/components/TemplateManager';
 
+export const dynamic = 'force-dynamic';
+
 // Minimal Breadcrumb shim
 function SimpleBreadcrumb() {
     return (
