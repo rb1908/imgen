@@ -24,16 +24,56 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
         if (!file) return;
 
         setIsUploading(true);
-        const formData = new FormData();
-        formData.append('image', file);
 
         try {
+            // 1. Client-Side Upload to Supabase 
+            // (Requires "Allow Anon Uploads" Policy in Supabase Storage)
+            const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
+
+            // We use a dynamic import or direct fetch to avoid "Buffer" issues on client if using the lib helper directly.
+            // But since we installed @supabase/supabase-js, we can construct a lightweight client here or import one.
+            // Let's use a quick fetch to the Supabase REST API or just import the lib helper if it's safe (it uses createClient).
+            // Actually, `lib/supabase.ts` uses `createClient` which is isomorphic.
+            // BUT `uploadImageToStorage` in `lib/supabase.ts` might be node-specific if we aren't careful.
+            // Let's implement the upload directly here to be 100% safe and simple.
+
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+            if (!supabaseUrl || !supabaseKey) throw new Error("Missing Supabase Config");
+
+            // Simple Fetch Upload (works everywhere)
+            const uploadUrl = `${supabaseUrl}/storage/v1/object/images/${fileName}`;
+            const uploadRes = await fetch(uploadUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${supabaseKey}`,
+                    'Content-Type': file.type,
+                    'x-upsert': 'true'
+                },
+                body: file
+            });
+
+            if (!uploadRes.ok) {
+                const err = await uploadRes.json();
+                throw new Error(`Upload Failed: ${err.message || 'Unknown error'}`);
+            }
+
+            // 2. Get Public URL
+            const publicUrl = `${supabaseUrl}/storage/v1/object/public/images/${fileName}`;
+
+            // 3. Save to DB via Server Action
+            const formData = new FormData();
+            formData.append('imageUrl', publicUrl);
+            formData.append('name', file.name);
+
             const newProject = await createProject(formData);
+
             toast.success("Project created! Redirecting...");
             router.push(`/project/${newProject.id}`);
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            toast.error("Failed to create project");
+            toast.error(error.message || "Failed to create project");
             setIsUploading(false);
         }
     };
