@@ -31,10 +31,17 @@ export async function createProject(formData: FormData): Promise<Project> {
 }
 
 export async function getProjects() {
-    return await prisma.project.findMany({
-        orderBy: { createdAt: 'desc' },
-        include: { generations: true }
-    });
+    try {
+        return await prisma.project.findMany({
+            orderBy: { createdAt: 'desc' },
+            include: { generations: true }
+        });
+    } catch (error) {
+        console.error("Failed to fetch projects:", error);
+        // Returning empty array to prevent 500 crash on connection error,
+        // allowing the UI to render "No Projects" instead of death.
+        return [];
+    }
 }
 
 export async function getProject(id: string) {
