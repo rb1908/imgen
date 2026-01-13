@@ -20,10 +20,25 @@ export async function generateVariations(
 
         if (!project) throw new Error('Project not found');
 
+        // 2. Prepare Image Data (Support both Base64 DB strings and Supabase URLs)
         const dataUrl = project.originalImageUrl;
-        // Extract base64 (remove "data:image/xyz;base64," prefix)
-        const base64Data = dataUrl.split(',')[1];
-        const mimeType = dataUrl.split(';')[0].split(':')[1];
+        let base64Data = "";
+        let mimeType = "image/png"; // default
+
+        if (dataUrl.startsWith("data:")) {
+            // Legacy Base64
+            base64Data = dataUrl.split(',')[1];
+            mimeType = dataUrl.split(';')[0].split(':')[1];
+        } else if (dataUrl.startsWith("http")) {
+            // New Supabase Storage URL -> Fetch Buffer
+            const imageRes = await fetch(dataUrl);
+            if (!imageRes.ok) throw new Error("Failed to fetch source image");
+            const arrayBuffer = await imageRes.arrayBuffer();
+            base64Data = Buffer.from(arrayBuffer).toString('base64');
+            mimeType = imageRes.headers.get("content-type") || "image/png";
+        } else {
+            throw new Error("Invalid image format");
+        }
 
         // Prepare tasks
         const tasks: { prompt: string, templateId?: string }[] = [];
@@ -107,14 +122,24 @@ export async function generateVariations(
                 // Simple URL regex extraction
                 const urlMatch = text.match(/https?:\/\/[^\s"']+\.(?:png|jpg|jpeg|webp|gif)/i);
                 if (urlMatch) {
-                    generatedImages.push(await prisma.generation.create({
-                        data: {
-                            imageUrl: urlMatch[0],
-                            promptUsed: task.prompt,
-                            projectId: projectId,
-                            templateId: task.templateId
-                        }
-                    }));
+                    // Fetch and Upload the Agent URL result to Supabase
+                    const externalUrl = urlMatch[0];
+                    const extRes = await fetch(externalUrl);
+                    if (extRes.ok) {
+                        const extBlob = await extRes.arrayBuffer();
+                        const buffer = Buffer.from(extBlob);
+                        const fileName = `gen-agent-${projectId}-${Date.now()}.png`; // guess png
+                        const publicUrl = await uploadImageToStorage(buffer, fileName, 'images');
+
+                        generatedImages.push(await prisma.generation.create({
+                            data: {
+                                imageUrl: publicUrl, // Storing Supabase URL now!
+                                promptUsed: task.prompt,
+                                projectId: projectId,
+                                templateId: task.templateId
+                            }
+                        }));
+                    }
                 }
             } catch (e) {
                 console.error("[Generate] Agent fallback failed:", e);
