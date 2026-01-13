@@ -2,6 +2,7 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { prisma } from '@/lib/db';
+import { uploadImageToStorage } from '@/lib/supabase';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || '';
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -60,10 +61,16 @@ export async function generateVariations(
                         if (imageParts.length > 0) {
                             for (const part of imageParts) {
                                 if (part.inlineData) {
-                                    const imageUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+                                    // Upload Generated Buffer to Supabase
+                                    const buffer = Buffer.from(part.inlineData.data, 'base64');
+                                    const fileName = `gen-${projectId}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}.png`;
+
+                                    // Use helper (accepts Buffer)
+                                    const publicUrl = await uploadImageToStorage(buffer, fileName, 'images');
+
                                     generatedImages.push(await prisma.generation.create({
                                         data: {
-                                            imageUrl: imageUrl,
+                                            imageUrl: publicUrl,
                                             promptUsed: task.prompt,
                                             projectId: projectId,
                                             templateId: task.templateId,
