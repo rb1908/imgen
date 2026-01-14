@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Project, Generation } from '@prisma/client';
 import { createProject, deleteProject, updateProject } from '@/app/actions/projects';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, FolderOpen, Image as ImageIcon, LayoutGrid, List, Pencil } from 'lucide-react';
+import { Plus, Trash2, FolderOpen, Image as ImageIcon, LayoutGrid, List, Pencil, MoreVertical } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -14,6 +14,12 @@ import { createClient } from '@supabase/supabase-js';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface ProjectListProps {
     initialProjects: (Project & { generations: Generation[] })[];
@@ -206,153 +212,154 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
             ) : (
                 <>
                     {viewMode === 'grid' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {projects.map((project) => (
-                                <Link href={`/project/${project.id}`} key={project.id} className="group relative block rounded-xl border bg-card text-card-foreground shadow transition-all hover:shadow-md hover:border-primary/50 overflow-hidden">
-                                    {/* Preview Grid */}
-                                    <div className="aspect-video w-full bg-muted relative grid grid-cols-2 gap-[1px] bg-white/10">
-                                        {/* Original Image (Always visible on left or full if no gens) */}
-                                        <div className={`relative ${project.generations.length > 0 ? 'col-span-1' : 'col-span-2'} h-full`}>
-                                            <Image
-                                                src={project.originalImageUrl}
-                                                alt="Original"
-                                                fill
-                                                className="object-cover"
-                                            />
-                                            <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm">
-                                                ORIGINAL
-                                            </div>
-                                        </div>
-
-                                        {/* 1st Generation Preview or Placeholder */}
-                                        {project.generations.length > 0 && (
-                                            <div className="relative h-full bg-muted/50 border-l border-white/10">
+                        { viewMode === 'grid' ? (
+                            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+                                {projects.map((project) => (
+                                    <Link href={`/project/${project.id}`} key={project.id} className="group relative block rounded-xl border bg-card text-card-foreground shadow transition-all hover:shadow-md hover:border-primary/50 overflow-hidden">
+                                        {/* Preview Grid */}
+                                        <div className="aspect-video w-full bg-muted relative grid grid-cols-2 gap-[1px] bg-white/10">
+                                            {/* Original Image (Always visible on left or full if no gens) */}
+                                            <div className={`relative ${project.generations.length > 0 ? 'col-span-1' : 'col-span-2'} h-full`}>
                                                 <Image
-                                                    src={project.generations[0].imageUrl}
-                                                    alt="Gen 1"
+                                                    src={project.originalImageUrl}
+                                                    alt="Original"
                                                     fill
                                                     className="object-cover"
                                                 />
-                                                <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
-                                                {project.generations.length > 1 && (
-                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white font-bold text-lg">
-                                                        +{project.generations.length - 1}
-                                                    </div>
-                                                )}
+                                                <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm">
+                                                    ORIGINAL
+                                                </div>
                                             </div>
-                                        )}
-                                    </div>
 
-                                    <div className="p-4 flex items-center justify-between">
-                                        <div>
-                                            <h3 className="font-semibold line-clamp-1">{project.name}</h3>
-                                            <p className="text-xs text-muted-foreground">
-                                                {new Date(project.createdAt).toLocaleDateString('en-US')} • {project.generations.length} generations
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="text-muted-foreground hover:text-primary transition-colors h-8 w-8"
-                                                onClick={(e) => startRenaming(project, e)}
-                                                title="Rename Project"
-                                            >
-                                                <Pencil className="w-3.5 h-3.5" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="text-muted-foreground hover:text-destructive transition-colors h-8 w-8"
-                                                onClick={(e) => handleDelete(project.id, e)}
-                                                title="Delete Project"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="rounded-xl border shadow-sm overflow-hidden bg-card">
-                            <table className="w-full text-sm">
-                                <thead className="bg-muted/40 text-muted-foreground font-medium border-b">
-                                    <tr>
-                                        <th className="py-2 px-4 w-[60px] text-left">Preview</th>
-                                        <th className="py-2 px-4 text-left">Name</th>
-                                        <th className="py-2 px-4 hidden sm:table-cell text-left">Created</th>
-                                        <th className="py-2 px-4 text-right">Count</th>
-                                        <th className="py-2 px-4 w-[100px]"></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y">
-                                    {projects.map((project) => (
-                                        <tr
-                                            key={project.id}
-                                            className="group hover:bg-muted/50 transition-colors cursor-pointer"
-                                            onClick={() => router.push(`/project/${project.id}`)}
-                                        >
-                                            {/* Thumbnail */}
-                                            <td className="p-2 pl-4">
-                                                <div className="w-8 h-8 relative rounded-md overflow-hidden bg-muted border">
+                                            {/* 1st Generation Preview or Placeholder */}
+                                            {project.generations.length > 0 && (
+                                                <div className="relative h-full bg-muted/50 border-l border-white/10">
                                                     <Image
-                                                        src={project.originalImageUrl}
-                                                        alt="Thumbnail"
+                                                        src={project.generations[0].imageUrl}
+                                                        alt="Gen 1"
                                                         fill
                                                         className="object-cover"
                                                     />
+                                                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+                                                    {project.generations.length > 1 && (
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white font-bold text-lg">
+                                                            +{project.generations.length - 1}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            </td>
+                                            )}
+                                        </div>
 
-                                            {/* Name */}
-                                            <td className="p-2 px-4 font-medium">
-                                                {project.name}
-                                            </td>
+                                        <div className="p-3 md:p-4 flex items-center justify-between gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <h3 className="font-semibold line-clamp-1 text-sm md:text-base">{project.name}</h3>
+                                                <p className="text-[10px] md:text-xs text-muted-foreground truncate">
+                                                    {project.generations.length} generations
+                                                </p>
+                                            </div>
 
-                                            {/* Date */}
-                                            <td className="p-2 px-4 text-muted-foreground hidden sm:table-cell">
-                                                {new Date(project.createdAt).toLocaleDateString('en-US', {
-                                                    year: 'numeric',
-                                                    month: 'short',
-                                                    day: 'numeric'
-                                                })}
-                                            </td>
-
-                                            {/* Stats */}
-                                            <td className="p-2 px-4 text-right font-medium tabular-nums text-muted-foreground">
-                                                {project.generations.length}
-                                            </td>
-
-                                            {/* Actions */}
-                                            <td className="p-2 pr-4 text-right">
-                                                <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-muted-foreground hover:text-primary"
-                                                        onClick={(e) => startRenaming(project, e)}
-                                                        title="Rename Project"
-                                                    >
-                                                        <Pencil className="w-4 h-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                                        onClick={(e) => handleDelete(project.id, e)}
-                                                        title="Delete Project"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </Button>
-                                                </div>
-                                            </td>
+                                            <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-muted-foreground hover:text-foreground">
+                                                            <MoreVertical className="w-4 h-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={(e) => startRenaming(project, e as any)}>
+                                                            <Pencil className="w-4 h-4 mr-2" />
+                                                            Rename
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={(e) => handleDelete(project.id, e as any)} className="text-destructive focus:text-destructive">
+                                                            <Trash2 className="w-4 h-4 mr-2" />
+                                                            Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="rounded-xl border shadow-sm overflow-hidden bg-card">
+                                <table className="w-full text-sm">
+                                    <thead className="bg-muted/40 text-muted-foreground font-medium border-b">
+                                        <tr>
+                                            <th className="py-2 px-4 w-[60px] text-left">Preview</th>
+                                            <th className="py-2 px-4 text-left">Name</th>
+                                            <th className="py-2 px-4 hidden sm:table-cell text-left">Created</th>
+                                            <th className="py-2 px-4 text-right">Count</th>
+                                            <th className="py-2 px-4 w-[100px]"></th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                                    </thead>
+                                    <tbody className="divide-y">
+                                        {projects.map((project) => (
+                                            <tr
+                                                key={project.id}
+                                                className="group hover:bg-muted/50 transition-colors cursor-pointer"
+                                                onClick={() => router.push(`/project/${project.id}`)}
+                                            >
+                                                {/* Thumbnail */}
+                                                <td className="p-2 pl-4">
+                                                    <div className="w-8 h-8 relative rounded-md overflow-hidden bg-muted border">
+                                                        <Image
+                                                            src={project.originalImageUrl}
+                                                            alt="Thumbnail"
+                                                            fill
+                                                            className="object-cover"
+                                                        />
+                                                    </div>
+                                                </td>
+
+                                                {/* Name */}
+                                                <td className="p-2 px-4 font-medium">
+                                                    {project.name}
+                                                </td>
+
+                                                {/* Date */}
+                                                <td className="p-2 px-4 text-muted-foreground hidden sm:table-cell">
+                                                    {new Date(project.createdAt).toLocaleDateString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: 'numeric'
+                                                    })}
+                                                </td>
+
+                                                {/* Stats */}
+                                                <td className="p-2 px-4 text-right font-medium tabular-nums text-muted-foreground">
+                                                    {project.generations.length}
+                                                </td>
+
+                                                {/* Actions */}
+                                                <td className="p-2 pr-4 text-right">
+                                                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-muted-foreground hover:text-primary"
+                                                            onClick={(e) => startRenaming(project, e)}
+                                                            title="Rename Project"
+                                                        >
+                                                            <Pencil className="w-4 h-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                                            onClick={(e) => handleDelete(project.id, e)}
+                                                            title="Delete Project"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                 </>
             )}
 
