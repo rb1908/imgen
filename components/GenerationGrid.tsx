@@ -10,12 +10,21 @@ import { TemplateDialog } from './TemplateDialog';
 
 // Removed corrupted lines
 
-interface GenerationGridProps {
+export interface GenerationGridProps {
     images: (GeneratedImage & { createdAt?: Date })[];
     isGenerating: boolean;
+    selectionMode?: boolean;
+    selectedIds?: string[];
+    onToggle?: (id: string) => void;
 }
 
-export function GenerationGrid({ images, isGenerating }: GenerationGridProps) {
+export function GenerationGrid({
+    images,
+    isGenerating,
+    selectionMode = false,
+    selectedIds = [],
+    onToggle
+}: GenerationGridProps) {
     const [expandedImage, setExpandedImage] = useState<GeneratedImage | null>(null);
     const [imageToSave, setImageToSave] = useState<GeneratedImage | null>(null);
 
@@ -60,52 +69,84 @@ export function GenerationGrid({ images, isGenerating }: GenerationGridProps) {
 
     return (
         <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-20 md:pb-0">
-                {images.map((img) => (
-                    <div key={img.id} className="group relative aspect-square rounded-xl overflow-hidden bg-secondary">
-                        <Image
-                            src={img.url}
-                            alt="Generated"
-                            fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                        {/* New Badge */}
-                        {img.createdAt && (new Date().getTime() - new Date(img.createdAt).getTime() < 24 * 60 * 60 * 1000) && (
-                            <div className="absolute top-2 left-2 bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg z-10 animate-pulse">
-                                NEW
-                            </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
-                            <div className="flex gap-2 justify-end">
-                                <Button
-                                    size="icon"
-                                    variant="secondary"
-                                    className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
-                                    onClick={() => setImageToSave(img)}
-                                    title="Save as Template"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                    size="icon"
-                                    variant="secondary"
-                                    className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
-                                    onClick={() => setExpandedImage(img)}
-                                >
-                                    <Maximize2 className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                    size="icon"
-                                    variant="secondary"
-                                    className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
-                                    onClick={() => handleDownload(img.url, img.id)}
-                                >
-                                    <Download className="w-4 h-4" />
-                                </Button>
-                            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 pb-20 md:pb-0">
+                {images.map((img) => {
+                    const isSelected = selectedIds.includes(img.id);
+                    return (
+                        <div
+                            key={img.id}
+                            className={`group relative aspect-square rounded-xl overflow-hidden bg-secondary cursor-pointer transition-all ${isSelected ? 'ring-4 ring-primary ring-inset' : ''}`}
+                            onClick={() => {
+                                if (selectionMode && onToggle) {
+                                    onToggle(img.id);
+                                }
+                            }}
+                        >
+                            <Image
+                                src={img.url}
+                                alt="Generated"
+                                fill
+                                className={`object-cover transition-transform duration-500 ${!selectionMode && 'group-hover:scale-110'} ${isSelected ? 'scale-95' : ''}`}
+                            />
+
+                            {/* Selection Checkbox Overlay */}
+                            {selectionMode && (
+                                <div className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center z-20 ${isSelected ? 'bg-primary border-primary' : 'bg-black/40 border-white/60'}`}>
+                                    {isSelected && <div className="w-2.5 h-2.5 bg-white rounded-full" />}
+                                </div>
+                            )}
+
+                            {/* New Badge */}
+                            {!selectionMode && img.createdAt && (new Date().getTime() - new Date(img.createdAt).getTime() < 24 * 60 * 60 * 1000) && (
+                                <div className="absolute top-2 left-2 bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg z-10 animate-pulse">
+                                    NEW
+                                </div>
+                            )}
+
+                            {/* Standard Hover Actions - Hidden in Selection Mode */}
+                            {!selectionMode && (
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+                                    <div className="flex gap-2 justify-end">
+                                        <Button
+                                            size="icon"
+                                            variant="secondary"
+                                            className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setImageToSave(img);
+                                            }}
+                                            title="Save as Template"
+                                        >
+                                            <Plus className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            size="icon"
+                                            variant="secondary"
+                                            className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setExpandedImage(img);
+                                            }}
+                                        >
+                                            <Maximize2 className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            size="icon"
+                                            variant="secondary"
+                                            className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDownload(img.url, img.id);
+                                            }}
+                                        >
+                                            <Download className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             {/* Expand Modal */}

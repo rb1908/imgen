@@ -18,14 +18,25 @@ export async function getAllGenerations(limit = 100) {
                 }
             }
         });
-
-        // We might want to transform this to match a UI type if needed, 
-        // but for now returning the raw Prisma result + project name is good.
-        // The UI expects something that can be mapped to GeneratedImage.
-
         return generations;
     } catch (error) {
         console.error("Failed to fetch generations:", error);
         return [];
+    }
+}
+
+export async function deleteGenerations(ids: string[]) {
+    try {
+        await prisma.generation.deleteMany({
+            where: {
+                id: {
+                    in: ids
+                }
+            }
+        });
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to delete generations:", error);
+        return { success: false, error: 'Failed to delete generations' };
     }
 }
