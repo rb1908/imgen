@@ -7,7 +7,17 @@ import { Input } from '@/components/ui/input';
 import { GenerationGrid } from '@/components/GenerationGrid';
 import { generateVariations } from '@/app/actions/generate';
 import { toast } from 'sonner';
-import { Loader2, Sparkles, Wand2, ArrowLeft, RefreshCcw, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, Sparkles, Wand2, ArrowLeft, RefreshCcw, CheckCircle2, ChevronDown, ChevronUp, Palette, X } from 'lucide-react';
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from "@/components/ui/drawer"
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -117,8 +127,21 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
         }
     };
 
-    return (
+    import {
+        Drawer,
+        DrawerClose,
+        DrawerContent,
+        DrawerDescription,
+        DrawerFooter,
+        DrawerHeader,
+        DrawerTitle,
+        DrawerTrigger,
+    } from "@/components/ui/drawer"
+    import { Palette, X } from 'lucide-react';
 
+    // ... (existing code top part)
+
+    return (
         <div className="h-full flex flex-col gap-6 relative">
             {/* Header */}
             <div className="flex-none flex items-center gap-4 px-4 border-b h-14 transition-all">
@@ -197,101 +220,33 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                                 )}
                             </AnimatePresence>
                         </div>
-
-                        {/* Mode Selection */}
-                        <div className="grid grid-cols-2 gap-2 p-1 bg-muted/50 rounded-lg flex-none sticky top-0 z-10 backdrop-blur-md bg-background/80 lg:relative lg:top-auto lg:backdrop-blur-none lg:bg-transparent">
-                            <button
-                                onClick={() => setMode('template')}
-                                className={cn(
-                                    "py-2 px-4 rounded-md text-sm font-medium transition-all",
-                                    mode === 'template' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
-                                )}
-                            >
-                                Templates
-                            </button>
-                            <button
-                                onClick={() => setMode('custom')}
-                                className={cn(
-                                    "py-2 px-4 rounded-md text-sm font-medium transition-all",
-                                    mode === 'custom' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
-                                )}
-                            >
-                                Custom Prompt
-                            </button>
-                        </div>
                     </div>
 
 
-                    {/* Template List: Rail on Mobile, Grid on Desktop */}
-                    {mode === 'template' && (
-                        <div className="space-y-4">
-                            {/* Selected Templates Row */}
-                            {selectedTemplateIds.length > 0 && (
-                                <div className="space-y-2 px-4">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm font-medium text-primary">Selected ({selectedTemplateIds.length})</span>
-                                        <button
-                                            onClick={() => setSelectedTemplateIds([])}
-                                            className="text-xs text-muted-foreground hover:text-primary transition-colors"
-                                        >
-                                            Clear all
-                                        </button>
-                                    </div>
-                                    {/* Selected Items - always vertical list slightly indented? or just keep same? */}
-                                </div>
-                            )}
-
-                            {/* Mobile: Horizontal Rail */}
-                            <div className="lg:hidden w-full overflow-x-auto px-4 pb-2 -mx-4 flex gap-2 snap-x snap-mandatory">
-                                <div className="w-4 shrink-0" /> {/* Spacer */}
-                                {sortedTemplates.map(t => (
+                    {/* Template List: HIDDEN on Mobile (uses Drawer instead), Grid on Desktop */}
+                    <div className="hidden lg:block space-y-4 px-4">
+                        {/* Desktop Grid Logic (Unchanged) */}
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">All Templates</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 pb-20">
+                            {sortedTemplates.map(t => {
+                                const isSelected = selectedTemplateIds.includes(t.id);
+                                return (
                                     <TemplateItem
                                         key={t.id}
                                         template={t}
-                                        isSelected={selectedTemplateIds.includes(t.id)}
+                                        isSelected={isSelected}
                                         onToggle={() => toggleTemplate(t.id)}
                                         onEdit={setEditingTemplate}
                                         onDelete={handleDeleteTemplate}
-                                        variant="rail"
+                                        variant="grid"
                                     />
-                                ))}
-                                <div className="w-4 shrink-0" /> {/* Spacer */}
-                            </div>
-
-                            {/* Desktop: Grid */}
-                            <div className="hidden lg:grid grid-cols-2 gap-2 pb-20 px-4">
-                                {sortedTemplates.map(t => {
-                                    const isSelected = selectedTemplateIds.includes(t.id);
-                                    return (
-                                        <TemplateItem
-                                            key={t.id}
-                                            template={t}
-                                            isSelected={isSelected}
-                                            onToggle={() => toggleTemplate(t.id)}
-                                            onEdit={setEditingTemplate}
-                                            onDelete={handleDeleteTemplate}
-                                            variant="grid"
-                                        />
-                                    );
-                                })}
-                            </div>
+                                );
+                            })}
                         </div>
-                    )}
+                    </div>
 
-                    {/* Custom Prompt Input */}
-                    {mode === 'custom' && (
-                        <div className="space-y-4 px-4">
-                            <div className="space-y-2">
-                                <span className="text-sm font-medium">Enter Prompt</span>
-                                <textarea
-                                    className="w-full min-h-[120px] p-3 rounded-xl border bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    placeholder="Describe the variation you want to generate..."
-                                    value={customPrompt}
-                                    onChange={(e) => setCustomPrompt(e.target.value)}
-                                />
-                            </div>
-                        </div>
-                    )}
 
                     {/* Mobile: Generations appened vertically */}
                     <div className="block lg:hidden px-4 space-y-4 pt-4 border-t">
@@ -317,6 +272,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
                 {/* Right: Generations Grid - Desktop Only (Sidebar style) */}
                 <div className="hidden lg:block lg:col-span-8 h-full overflow-y-auto space-y-6 pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+                    {/* Unchanged Desktop Generation Grid */}
                     <div className="flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur z-10 py-2">
                         <h2 className="text-lg font-semibold flex items-center gap-2">
                             <Sparkles className="w-5 h-5 text-primary" />
@@ -340,13 +296,59 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 </div>
             </div>
 
-            {/* Floating Generate Button (Universal) */}
-            <div className="fixed bottom-20 lg:bottom-8 left-1/2 -translate-x-1/2 z-40">
+            {/* Floating Action Bar (Mobile Only - Desktop has inline buttons if needed, or keep generic) */}
+            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 w-full justify-center px-4 pointer-events-none">
+                {/* 1. Palette Button (Triggers Drawer) */}
+                <Drawer>
+                    <DrawerTrigger asChild>
+                        <Button
+                            size="icon"
+                            className="pointer-events-auto rounded-full shadow-xl bg-background text-foreground border h-12 w-12 hover:bg-accent shrink-0 relative"
+                        >
+                            <Palette className="w-5 h-5" />
+                            {selectedTemplateIds.length > 0 && (
+                                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground border border-background">
+                                    {selectedTemplateIds.length}
+                                </span>
+                            )}
+                        </Button>
+                    </DrawerTrigger>
+                    <DrawerContent>
+                        <div className="mx-auto w-full max-w-sm">
+                            <DrawerHeader>
+                                <DrawerTitle>Select Templates</DrawerTitle>
+                                <DrawerDescription>Choose styles to generate</DrawerDescription>
+                            </DrawerHeader>
+                            <div className="p-4 h-[50vh] overflow-y-auto">
+                                <div className="grid grid-cols-2 gap-3">
+                                    {sortedTemplates.map(t => (
+                                        <TemplateItem
+                                            key={t.id}
+                                            template={t}
+                                            isSelected={selectedTemplateIds.includes(t.id)}
+                                            onToggle={() => toggleTemplate(t.id)}
+                                            onEdit={setEditingTemplate}
+                                            onDelete={handleDeleteTemplate}
+                                            variant="grid"
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                            <DrawerFooter>
+                                <DrawerClose asChild>
+                                    <Button>Done ({selectedTemplateIds.length})</Button>
+                                </DrawerClose>
+                            </DrawerFooter>
+                        </div>
+                    </DrawerContent>
+                </Drawer>
+
+                {/* 2. Generate Button */}
                 <Button
                     size="lg"
                     className={cn(
-                        "rounded-full shadow-2xl transition-all duration-300 relative overflow-hidden h-12 px-8 bg-primary text-primary-foreground hover:scale-105 active:scale-95",
-                        generationStatus === 'generating' ? "w-48" : "w-auto min-w-[160px]"
+                        "pointer-events-auto rounded-full shadow-2xl transition-all duration-300 relative overflow-hidden h-12 bg-primary text-primary-foreground hover:scale-105 active:scale-95",
+                        generationStatus === 'generating' ? "w-48 px-6" : "w-auto min-w-[140px] px-8"
                     )}
                     disabled={generationStatus === 'generating' || (mode === 'template' && selectedTemplateIds.length === 0) || (mode === 'custom' && !customPrompt)}
                     onClick={handleGenerate}
@@ -361,7 +363,6 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                             <Wand2 className="w-4 h-4" />
                             <span className="text-base font-semibold">
                                 Generate
-                                {mode === 'template' && selectedTemplateIds.length > 0 ? ` (${selectedTemplateIds.length})` : ''}
                             </span>
                         </div>
                     )}
