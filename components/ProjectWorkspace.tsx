@@ -305,7 +305,24 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         <div className="mx-auto w-full max-w-sm">
                             <DrawerHeader>
                                 <DrawerTitle>Select Templates</DrawerTitle>
-                                <DrawerDescription>Choose styles to generate</DrawerDescription>
+                                <DrawerDescription className="flex items-center justify-between">
+                                    <span>Choose styles to generate</span>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setSelectedTemplateIds(sortedTemplates.map(t => t.id))}
+                                            className="text-xs font-medium text-primary hover:underline"
+                                        >
+                                            Select All
+                                        </button>
+                                        <span className="text-muted-foreground/30">|</span>
+                                        <button
+                                            onClick={() => setSelectedTemplateIds([])}
+                                            className="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
+                                        >
+                                            Deselect All
+                                        </button>
+                                    </div>
+                                </DrawerDescription>
                             </DrawerHeader>
                             <div className="p-4 h-[50vh] overflow-y-auto">
                                 <div className="grid grid-cols-2 gap-3">
