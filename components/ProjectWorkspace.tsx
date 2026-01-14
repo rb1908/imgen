@@ -145,10 +145,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                     </AnimatePresence>
 
                     <div className="min-w-0">
-                        <h1 className="text-2xl font-bold tracking-tight truncate">{project.name || 'Untitled Project'}</h1>
-                        <p className="text-sm text-muted-foreground flex items-center gap-2 truncate">
-                            Project ID: {project.id.substring(0, 8)}...
-                        </p>
+                        <h1 className="text-lg font-bold tracking-tight truncate">{project.name || 'Untitled Project'}</h1>
                     </div>
                 </div>
             </div>
