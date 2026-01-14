@@ -18,8 +18,28 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from "@/components/ui/drawer"
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+// ... other imports ...
+
+// ... inside ProjectWorkspace component function ...
+// Sort templates: Stable sort (e.g. by name/date)
+const sortedTemplates = useMemo(() => {
+    return templates;
+}, [templates]);
+
+const isAllSelected = sortedTemplates.length > 0 && selectedTemplateIds.length === sortedTemplates.length;
+
+const handleSelectAllToggle = () => {
+    if (isAllSelected) {
+        setSelectedTemplateIds([]);
+    } else {
+        setSelectedTemplateIds(sortedTemplates.map(t => t.id));
+    }
+};
+
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TemplateItem } from './TemplateItem';
