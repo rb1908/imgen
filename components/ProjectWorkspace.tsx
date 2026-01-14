@@ -307,20 +307,15 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                                 <DrawerTitle>Select Templates</DrawerTitle>
                                 <DrawerDescription className="flex items-center justify-between">
                                     <span>Choose styles to generate</span>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => setSelectedTemplateIds(sortedTemplates.map(t => t.id))}
-                                            className="text-xs font-medium text-primary hover:underline"
-                                        >
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id="select-all"
+                                            checked={isAllSelected}
+                                            onCheckedChange={handleSelectAllToggle}
+                                        />
+                                        <Label htmlFor="select-all" className="text-xs font-medium cursor-pointer">
                                             Select All
-                                        </button>
-                                        <span className="text-muted-foreground/30">|</span>
-                                        <button
-                                            onClick={() => setSelectedTemplateIds([])}
-                                            className="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
-                                        >
-                                            Deselect All
-                                        </button>
+                                        </Label>
                                     </div>
                                 </DrawerDescription>
                             </DrawerHeader>
