@@ -193,7 +193,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                     ref={leftPanelRef}
                     onScroll={handleScroll}
                     className={cn(
-                        "lg:col-span-4 h-full overflow-y-auto pr-2 space-y-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']",
+                        "lg:col-span-4 h-full overflow-y-auto pr-2 space-y-6 pb-40 lg:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']",
                         activeMobileTab === 'create' ? 'block' : 'hidden lg:block'
                     )}
                 >
@@ -314,7 +314,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         </div>
                     )}
 
-                    <div className="sticky bottom-0 z-20 bg-background pt-4 pb-2 border-t mt-auto">
+                    <div className="fixed bottom-[58px] left-0 right-0 p-4 border-t bg-background/95 backdrop-blur z-30 lg:sticky lg:bottom-0 lg:left-auto lg:right-auto lg:p-0 lg:pt-4 lg:pb-2 lg:bg-background lg:mt-auto shadow-[0_-5px_15px_-5px_rgba(0,0,0,0.1)] lg:shadow-none">
                         <Button
                             size="lg"
                             className="w-full gap-2 text-md shadow-lg shadow-primary/20 transition-all duration-300 relative overflow-hidden"
