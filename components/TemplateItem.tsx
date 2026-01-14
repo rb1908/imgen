@@ -24,9 +24,10 @@ interface TemplateItemProps {
     onEdit: (template: Template) => void;
     onDelete: (id: string) => void;
     layoutId?: string;
+    variant?: 'grid' | 'rail';
 }
 
-export function TemplateItem({ template, isSelected, onToggle, onEdit, onDelete, layoutId }: TemplateItemProps) {
+export function TemplateItem({ template, isSelected, onToggle, onEdit, onDelete, layoutId, variant = 'grid' }: TemplateItemProps) {
     // Determine the image to show: Latest generation -> Saved thumbnail -> Fallback
     const displayImage = template.generations?.[0]?.imageUrl || template.thumbnailUrl;
 
@@ -45,6 +46,48 @@ export function TemplateItem({ template, isSelected, onToggle, onEdit, onDelete,
         e.stopPropagation();
         onDelete(template.id);
     };
+
+    if (variant === 'rail') {
+        return (
+            <motion.div
+                layout={!!layoutId}
+                layoutId={layoutId}
+                className={cn(
+                    "relative flex-none w-24 aspect-square rounded-lg overflow-hidden cursor-pointer transition-all",
+                    isSelected ? "ring-2 ring-primary ring-offset-2 scale-105 z-10" : "opacity-80 hover:opacity-100 scale-100"
+                )}
+                onClick={onToggle}
+            >
+                {displayImage ? (
+                    <img
+                        src={displayImage}
+                        alt={template.name}
+                        className="w-full h-full object-cover"
+                    />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground text-[10px] p-2 text-center leading-tight font-medium">
+                        {template.name}
+                    </div>
+                )}
+
+                {/* Overlay Label for Rail */}
+                {displayImage && (
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-1.5 pt-4">
+                        <p className="text-[10px] font-medium text-white truncate text-center leading-tight">
+                            {template.name}
+                        </p>
+                    </div>
+                )}
+
+                {/* Selection Indicator */}
+                {isSelected && (
+                    <div className="absolute top-1 right-1 bg-primary text-white rounded-full p-0.5 shadow-sm">
+                        <CheckCircle2 className="w-3 h-3" />
+                    </div>
+                )}
+            </motion.div>
+        );
+    }
 
     return (
         <motion.div

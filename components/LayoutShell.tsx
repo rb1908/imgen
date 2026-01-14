@@ -45,7 +45,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
             <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />
             <main
                 className={cn(
-                    "flex-1 p-4 md:p-8 transition-[margin] duration-300 ease-in-out h-full overflow-hidden pb-20 md:pb-8", // added bottom padding for mobile nav
+                    "flex-1 p-4 md:p-8 transition-[margin] duration-300 ease-in-out h-full overflow-hidden pb-14 md:pb-8", // added bottom padding for mobile nav
                     isCollapsed ? "md:ml-20" : "md:ml-64",
                     "ml-0" // Reset margin on mobile
                 )}

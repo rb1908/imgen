@@ -35,7 +35,6 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
     const [mode, setMode] = useState<'template' | 'custom'>('template');
 
     // Mobile Layout Tab
-    const [activeMobileTab, setActiveMobileTab] = useState<'create' | 'results'>('create');
     const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
 
     const toggleTemplate = (id: string) => {
@@ -119,7 +118,8 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
     };
 
     return (
-        <div className="h-full flex flex-col gap-6">
+    return (
+        <div className="h-full flex flex-col gap-6 relative">
             {/* Header */}
             <div className="flex-none flex items-center gap-4 px-4 pb-2 border-b h-16 transition-all">
                 <Link href="/" className="p-2 hover:bg-accent rounded-full text-muted-foreground transition-colors">
@@ -153,118 +153,84 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 </div>
             </div>
 
-            {/* Mobile Tab Navigation */}
-            <div className="flex lg:hidden border-b bg-background/95 backdrop-blur z-20 sticky top-0 px-4">
-                <button
-                    onClick={() => setActiveMobileTab('create')}
-                    className={cn(
-                        "flex-1 py-3 text-sm font-medium border-b-2 transition-colors",
-                        activeMobileTab === 'create'
-                            ? "border-primary text-primary"
-                            : "border-transparent text-muted-foreground"
-                    )}
-                >
-                    Create & Edit
-                </button>
-                <button
-                    onClick={() => setActiveMobileTab('results')}
-                    className={cn(
-                        "flex-1 py-3 text-sm font-medium border-b-2 transition-colors relative",
-                        activeMobileTab === 'results'
-                            ? "border-primary text-primary"
-                            : "border-transparent text-muted-foreground"
-                    )}
-                >
-                    Results
-                    <span className="ml-2 text-xs bg-muted px-1.5 py-0.5 rounded-full">
-                        {generations.length}
-                    </span>
-                    {generationStatus === 'generating' && (
-                        <span className="absolute top-2 right-4 flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                        </span>
-                    )}
-                </button>
-            </div>
-
-            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 px-4 relative">
-                {/* Left: Controls & Original Image - SCROLLABLE */}
+            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-8 px-0 lg:px-4 relative overflow-y-auto lg:overflow-visible">
+                {/* Left: Controls & Original Image - SCROLLABLE on Mobile (Main View) */}
                 <div
                     ref={leftPanelRef}
                     onScroll={handleScroll}
-                    className={cn(
-                        "lg:col-span-4 h-full overflow-y-auto pr-2 space-y-6 pb-40 lg:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']",
-                        activeMobileTab === 'create' ? 'block' : 'hidden lg:block'
-                    )}
+                    className="lg:col-span-4 h-full lg:overflow-y-auto pr-0 lg:pr-2 pb-32 lg:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] space-y-6 lg:space-y-6"
                 >
-                    {/* Original Image Card - Collapsible */}
-                    <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden flex-none">
-                        <button
-                            onClick={() => setIsExpanded(!isExpanded)}
-                            className="w-full p-3 flex items-center justify-between bg-muted/20 hover:bg-muted/30 transition-colors"
-                        >
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                                <Image
-                                    src={project.originalImageUrl}
-                                    width={20}
-                                    height={20}
-                                    alt="Mini"
-                                    className="rounded-sm"
-                                />
-                                Reference Image
-                            </span>
-                            {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                        </button>
+                    <div className="px-4 space-y-6">
+                        {/* Original Image Card - Collapsible */}
+                        <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden flex-none">
+                            <button
+                                onClick={() => setIsExpanded(!isExpanded)}
+                                className="w-full p-3 flex items-center justify-between bg-muted/20 hover:bg-muted/30 transition-colors"
+                            >
+                                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                    <Image
+                                        src={project.originalImageUrl}
+                                        width={20}
+                                        height={20}
+                                        alt="Mini"
+                                        className="rounded-sm"
+                                    />
+                                    Reference Image
+                                </span>
+                                {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                            </button>
 
-                        <AnimatePresence>
-                            {isExpanded && (
-                                <motion.div
-                                    initial={{ height: 0 }}
-                                    animate={{ height: 'auto' }}
-                                    exit={{ height: 0 }}
-                                    className="overflow-hidden"
-                                >
-                                    <div className="relative aspect-video w-full bg-muted border-t">
-                                        <Image
-                                            src={project.originalImageUrl}
-                                            alt="Original"
-                                            fill
-                                            className="object-contain"
-                                        />
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                            <AnimatePresence>
+                                {isExpanded && (
+                                    <motion.div
+                                        initial={{ height: 0 }}
+                                        animate={{ height: 'auto' }}
+                                        exit={{ height: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="relative aspect-video w-full bg-muted border-t">
+                                            <Image
+                                                src={project.originalImageUrl}
+                                                alt="Original"
+                                                fill
+                                                className="object-contain"
+                                            />
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Mode Selection */}
+                        <div className="grid grid-cols-2 gap-2 p-1 bg-muted/50 rounded-lg flex-none sticky top-0 z-10 backdrop-blur-md bg-background/80 lg:relative lg:top-auto lg:backdrop-blur-none lg:bg-transparent">
+                            <button
+                                onClick={() => setMode('template')}
+                                className={cn(
+                                    "py-2 px-4 rounded-md text-sm font-medium transition-all",
+                                    mode === 'template' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                Templates
+                            </button>
+                            <button
+                                onClick={() => setMode('custom')}
+                                className={cn(
+                                    "py-2 px-4 rounded-md text-sm font-medium transition-all",
+                                    mode === 'custom' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                Custom Prompt
+                            </button>
+                        </div>
                     </div>
 
-                    {/* Mode Selection */}
-                    <div className="grid grid-cols-2 gap-2 p-1 bg-muted/50 rounded-lg flex-none sticky top-0 z-10 backdrop-blur-md bg-background/80">
-                        <button
-                            onClick={() => setMode('template')}
-                            className={cn(
-                                "py-2 px-4 rounded-md text-sm font-medium transition-all",
-                                mode === 'template' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
-                            )}
-                        >
-                            Templates
-                        </button>
-                        <button
-                            onClick={() => setMode('custom')}
-                            className={cn(
-                                "py-2 px-4 rounded-md text-sm font-medium transition-all",
-                                mode === 'custom' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
-                            )}
-                        >
-                            Custom Prompt
-                        </button>
-                    </div>
 
-                    {/* Template List */}
+                    {/* Template List: Rail on Mobile, Grid on Desktop */}
                     {mode === 'template' && (
                         <div className="space-y-4">
+                            {/* Selected Templates Row */}
                             {selectedTemplateIds.length > 0 && (
-                                <div className="space-y-2">
+                                <div className="space-y-2 px-4">
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm font-medium text-primary">Selected ({selectedTemplateIds.length})</span>
                                         <button
@@ -274,29 +240,29 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                                             Clear all
                                         </button>
                                     </div>
-                                    <div className="grid grid-cols-1 gap-2">
-                                        <AnimatePresence>
-                                            {templates.filter(t => selectedTemplateIds.includes(t.id)).map(t => (
-                                                <TemplateItem
-                                                    key={`selected-${t.id}`}
-                                                    template={t}
-                                                    isSelected={true}
-                                                    onToggle={() => toggleTemplate(t.id)}
-                                                    onEdit={setEditingTemplate}
-                                                    onDelete={handleDeleteTemplate}
-                                                    layoutId={`template-${t.id}`}
-                                                />
-                                            ))}
-                                        </AnimatePresence>
-                                    </div>
-                                    <div className="h-px bg-border my-2" />
+                                    {/* Selected Items - always vertical list slightly indented? or just keep same? */}
                                 </div>
                             )}
 
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">All Templates</span>
+                            {/* Mobile: Horizontal Rail */}
+                            <div className="lg:hidden w-full overflow-x-auto px-4 pb-2 -mx-4 flex gap-2 snap-x snap-mandatory">
+                                <div className="w-4 shrink-0" /> {/* Spacer */}
+                                {sortedTemplates.map(t => (
+                                    <TemplateItem
+                                        key={t.id}
+                                        template={t}
+                                        isSelected={selectedTemplateIds.includes(t.id)}
+                                        onToggle={() => toggleTemplate(t.id)}
+                                        onEdit={setEditingTemplate}
+                                        onDelete={handleDeleteTemplate}
+                                        variant="rail"
+                                    />
+                                ))}
+                                <div className="w-4 shrink-0" /> {/* Spacer */}
                             </div>
-                            <div className="grid grid-cols-2 gap-2 pb-20">
+
+                            {/* Desktop: Grid */}
+                            <div className="hidden lg:grid grid-cols-2 gap-2 pb-20 px-4">
                                 {sortedTemplates.map(t => {
                                     const isSelected = selectedTemplateIds.includes(t.id);
                                     return (
@@ -307,6 +273,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                                             onToggle={() => toggleTemplate(t.id)}
                                             onEdit={setEditingTemplate}
                                             onDelete={handleDeleteTemplate}
+                                            variant="grid"
                                         />
                                     );
                                 })}
@@ -316,7 +283,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
                     {/* Custom Prompt Input */}
                     {mode === 'custom' && (
-                        <div className="space-y-4">
+                        <div className="space-y-4 px-4">
                             <div className="space-y-2">
                                 <span className="text-sm font-medium">Enter Prompt</span>
                                 <textarea
@@ -332,51 +299,30 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         </div>
                     )}
 
-                    <div className="fixed bottom-[58px] left-0 right-0 p-4 border-t bg-background/95 backdrop-blur z-30 lg:sticky lg:bottom-0 lg:left-auto lg:right-auto lg:p-0 lg:pt-4 lg:pb-2 lg:bg-background lg:mt-auto shadow-[0_-5px_15px_-5px_rgba(0,0,0,0.1)] lg:shadow-none">
-                        <Button
-                            size="lg"
-                            className="w-full gap-2 text-md shadow-lg shadow-primary/20 transition-all duration-300 relative overflow-hidden"
-                            disabled={generationStatus === 'generating' || (mode === 'template' && selectedTemplateIds.length === 0) || (mode === 'custom' && !customPrompt)}
-                            onClick={handleGenerate}
-                        >
-                            {generationStatus === 'generating' ? (
-                                <div className="flex items-center gap-3">
-                                    <div className="relative">
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                        <div className="absolute inset-0 animate-ping opacity-75 bg-primary rounded-full" />
-                                    </div>
-                                    <span className="animate-pulse">{statusMessage}</span>
-                                </div>
-                            ) : (
-                                <>
-                                    <Wand2 className="w-5 h-5" />
-                                    Generate {mode === 'template' && selectedTemplateIds.length > 0 ? `(${selectedTemplateIds.length})` : ''}
-                                </>
-                            )}
-
-                            {/* Progres Bar (Fake) */}
-                            {generationStatus === 'generating' && (
-                                <motion.div
-                                    className="absolute bottom-0 left-0 h-1 bg-white/30"
-                                    initial={{ width: "0%" }}
-                                    animate={{ width: "100%" }}
-                                    transition={{ duration: 15, ease: "linear" }}
-                                />
-                            )}
-                        </Button>
-                        {generationStatus === 'generating' && (
-                            <p className="text-[10px] text-muted-foreground text-center mt-2 animate-in fade-in slide-in-from-bottom-2">
-                                You can browse other projects while this runs.
-                            </p>
-                        )}
+                    {/* Mobile: Generations appened vertically */}
+                    <div className="block lg:hidden px-4 space-y-4 pt-4 border-t">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-semibold flex items-center gap-2">
+                                <Sparkles className="w-5 h-5 text-primary" />
+                                Results
+                            </h2>
+                            <span className="text-sm text-muted-foreground">{generations.length}</span>
+                        </div>
+                        <GenerationGrid
+                            images={generations.map(g => ({
+                                id: g.id,
+                                url: g.imageUrl,
+                                templateId: g.templateId || 'custom',
+                                originalImage: g.promptUsed || 'Custom Generation',
+                                prompt: g.promptUsed || customPrompt || 'Custom Generation'
+                            }))}
+                            isGenerating={generationStatus === 'generating'}
+                        />
                     </div>
                 </div>
 
-                {/* Right: Generations Grid - SCROLLABLE */}
-                <div className={cn(
-                    "lg:col-span-8 h-full overflow-y-auto space-y-6 pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']",
-                    activeMobileTab === 'results' ? 'block' : 'hidden lg:block'
-                )}>
+                {/* Right: Generations Grid - Desktop Only (Sidebar style) */}
+                <div className="hidden lg:block lg:col-span-8 h-full overflow-y-auto space-y-6 pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                     <div className="flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur z-10 py-2">
                         <h2 className="text-lg font-semibold flex items-center gap-2">
                             <Sparkles className="w-5 h-5 text-primary" />
@@ -385,10 +331,8 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         <span className="text-sm text-muted-foreground">{generations.length} images</span>
                     </div>
 
-                    {/* Reuse GenerationGrid (might need type adjustment if GenerationGrid expects strictly UI type) */}
                     <div className="bg-muted/10 rounded-2xl p-6 border border-dashed min-h-[500px]">
                         <GenerationGrid
-                            // Mapping database Generation to UI GeneratedImage if needed
                             images={generations.map(g => ({
                                 id: g.id,
                                 url: g.imageUrl,
@@ -401,6 +345,35 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                     </div>
                 </div>
             </div>
+
+            {/* Floating Generate Button (Universal) */}
+            <div className="fixed bottom-20 lg:bottom-8 left-1/2 -translate-x-1/2 z-40">
+                <Button
+                    size="lg"
+                    className={cn(
+                        "rounded-full shadow-2xl transition-all duration-300 relative overflow-hidden h-12 px-8 bg-primary text-primary-foreground hover:scale-105 active:scale-95",
+                        generationStatus === 'generating' ? "w-48" : "w-auto min-w-[160px]"
+                    )}
+                    disabled={generationStatus === 'generating' || (mode === 'template' && selectedTemplateIds.length === 0) || (mode === 'custom' && !customPrompt)}
+                    onClick={handleGenerate}
+                >
+                    {generationStatus === 'generating' ? (
+                        <div className="flex items-center gap-2 justify-center">
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span className="text-sm font-medium animate-pulse">Creating...</span>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2 justify-center">
+                            <Wand2 className="w-4 h-4" />
+                            <span className="text-base font-semibold">
+                                Generate
+                                {mode === 'template' && selectedTemplateIds.length > 0 ? ` (${selectedTemplateIds.length})` : ''}
+                            </span>
+                        </div>
+                    )}
+                </Button>
+            </div>
+
             <TemplateDialog
                 open={!!editingTemplate}
                 onOpenChange={(open) => !open && setEditingTemplate(null)}
