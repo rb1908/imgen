@@ -285,7 +285,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
             </div>
 
             {/* Floating Action Bar (Mobile Only - Desktop has inline buttons if needed, or keep generic) */}
-            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 w-full justify-center px-4 pointer-events-none">
+            <div className="fixed bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 w-full justify-center px-4 pointer-events-none">
                 {/* 1. Palette Button (Triggers Drawer) */}
                 <Drawer>
                     <DrawerTrigger asChild>
