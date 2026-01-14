@@ -130,7 +130,7 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
         e.preventDefault();
         e.stopPropagation();
         setRenamingProject(project);
-        setNewName(project.name);
+        setNewName(project.name || "");
     };
 
     const handleRenameSubmit = async (e: React.FormEvent) => {
