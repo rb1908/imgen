@@ -127,19 +127,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
         }
     };
 
-    import {
-        Drawer,
-        DrawerClose,
-        DrawerContent,
-        DrawerDescription,
-        DrawerFooter,
-        DrawerHeader,
-        DrawerTitle,
-        DrawerTrigger,
-    } from "@/components/ui/drawer"
-    import { Palette, X } from 'lucide-react';
 
-    // ... (existing code top part)
 
     return (
         <div className="h-full flex flex-col gap-6 relative">
