@@ -225,9 +225,7 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                                                 fill
                                                 className="object-cover"
                                             />
-                                            <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm">
-                                                ORIGINAL
-                                            </div>
+
                                         </div>
 
                                         {/* 1st Generation Preview or Placeholder */}
