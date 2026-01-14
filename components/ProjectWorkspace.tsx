@@ -106,8 +106,8 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
             if (mode === 'custom') setCustomPrompt('');
 
-            // Switch to results view on mobile
-            setActiveMobileTab('results');
+            // Scroll to results or provide feedback
+            toast.info("Scroll down to see results!");
         } catch (e) {
             console.error(e);
             toast.error("Generation failed");
@@ -118,7 +118,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
     };
 
     return (
-    return (
+
         <div className="h-full flex flex-col gap-6 relative">
             {/* Header */}
             <div className="flex-none flex items-center gap-4 px-4 pb-2 border-b h-16 transition-all">
