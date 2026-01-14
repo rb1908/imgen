@@ -293,9 +293,6 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                                     onChange={(e) => setCustomPrompt(e.target.value)}
                                 />
                             </div>
-                            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-xs text-blue-400">
-                                💡 Tip: Be specific about lighting, style, and composition for best results.
-                            </div>
                         </div>
                     )}
 
