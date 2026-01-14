@@ -8,8 +8,10 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { TemplateDialog } from './TemplateDialog';
 
+// Removed corrupted lines
+
 interface GenerationGridProps {
-    images: GeneratedImage[];
+    images: (GeneratedImage & { createdAt?: Date })[];
     isGenerating: boolean;
 }
 
@@ -67,6 +69,12 @@ export function GenerationGrid({ images, isGenerating }: GenerationGridProps) {
                             fill
                             className="object-cover transition-transform duration-500 group-hover:scale-110"
                         />
+                        {/* New Badge */}
+                        {img.createdAt && (new Date().getTime() - new Date(img.createdAt).getTime() < 24 * 60 * 60 * 1000) && (
+                            <div className="absolute top-2 left-2 bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg z-10 animate-pulse">
+                                NEW
+                            </div>
+                        )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
                             <div className="flex gap-2 justify-end">
                                 <Button

@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 
 const sidebarItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
+    { icon: Sparkles, label: 'Generations', href: '/generations' },
     { icon: ImageIcon, label: 'Templates', href: '/templates' },
     { icon: Settings, label: 'Settings', href: '/settings' },
 ];
