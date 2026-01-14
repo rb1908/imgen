@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { GenerationGrid } from '@/components/GenerationGrid';
 import { generateVariations } from '@/app/actions/generate';
 import { toast } from 'sonner';
-import { Loader2, Sparkles, Wand2, ArrowLeft, RefreshCcw, CheckCircle2 } from 'lucide-react';
+import { Loader2, Sparkles, Wand2, ArrowLeft, RefreshCcw, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -28,6 +28,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
     const [statusMessage, setStatusMessage] = useState('');
     const [generations, setGenerations] = useState<Generation[]>(project.generations);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(true); // Default expanded
     const leftPanelRef = useRef<HTMLDivElement>(null);
 
     // Tab state: 'templates' or 'custom'
@@ -187,7 +188,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 </button>
             </div>
 
-            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-8 px-4 relative">
+            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 px-4 relative">
                 {/* Left: Controls & Original Image - SCROLLABLE */}
                 <div
                     ref={leftPanelRef}
@@ -197,28 +198,45 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         activeMobileTab === 'create' ? 'block' : 'hidden lg:block'
                     )}
                 >
-                    {/* Original Image Card - Animates out on scroll */}
-                    <motion.div
-                        animate={{
-                            height: isScrolled ? 0 : 'auto',
-                            opacity: isScrolled ? 0 : 1,
-                            marginBottom: isScrolled ? 0 : 24
-                        }}
-                        transition={{ duration: 0.3 }}
-                        className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden flex-none origin-top"
-                    >
-                        <div className="relative aspect-video w-full bg-muted">
-                            <Image
-                                src={project.originalImageUrl}
-                                alt="Original"
-                                fill
-                                className="object-contain"
-                            />
-                        </div>
-                        <div className="p-4 bg-muted/20 border-t">
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Reference Image</span>
-                        </div>
-                    </motion.div>
+                    {/* Original Image Card - Collapsible */}
+                    <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden flex-none">
+                        <button
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            className="w-full p-3 flex items-center justify-between bg-muted/20 hover:bg-muted/30 transition-colors"
+                        >
+                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                <Image
+                                    src={project.originalImageUrl}
+                                    width={20}
+                                    height={20}
+                                    alt="Mini"
+                                    className="rounded-sm"
+                                />
+                                Reference Image
+                            </span>
+                            {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                        </button>
+
+                        <AnimatePresence>
+                            {isExpanded && (
+                                <motion.div
+                                    initial={{ height: 0 }}
+                                    animate={{ height: 'auto' }}
+                                    exit={{ height: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    <div className="relative aspect-video w-full bg-muted border-t">
+                                        <Image
+                                            src={project.originalImageUrl}
+                                            alt="Original"
+                                            fill
+                                            className="object-contain"
+                                        />
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
 
                     {/* Mode Selection */}
                     <div className="grid grid-cols-2 gap-2 p-1 bg-muted/50 rounded-lg flex-none sticky top-0 z-10 backdrop-blur-md bg-background/80">

@@ -2,9 +2,15 @@
 
 import { Template } from '@prisma/client';
 import { motion } from 'framer-motion';
-import { Pencil, Trash2, Copy, CheckCircle2 } from 'lucide-react';
+import { Pencil, Trash2, Copy, CheckCircle2, MoreVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 // Extend Template to include optional generations array as returned by getTemplates
 type TemplateWithGenerations = Template & {
@@ -85,32 +91,33 @@ export function TemplateItem({ template, isSelected, onToggle, onEdit, onDelete,
                 <span className="text-xs text-muted-foreground line-clamp-2">{template.prompt}</span>
             </div>
 
-            {/* Actions (Absolute positioned) */}
-            <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+            {/* Actions (Dropdown) */}
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20 md:group-hover:opacity-100 opacity-100">
                 {!isSelected && (
-                    <>
-                        <button
-                            onClick={handleCopy}
-                            className="p-1.5 rounded-md bg-black/50 text-white hover:bg-black/70 backdrop-blur-sm transition-colors"
-                            title="Copy Prompt"
-                        >
-                            <Copy className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                            onClick={handleEdit}
-                            className="p-1.5 rounded-md bg-black/50 text-white hover:bg-blue-500/80 backdrop-blur-sm transition-colors"
-                            title="Edit Template"
-                        >
-                            <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                            onClick={handleDelete}
-                            className="p-1.5 rounded-md bg-black/50 text-white hover:bg-red-500/80 backdrop-blur-sm transition-colors"
-                            title="Delete Template"
-                        >
-                            <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                    </>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <button
+                                className="p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                                title="Options"
+                            >
+                                <MoreVertical className="w-4 h-4" />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuItem onClick={handleCopy}>
+                                <Copy className="w-4 h-4 mr-2" />
+                                Copy Prompt
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleEdit}>
+                                <Pencil className="w-4 h-4 mr-2" />
+                                Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 )}
             </div>
         </motion.div>
