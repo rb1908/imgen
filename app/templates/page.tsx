@@ -1,5 +1,6 @@
-import { getTemplates, createTemplate, deleteTemplate } from '@/app/actions/templates';
-import { TemplateManager } from '@/components/TemplateManager';
+import { Suspense } from 'react';
+import { TemplatesContent } from '@/components/TemplatesContent';
+import { TemplateSkeleton } from '@/components/TemplateSkeleton';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,9 +15,7 @@ function SimpleBreadcrumb() {
     )
 }
 
-export default async function TemplatesPage() {
-    const templates = await getTemplates();
-
+export default function TemplatesPage() {
     return (
         <div className="max-w-6xl mx-auto">
             <SimpleBreadcrumb />
@@ -27,9 +26,10 @@ export default async function TemplatesPage() {
                 </div>
             </div>
 
-            <TemplateManager
-                templates={templates}
-            />
+            <Suspense fallback={<TemplateSkeleton />}>
+                <TemplatesContent />
+            </Suspense>
         </div>
     );
 }
+
