@@ -12,6 +12,9 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import { TemplateItem } from './TemplateItem';
+import { TemplateDialog } from './TemplateDialog';
+import { deleteTemplate } from '@/app/actions/templates';
 
 interface ProjectWorkspaceProps {
     project: Project & { generations: Generation[] };
@@ -30,22 +33,30 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
     // Tab state: 'templates' or 'custom'
     const [mode, setMode] = useState<'template' | 'custom'>('template');
 
+    // Mobile Layout Tab
+    const [activeMobileTab, setActiveMobileTab] = useState<'create' | 'results'>('create');
+    const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+
     const toggleTemplate = (id: string) => {
         setSelectedTemplateIds(prev =>
             prev.includes(id) ? prev.filter(tid => tid !== id) : [...prev, id]
         );
     };
 
-    // Sort templates: Selected first
+    const handleDeleteTemplate = async (id: string) => {
+        if (confirm('Are you sure you want to delete this template?')) {
+            await deleteTemplate(id);
+            toast.success('Template deleted');
+            setSelectedTemplateIds(prev => prev.filter(tid => tid !== id));
+        }
+    };
+
+    // Sort templates: Stable sort (e.g. by name/date)
     const sortedTemplates = useMemo(() => {
-        return [...templates].sort((a, b) => {
-            const aSelected = selectedTemplateIds.includes(a.id);
-            const bSelected = selectedTemplateIds.includes(b.id);
-            if (aSelected && !bSelected) return -1;
-            if (!aSelected && bSelected) return 1;
-            return 0;
-        });
-    }, [templates, selectedTemplateIds]);
+        // Just return original order (likely creation date from DB)
+        // or sort alphabetically if preferred. For stability, let's keep DB order.
+        return templates;
+    }, [templates]);
 
     const handleScroll = () => {
         if (leftPanelRef.current) {
@@ -94,6 +105,9 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
             toast.success("Generations complete!");
 
             if (mode === 'custom') setCustomPrompt('');
+
+            // Switch to results view on mobile
+            setActiveMobileTab('results');
         } catch (e) {
             console.error(e);
             toast.error("Generation failed");
@@ -138,12 +152,50 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 </div>
             </div>
 
-            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-8 px-4">
+            {/* Mobile Tab Navigation */}
+            <div className="flex lg:hidden border-b bg-background/95 backdrop-blur z-20 sticky top-0 px-4">
+                <button
+                    onClick={() => setActiveMobileTab('create')}
+                    className={cn(
+                        "flex-1 py-3 text-sm font-medium border-b-2 transition-colors",
+                        activeMobileTab === 'create'
+                            ? "border-primary text-primary"
+                            : "border-transparent text-muted-foreground"
+                    )}
+                >
+                    Create & Edit
+                </button>
+                <button
+                    onClick={() => setActiveMobileTab('results')}
+                    className={cn(
+                        "flex-1 py-3 text-sm font-medium border-b-2 transition-colors relative",
+                        activeMobileTab === 'results'
+                            ? "border-primary text-primary"
+                            : "border-transparent text-muted-foreground"
+                    )}
+                >
+                    Results
+                    <span className="ml-2 text-xs bg-muted px-1.5 py-0.5 rounded-full">
+                        {generations.length}
+                    </span>
+                    {generationStatus === 'generating' && (
+                        <span className="absolute top-2 right-4 flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                        </span>
+                    )}
+                </button>
+            </div>
+
+            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-8 px-4 relative">
                 {/* Left: Controls & Original Image - SCROLLABLE */}
                 <div
                     ref={leftPanelRef}
                     onScroll={handleScroll}
-                    className="lg:col-span-4 h-full overflow-y-auto pr-2 space-y-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
+                    className={cn(
+                        "lg:col-span-4 h-full overflow-y-auto pr-2 space-y-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']",
+                        activeMobileTab === 'create' ? 'block' : 'hidden lg:block'
+                    )}
                 >
                     {/* Original Image Card - Animates out on scroll */}
                     <motion.div
@@ -193,32 +245,53 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                     {/* Template List */}
                     {mode === 'template' && (
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">Available Templates</span>
-                                <span className="text-xs text-muted-foreground">{selectedTemplateIds.length} selected</span>
-                            </div>
-                            <div className="grid grid-cols-1 gap-2 pb-20">
-                                <AnimatePresence>
-                                    {sortedTemplates.map(t => (
-                                        <motion.button
-                                            layout
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -10 }}
-                                            key={t.id}
-                                            onClick={() => toggleTemplate(t.id)}
-                                            className={cn(
-                                                "flex flex-col items-start p-3 rounded-xl border text-left transition-colors relative",
-                                                selectedTemplateIds.includes(t.id)
-                                                    ? "border-primary bg-primary/5 ring-1 ring-primary z-10"
-                                                    : "border-border hover:bg-accent"
-                                            )}
+                            {selectedTemplateIds.length > 0 && (
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium text-primary">Selected ({selectedTemplateIds.length})</span>
+                                        <button
+                                            onClick={() => setSelectedTemplateIds([])}
+                                            className="text-xs text-muted-foreground hover:text-primary transition-colors"
                                         >
-                                            <span className="font-medium text-sm">{t.name}</span>
-                                            <span className="text-xs text-muted-foreground line-clamp-1">{t.prompt}</span>
-                                        </motion.button>
-                                    ))}
-                                </AnimatePresence>
+                                            Clear all
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-2">
+                                        <AnimatePresence>
+                                            {templates.filter(t => selectedTemplateIds.includes(t.id)).map(t => (
+                                                <TemplateItem
+                                                    key={`selected-${t.id}`}
+                                                    template={t}
+                                                    isSelected={true}
+                                                    onToggle={() => toggleTemplate(t.id)}
+                                                    onEdit={setEditingTemplate}
+                                                    onDelete={handleDeleteTemplate}
+                                                    layoutId={`template-${t.id}`}
+                                                />
+                                            ))}
+                                        </AnimatePresence>
+                                    </div>
+                                    <div className="h-px bg-border my-2" />
+                                </div>
+                            )}
+
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">All Templates</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 pb-20">
+                                {sortedTemplates.map(t => {
+                                    const isSelected = selectedTemplateIds.includes(t.id);
+                                    return (
+                                        <TemplateItem
+                                            key={t.id}
+                                            template={t}
+                                            isSelected={isSelected}
+                                            onToggle={() => toggleTemplate(t.id)}
+                                            onEdit={setEditingTemplate}
+                                            onDelete={handleDeleteTemplate}
+                                        />
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
@@ -282,7 +355,10 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 </div>
 
                 {/* Right: Generations Grid - SCROLLABLE */}
-                <div className="lg:col-span-8 h-full overflow-y-auto space-y-6 pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+                <div className={cn(
+                    "lg:col-span-8 h-full overflow-y-auto space-y-6 pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']",
+                    activeMobileTab === 'results' ? 'block' : 'hidden lg:block'
+                )}>
                     <div className="flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur z-10 py-2">
                         <h2 className="text-lg font-semibold flex items-center gap-2">
                             <Sparkles className="w-5 h-5 text-primary" />
@@ -299,13 +375,19 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                                 id: g.id,
                                 url: g.imageUrl,
                                 templateId: g.templateId || 'custom',
-                                originalImage: g.promptUsed || 'Custom Generation'
+                                originalImage: g.promptUsed || 'Custom Generation',
+                                prompt: g.promptUsed || customPrompt || 'Custom Generation'
                             }))}
                             isGenerating={generationStatus === 'generating'}
                         />
                     </div>
                 </div>
             </div>
+            <TemplateDialog
+                open={!!editingTemplate}
+                onOpenChange={(open) => !open && setEditingTemplate(null)}
+                template={editingTemplate || undefined}
+            />
         </div>
     );
 }

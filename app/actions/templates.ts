@@ -7,37 +7,85 @@ import { z } from 'zod';
 const CreateTemplateSchema = z.object({
     name: z.string().min(1, 'Name is required'),
     prompt: z.string().min(10, 'Prompt must be at least 10 characters'),
+    description: z.string().optional(),
+    thumbnailUrl: z.string().optional(),
     category: z.string().default('custom'),
 });
 
 export async function getTemplates() {
     return await prisma.template.findMany({
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
+        include: {
+            generations: {
+                take: 1,
+                orderBy: { createdAt: 'desc' },
+                select: { imageUrl: true }
+            }
+        }
     });
 }
 
 export async function createTemplate(formData: FormData) {
-    const rawData = {
-        name: formData.get('name'),
-        prompt: formData.get('prompt'),
-        category: formData.get('category') || 'custom',
-    };
+    try {
+        const rawData = {
+            name: formData.get('name'),
+            prompt: formData.get('prompt'),
+            description: formData.get('description'),
+            thumbnailUrl: formData.get('thumbnailUrl'),
+            category: formData.get('category') || 'custom',
+        };
 
-    const validatedData = CreateTemplateSchema.parse(rawData);
+        const validatedData = CreateTemplateSchema.parse(rawData);
 
-    await prisma.template.create({
-        data: validatedData,
-    });
+        const template = await prisma.template.create({
+            data: validatedData,
+        });
 
-    revalidatePath('/templates');
-    revalidatePath('/');
+        revalidatePath('/', 'layout');
+
+        return { success: true, template };
+    } catch (error) {
+        console.error("Failed to create template:", error);
+        return { success: false, error: "Failed to create template" };
+    }
+}
+
+export async function updateTemplate(id: string, formData: FormData) {
+    try {
+        const rawData = {
+            name: formData.get('name'),
+            prompt: formData.get('prompt'),
+            description: formData.get('description'),
+            thumbnailUrl: formData.get('thumbnailUrl'),
+            category: formData.get('category') || 'custom',
+        };
+
+        const validatedData = CreateTemplateSchema.parse(rawData);
+
+        const template = await prisma.template.update({
+            where: { id },
+            data: validatedData,
+        });
+
+        revalidatePath('/', 'layout');
+
+        return { success: true, template };
+    } catch (error) {
+        console.error("Failed to update template:", error);
+        return { success: false, error: "Failed to update template" };
+    }
 }
 
 export async function deleteTemplate(id: string) {
-    await prisma.template.delete({
-        where: { id },
-    });
+    try {
+        await prisma.template.delete({
+            where: { id },
+        });
 
-    revalidatePath('/templates');
-    revalidatePath('/');
+        revalidatePath('/', 'layout');
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to delete template:", error);
+        return { success: false, error: "Failed to delete template" };
+    }
 }

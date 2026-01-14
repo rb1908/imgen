@@ -23,6 +23,7 @@ model Template {
   name        String
   prompt      String
   description String?
+  thumbnailUrl String?
   category    String   @default("custom")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

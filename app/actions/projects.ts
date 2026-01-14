@@ -54,3 +54,17 @@ export async function deleteProject(id: string) {
     await prisma.project.delete({ where: { id } });
     revalidatePath('/');
 }
+
+export async function updateProject(id: string, name: string) {
+    if (!name || name.trim().length === 0) {
+        throw new Error("Name cannot be empty");
+    }
+
+    const project = await prisma.project.update({
+        where: { id },
+        data: { name: name.trim() }
+    });
+
+    revalidatePath('/');
+    return project;
+}

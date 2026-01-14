@@ -11,4 +11,5 @@ export interface GeneratedImage {
     url: string;
     templateId: string;
     originalImage: string;
+    prompt?: string;
 }

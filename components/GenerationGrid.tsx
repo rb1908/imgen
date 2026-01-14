@@ -3,9 +3,10 @@
 import { useState } from 'react';
 
 import { GeneratedImage } from '@/app/types';
-import { Loader2, Download, Maximize2 } from 'lucide-react';
+import { Loader2, Download, Maximize2, Plus } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { TemplateDialog } from './TemplateDialog';
 
 interface GenerationGridProps {
     images: GeneratedImage[];
@@ -14,6 +15,7 @@ interface GenerationGridProps {
 
 export function GenerationGrid({ images, isGenerating }: GenerationGridProps) {
     const [expandedImage, setExpandedImage] = useState<GeneratedImage | null>(null);
+    const [imageToSave, setImageToSave] = useState<GeneratedImage | null>(null);
 
     const handleDownload = async (imageUrl: string, id: string) => {
         try {
@@ -71,6 +73,15 @@ export function GenerationGrid({ images, isGenerating }: GenerationGridProps) {
                                     size="icon"
                                     variant="secondary"
                                     className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
+                                    onClick={() => setImageToSave(img)}
+                                    title="Save as Template"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                    size="icon"
+                                    variant="secondary"
+                                    className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
                                     onClick={() => setExpandedImage(img)}
                                 >
                                     <Maximize2 className="w-4 h-4" />
@@ -117,6 +128,14 @@ export function GenerationGrid({ images, isGenerating }: GenerationGridProps) {
                     </div>
                 </div>
             )}
+
+            {/* Save Template Dialog */}
+            <TemplateDialog
+                open={!!imageToSave}
+                onOpenChange={(open) => !open && setImageToSave(null)}
+                prompt={imageToSave?.prompt || ''}
+                thumbnailUrl={imageToSave?.url}
+            />
         </>
     );
 }
