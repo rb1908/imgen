@@ -153,10 +153,10 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
 
     return (
         <div className="max-w-6xl mx-auto space-y-8 py-10 px-4 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-primary/10">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">ImageForge Projects</h1>
-                    <p className="text-muted-foreground mt-2">Manage your creative workspaces. Each upload is a new project.</p>
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight">ImageForge Projects</h1>
+                    <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">Manage your creative workspaces.</p>
                 </div>
                 <div className="flex items-center gap-4">
                     {/* View Toggle */}
@@ -180,7 +180,8 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                     <div className="relative">
                         <Button size="lg" className="gap-2 shadow-lg hover:shadow-primary/20 transition-all" disabled={isUploading}>
                             {isUploading ? <Plus className="animate-spin" /> : <Plus />}
-                            {isUploading ? "Creating..." : "New Project"}
+                            <span className="hidden md:inline">{isUploading ? "Creating..." : "New Project"}</span>
+                            <span className="md:hidden">{isUploading ? "..." : "New"}</span>
                         </Button>
                         <input
                             type="file"

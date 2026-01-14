@@ -58,7 +58,7 @@ export function GenerationGrid({ images, isGenerating }: GenerationGridProps) {
 
     return (
         <>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-20 md:pb-0">
                 {images.map((img) => (
                     <div key={img.id} className="group relative aspect-square rounded-xl overflow-hidden bg-secondary">
                         <Image

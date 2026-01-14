@@ -17,7 +17,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
     return (
         <div
             className={cn(
-                "border-r border-border h-screen flex flex-col bg-card fixed left-0 top-0 transition-[width] duration-300 ease-in-out z-20",
+                "border-r border-border h-screen bg-card fixed left-0 top-0 transition-[width] duration-300 ease-in-out z-20 hidden md:flex flex-col",
                 isCollapsed ? "w-20" : "w-64"
             )}
         >
