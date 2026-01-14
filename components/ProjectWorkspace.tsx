@@ -22,6 +22,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
+import { TemplateItem } from './TemplateItem';
+import { TemplateDialog } from './TemplateDialog';
+import { deleteTemplate } from '@/app/actions/templates';
 // ... other imports ...
 
 // ... inside ProjectWorkspace component function ...
