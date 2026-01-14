@@ -125,7 +125,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
             await Promise.all(promises);
 
             const content = await zip.generateAsync({ type: "blob" });
-            saveAs(content, `${project.name.replace(/\s+/g, '-').toLowerCase()}-generations.zip`);
+            saveAs(content, `${(project.name || 'project').replace(/\s+/g, '-').toLowerCase()}-generations.zip`);
 
             setIsSelectionMode(false);
             setSelectedGenerationIds([]);
