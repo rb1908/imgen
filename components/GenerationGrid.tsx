@@ -1,17 +1,10 @@
-"use client";
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { GeneratedImage } from '@/app/types';
 import { Loader2, Download, Maximize2, Plus } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { TemplateDialog } from './TemplateDialog';
-
-// Removed corrupted lines
-
-// ... imports
-import { useEffect, useState } from 'react';
 
 export interface GenerationGridProps {
     images: (GeneratedImage & { createdAt?: Date; referenceName?: string })[];
