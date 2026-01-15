@@ -87,7 +87,7 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
             {/* Main Layout */}
             <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                 {/* Visual Canvas (65% Desktop, Top Mobile) */}
-                <div className="flex-1 md:flex-[1.8] h-[50vh] md:h-full relative order-1">
+                <div className="flex-1 md:flex-none md:w-[65%] h-[50vh] md:h-full relative order-1">
                     <VisualCanvas
                         activeImage={activeImage}
                         onActiveImageChange={setActiveImage}
@@ -101,7 +101,7 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
                 </div>
 
                 {/* Listing Editor (35% Desktop, Bottom Mobile) */}
-                <div className="flex-1 md:flex-1 h-full border-l overflow-hidden bg-card order-2">
+                <div className="flex-1 md:flex-none md:w-[35%] h-full border-l overflow-hidden bg-card order-2 z-20 shadow-md">
                     <ListingEditor
                         product={product}
                     />
