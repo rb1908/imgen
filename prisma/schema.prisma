@@ -43,4 +43,8 @@ model Generation {
   template      Template? @relation(fields: [templateId], references: [id], onDelete: SetNull)
   
   createdAt     DateTime @default(now())
+
+  @@index([projectId])
+  @@index([templateId])
+  @@index([createdAt])
 }

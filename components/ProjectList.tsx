@@ -22,7 +22,10 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 interface ProjectListProps {
-    initialProjects: (Project & { generations: Generation[] })[];
+    initialProjects: (Project & {
+        generations: { imageUrl: string, createdAt: Date }[];
+        _count: { generations: number };
+    })[];
 }
 
 export function ProjectList({ initialProjects }: ProjectListProps) {
@@ -33,7 +36,8 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
     // Renaming State
-    const [renamingProject, setRenamingProject] = useState<Project & { generations: Generation[] } | null>(null);
+    // Renaming State
+    const [renamingProject, setRenamingProject] = useState<Project & { generations: { imageUrl: string, createdAt: Date }[], _count: { generations: number } } | null>(null);
     const [newName, setNewName] = useState("");
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,7 +136,7 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
         }
     };
 
-    const startRenaming = (project: Project & { generations: Generation[] }, e: React.MouseEvent) => {
+    const startRenaming = (project: Project & { generations: { imageUrl: string, createdAt: Date }[], _count: { generations: number } }, e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
         setRenamingProject(project);
@@ -238,9 +242,9 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                                                     className="object-cover"
                                                 />
                                                 <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
-                                                {project.generations.length > 1 && (
+                                                {project._count.generations > 1 && (
                                                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white font-bold text-lg">
-                                                        +{project.generations.length - 1}
+                                                        +{project._count.generations - 1}
                                                     </div>
                                                 )}
                                             </div>
@@ -251,7 +255,7 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                                         <div className="min-w-0 flex-1">
                                             <h3 className="font-semibold line-clamp-1 text-sm md:text-base">{project.name}</h3>
                                             <p className="text-[10px] md:text-xs text-muted-foreground truncate">
-                                                {project.generations.length} images
+                                                {project._count.generations} images
                                             </p>
                                         </div>
 
@@ -325,7 +329,7 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
 
                                             {/* Stats */}
                                             <td className="p-2 px-4 text-right font-medium tabular-nums text-muted-foreground">
-                                                {project.generations.length}
+                                                {project._count.generations}
                                             </td>
 
                                             {/* Actions */}

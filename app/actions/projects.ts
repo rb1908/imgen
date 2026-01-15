@@ -33,7 +33,19 @@ export async function getProjects() {
     try {
         return await prisma.project.findMany({
             orderBy: { createdAt: 'desc' },
-            include: { generations: true }
+            include: {
+                generations: {
+                    take: 1,
+                    orderBy: { createdAt: 'desc' },
+                    select: {
+                        imageUrl: true,
+                        createdAt: true
+                    }
+                },
+                _count: {
+                    select: { generations: true }
+                }
+            }
         });
     } catch (error) {
         console.error("Failed to fetch projects:", error);
