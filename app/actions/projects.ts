@@ -86,7 +86,10 @@ export async function getProjects() {
                 generations: {
                     take: 1,
                     orderBy: { createdAt: 'desc' },
-                    select: { imageUrl: true }
+                    select: {
+                        imageUrl: true,
+                        createdAt: true
+                    }
                 }
             }
         });
