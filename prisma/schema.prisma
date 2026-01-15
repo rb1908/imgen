@@ -48,3 +48,19 @@ model Generation {
   @@index([templateId])
   @@index([createdAt])
 }
+
+model EtsyIntegration {
+  id            String   @id @default(uuid())
+  accessToken   String
+  refreshToken  String
+  tokenType     String   @default("Bearer")
+  expiresIn     Int
+  expiresAt     DateTime
+  etsyUserId    String   // Numeric ID from Etsy
+  shopId        String?  // Optional, if valid shop
+  
+  pkceVerifier  String?  // Temporary storage during auth if needed, but cookie is better.
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

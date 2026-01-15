@@ -1,15 +1,72 @@
-import { Construction } from 'lucide-react';
+import { getEtsyStatus, disconnectEtsy } from '@/app/actions/etsy';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CheckCircle2, ShoppingBag, Loader2, XCircle } from 'lucide-react';
+import Link from 'next/link';
 
-export default function SettingsPage() {
+export default async function SettingsPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+    const etsyStatus = await getEtsyStatus();
+    const isConnected = etsyStatus.connected && !etsyStatus.isExpired;
+    const isExpired = etsyStatus.connected && etsyStatus.isExpired;
+
     return (
-        <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] text-center space-y-4">
-            <div className="p-4 bg-muted rounded-full">
-                <Construction className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <h1 className="text-2xl font-bold">Settings</h1>
-            <p className="text-muted-foreground max-w-sm">
-                Global configuration and account preferences will live here soon.
-            </p>
+        <div className="max-w-4xl mx-auto p-8 space-y-8">
+            <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+
+            {/* Integrations Section */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Integrations</CardTitle>
+                    <CardDescription>Connect your accounts to publish directly.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between p-4 border rounded-xl bg-card">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-[#F1641E] rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                                E
+                            </div>
+                            <div>
+                                <h3 className="font-semibold flex items-center gap-2">
+                                    Etsy
+                                    {isConnected && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Connected</span>}
+                                    {isExpired && <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">Session Expired</span>}
+                                </h3>
+                                <p className="text-sm text-muted-foreground">
+                                    {isConnected 
+                                        ? `Connected as User ID: ${etsyStatus.userId}` 
+                                        : "Connect your Etsy shop to publish listings directly."}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div>
+                            {isConnected || isExpired ? (
+                                <form action={disconnectEtsy}>
+                                    <Button variant="outline" className="text-destructive hover:text-destructive">Disconnect</Button>
+                                </form>
+                            ) : (
+                                <Button asChild className="bg-[#F1641E] hover:bg-[#D55F21] text-white">
+                                    <Link href="/api/etsy/auth">Connect Etsy</Link>
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Error/Success Messages from Redirect */}
+            {searchParams?.error && (
+                <div className="p-4 bg-destructive/10 text-destructive rounded-lg flex items-center gap-2">
+                    <XCircle className="w-5 h-5" />
+                    <p>Connection failed: {searchParams.error}</p>
+                </div>
+            )}
+            {searchParams?.etsy === 'connected' && (
+                <div className="p-4 bg-green-100 text-green-700 rounded-lg flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5" />
+                    <p>Successfully connected to Etsy!</p>
+                </div>
+            )}
         </div>
     );
 }
