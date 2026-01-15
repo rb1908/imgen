@@ -1,7 +1,7 @@
 // Force Vercel Rebuild - Timestamp: verify_upload_fix
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Project, Generation } from '@prisma/client';
 import { createProject, deleteProject, updateProject, getSignedUploadUrl, getPublicUrl } from '@/app/actions/projects';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,25 @@ interface ProjectListProps {
 
 export function ProjectList({ initialProjects }: ProjectListProps) {
     const [projects, setProjects] = useState(initialProjects);
+
+    useEffect(() => {
+        setProjects(initialProjects);
+    }, [initialProjects]);
+
+    // Sync state with props when router.refresh() updates data
+    useState(() => {
+        // This is not useEffect, waiting for tool
+    });
+    // actually, replace_file_content needs the full block.
+    // I will use useEffect. import is needed. 
+    // Wait, useState is already imported. I need useEffect.
+
+    // I will check imports first. line 4 has { useState }. I need to change it to { useState, useEffect }.
+    // I'll do this in two steps or one big step if I can view imports.
+    // I have viewed imports. Line 4 is `import { useState } from 'react';`.
+
+    // Step 1: Fix imports & Add useEffect.
+
     const [isUploading, setIsUploading] = useState(false);
     const router = useRouter();
 
