@@ -154,3 +154,34 @@ export async function setProjectDefaultProduct(id: string, productId: string | n
         return { success: false, error: "Failed to link product" };
     }
 }
+
+export async function getOrCreateProjectForProduct(product: { id: string; title: string; images: string[] }) {
+    try {
+        // 1. Try to find existing project linked to this product
+        const existing = await prisma.project.findFirst({
+            where: { defaultProductId: product.id },
+            include: { generations: { orderBy: { createdAt: 'desc' } } }
+        });
+
+        if (existing) return existing;
+
+        // 2. Create new project if none exists
+        // Use first product image or a placeholder
+        const flowImageUrl = product.images[0] || "https://placehold.co/600x400?text=No+Image";
+
+        const newProject = await prisma.project.create({
+            data: {
+                name: product.title,
+                originalImageUrl: flowImageUrl,
+                defaultProductId: product.id,
+                description: `Workspace for ${product.title}`
+            },
+            include: { generations: { orderBy: { createdAt: 'desc' } } }
+        });
+
+        return newProject;
+    } catch (e) {
+        console.error("Failed to get/create project for product:", e);
+        throw e;
+    }
+}

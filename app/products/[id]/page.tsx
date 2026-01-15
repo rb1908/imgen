@@ -1,12 +1,12 @@
 import { prisma } from '@/lib/db';
-import { ProductDetailForm } from '@/components/ProductDetailForm';
+import { ProductWorkspace } from '@/components/ProductWorkspace';
 import { notFound } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
+import { getOrCreateProjectForProduct } from '@/app/actions/projects';
 
 export default async function ProductDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
+
+    // 1. Fetch Product
     const product = await prisma.product.findUnique({
         where: { id }
     });
@@ -15,22 +15,19 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
         notFound();
     }
 
+    // 2. Fetch/Create Project
+    const project = await getOrCreateProjectForProduct(product);
+
+    // 3. Fetch Templates
+    const templates = await prisma.template.findMany({
+        orderBy: { updatedAt: 'desc' }
+    });
+
     return (
-        <div className="h-full flex flex-col">
-            <div className="flex-none p-6 border-b flex items-center gap-4">
-                <Link href="/products">
-                    <Button variant="ghost" size="icon">
-                        <ArrowLeft className="w-4 h-4" />
-                    </Button>
-                </Link>
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Edit Product</h1>
-                    <p className="text-muted-foreground text-sm">Update details and sync with Shopify.</p>
-                </div>
-            </div>
-            <div className="flex-1 overflow-y-auto p-6 max-w-5xl mx-auto w-full">
-                <ProductDetailForm product={product} />
-            </div>
-        </div>
+        <ProductWorkspace
+            product={product}
+            project={project}
+            templates={templates}
+        />
     );
 }

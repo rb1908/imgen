@@ -10,7 +10,8 @@ const genAI = new GoogleGenerativeAI(apiKey);
 export async function generateVariations(
     projectId: string,
     mode: 'template' | 'custom',
-    input: string[] | string // templateIds[] OR customPrompt
+    input: string[] | string, // templateIds[] OR customPrompt
+    overrideImageUrl?: string
 ) {
     try {
         // 1. Get Project & Image
@@ -21,7 +22,7 @@ export async function generateVariations(
         if (!project) throw new Error('Project not found');
 
         // 2. Prepare Image Data (Support both Base64 DB strings and Supabase URLs)
-        const dataUrl = project.originalImageUrl;
+        const dataUrl = overrideImageUrl || project.originalImageUrl;
         let base64Data = "";
         let mimeType = "image/png"; // default
 
