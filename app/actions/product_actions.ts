@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
-export async function updateProduct(id: string, data: { title: string; description: string; tags: string; price: string }) {
+export async function updateProduct(id: string, data: { title: string; description: string; tags: string; price: string; images: string[] }) {
     try {
         await prisma.product.update({
             where: { id },
@@ -11,7 +11,8 @@ export async function updateProduct(id: string, data: { title: string; descripti
                 title: data.title,
                 description: data.description,
                 tags: data.tags,
-                price: data.price
+                price: data.price,
+                images: data.images
             }
         });
         revalidatePath('/products');

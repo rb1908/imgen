@@ -178,7 +178,7 @@ export async function getLocalProducts() {
     });
 }
 
-export async function updateShopifyProduct(dbProduct: { id: string; title: string; description?: string; price?: string; tags?: string }) {
+export async function updateShopifyProduct(dbProduct: { id: string; title: string; description?: string; price?: string; tags?: string; images?: string[] }) {
     try {
         const integration = await prisma.shopifyIntegration.findFirst();
         if (!integration) return { success: false, error: "Not connected" };
@@ -194,6 +194,10 @@ export async function updateShopifyProduct(dbProduct: { id: string; title: strin
                 // price: dbProduct.price // Price updating requires variant handling, skipping for MVP to avoid errors
             }
         };
+
+        if (dbProduct.images) {
+            payload.product.images = dbProduct.images.map(url => ({ src: url }));
+        }
 
         const response = await fetch(`https://${shopDomain}/admin/api/2023-10/products/${dbProduct.id}.json`, {
             method: 'PUT',
