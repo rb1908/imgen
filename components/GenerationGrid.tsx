@@ -346,7 +346,7 @@ export function GenerationGrid({
                             if (currentIndex > 0) {
                                 const prev = images[currentIndex - 1];
                                 setExpandedImage({ ...prev, referenceName: prev.referenceName || referenceName });
-                           }...se {
+                            } else {
                                 // Loop to last
                                 const last = images[images.length - 1];
                                 setExpandedImage({ ...last, referenceName: last.referenceName || referenceName });
@@ -366,7 +366,7 @@ export function GenerationGrid({
                             if (currentIndex < images.length - 1) {
                                 const next = images[currentIndex + 1];
                                 setExpandedImage({ ...next, referenceName: next.referenceName || referenceName });
-                           }...se {
+                            } else {
                                 // Loop to first
                                 const first = images[0];
                                 setExpandedImage({ ...first, referenceName: first.referenceName || referenceName });
