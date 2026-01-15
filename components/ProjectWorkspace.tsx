@@ -312,9 +312,14 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                             onClick={() => setIsTemplatePickerOpen(true)}
                         >
                             <Palette className="w-5 h-5" />
-                            {selectedTemplateIds.length > 0 && (
+                            {selectedTemplateIds.length > 0 && mode === 'template' && (
                                 <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground border border-background">
                                     {selectedTemplateIds.length}
+                                </span>
+                            )}
+                            {mode === 'custom' && customPrompt && (
+                                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-[10px] text-white border border-background">
+                                    !
                                 </span>
                             )}
                         </Button>
@@ -326,7 +331,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                                 "pointer-events-auto rounded-full shadow-2xl transition-all duration-300 relative overflow-hidden h-12 bg-primary text-primary-foreground hover:scale-105 active:scale-95",
                                 generationStatus === 'generating' ? "w-48 px-6" : "w-auto min-w-[140px] px-8"
                             )}
-                            disabled={generationStatus === 'generating' || (mode === 'template' && selectedTemplateIds.length === 0) || (mode === 'custom' && !customPrompt)}
+                            disabled={generationStatus === 'generating' || (mode === 'template' && selectedTemplateIds.length === 0) || (mode === 'custom' && !customPrompt.trim())}
                             onClick={handleGenerate}
                         >
                             {generationStatus === 'generating' ? (
@@ -413,6 +418,10 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 onSelectAll={handleSelectAllTemplatesToggle}
                 onEdit={setEditingTemplate}
                 onDelete={handleDeleteTemplate}
+                mode={mode}
+                onModeChange={setMode}
+                customPrompt={customPrompt}
+                onCustomPromptChange={setCustomPrompt}
             />
         </div>
     );
