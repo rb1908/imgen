@@ -25,11 +25,9 @@ export async function getEtsyStatus() {
 
 export async function disconnectEtsy() {
     try {
-        await prisma.etsyIntegration.deleteMany(); // Delete all (single tenant)
+        await prisma.etsyIntegration.deleteMany();
         revalidatePath('/settings');
-        return { success: true };
     } catch (e) {
         console.error("Failed to disconnect Etsy:", e);
-        return { success: false };
     }
 }
