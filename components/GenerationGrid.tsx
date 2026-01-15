@@ -82,7 +82,7 @@ export function GenerationGrid({
     const getDownloadFilename = (id: string, prompt?: string, refName?: string) => {
         const cleanRefName = (refName || referenceName).replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
         const cleanPrompt = (prompt || 'generated').slice(0, 50).replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
-        return `${cleanRefName}_${cleanPrompt}_${id.slice(0, 4)}.png`;
+        return cleanRefName + '_' + cleanPrompt + '_' + id.slice(0, 4) + '.png';
     };
 
     const handleDownload = async (imageUrl: string, id: string, prompt?: string, refName?: string) => {
@@ -168,16 +168,16 @@ export function GenerationGrid({
                 {images.map((img) => {
                     const isSelected = selectedIds.includes(img.id);
                     const refName = img.referenceName || referenceName;
-                    const filenameDisplay = `${refName}_${ (img.prompt || 'generated').slice(0, 20)}...`;
+                    const filenameDisplay = refName + '_' + (img.prompt || 'generated').slice(0, 20) + '...';
 
                     return (
                         <div key={img.id} className="group flex flex-col gap-1">
                             <div
-                                className={`relative aspect-square rounded-xl overflow-hidden bg-secondary cursor-pointer transition-all ${isSelected ? 'ring-4 ring-primary ring-inset' : ''}...
+                                className={`relative aspect - square rounded - xl overflow - hidden bg - secondary cursor - pointer transition - all ${ isSelected ? 'ring-4 ring-primary ring-inset' : '' } `}
                                 onClick={() => {
                                     if (selectionMode && onToggle) {
                                         onToggle(img.id);
-                                   }...se {
+                                    } else {
                                         setExpandedImage({ ...img, referenceName: refName });
                                     }
                                 }}
@@ -186,12 +186,12 @@ export function GenerationGrid({
                                     src={img.url}
                                     alt="Generated"
                                     fill
-                                    className={`object-cover transition-transform duration-500 ${!selectionMode && 'group-hover:scale-110'}...isSelected ? 'scale-95' : ''}...
+                                    className={`object - cover transition - transform duration - 500 ${ !selectionMode && 'group-hover:scale-110' } ${ isSelected ? 'scale-95' : '' } `}
                                 />
 
                                 {/* Selection Checkbox Overlay */}
                                 {selectionMode && (
-                                    <div className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center z-20 ${isSelected ? 'bg-primary border-primary' : 'bg-black/40 border-white/60'}...>
+                                    <div className={`absolute top - 2 right - 2 w - 6 h - 6 rounded - full border - 2 flex items - center justify - center z - 20 ${ isSelected ? 'bg-primary border-primary' : 'bg-black/40 border-white/60' } `}>
                                         {isSelected && <div className="w-2.5 h-2.5 bg-white rounded-full" />}
                                     </div>
                                 )}
@@ -214,12 +214,12 @@ export function GenerationGrid({
                                                     className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
                                                     onClick={async (e) => {
                                                         e.stopPropagation();
-                                                        const { addProductImage}...await import('@/app/actions/product_actions');
-                                                        const { toast}...await import('sonner');
+                                                        const { addProductImage } = await import('@/app/actions/product_actions');
+                                                        const { toast } = await import('sonner');
                                                         const res = await addProductImage(defaultProductId, img.url);
                                                         if (res.success) {
                                                             toast.success("Added to product listing");
-                                                       }...se {
+                                                        } else {
                                                             toast.error("Failed to add to listing");
                                                         }
                                                     }}
@@ -264,7 +264,6 @@ export function GenerationGrid({
                                             </Button>
                                         </div>
                                     </div>
-                                    </div>
                                 )}
                                 
                                 {/* Mobile Actions Menu (Visible on touch/click) */}
@@ -280,12 +279,12 @@ export function GenerationGrid({
                                                 {defaultProductId && (
                                                     <DropdownMenuItem onClick={async (e) => {
                                                         e.stopPropagation();
-                                                        const { addProductImage}...await import('@/app/actions/product_actions');
-                                                        const { toast}...await import('sonner');
+                                                        const { addProductImage } = await import('@/app/actions/product_actions');
+                                                        const { toast } = await import('sonner');
                                                         const res = await addProductImage(defaultProductId, img.url);
                                                         if (res.success) {
                                                             toast.success("Added to product listing");
-                                                       }...se {
+                                                        } else {
                                                             toast.error("Failed to add to listing");
                                                         }
                                                     }}>
@@ -331,8 +330,9 @@ export function GenerationGrid({
                 })}
             </div>
 
-            {/* Expand Modal */}
-            {expandedImage && (
+    {/* Expand Modal */ }
+{
+    expandedImage && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={() => setExpandedImage(null)}>
 
                     {/* Navigation Buttons - Desktop (Fixed on sides) */}
@@ -441,16 +441,17 @@ export function GenerationGrid({
                             </Button>
                         </div>
                     </div>
-                </div>
-            )}
+                </div >
+            )
+}
 
-            {/* Save Template Dialog */}
-            <TemplateDialog
-                open={!!imageToSave}
-                onOpenChange={(open) => !open && setImageToSave(null)}
-                prompt={imageToSave?.prompt || ''}
-                thumbnailUrl={imageToSave?.url}
-            />
+{/* Save Template Dialog */ }
+<TemplateDialog
+    open={!!imageToSave}
+    onOpenChange={(open) => !open && setImageToSave(null)}
+    prompt={imageToSave?.prompt || ''}
+    thumbnailUrl={imageToSave?.url}
+/>
         </>
     );
 }
