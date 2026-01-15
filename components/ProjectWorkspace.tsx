@@ -297,28 +297,8 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
 
                     {/* Template List: HIDDEN on Mobile (uses Drawer instead), Grid on Desktop */}
-                    <div className="hidden lg:block space-y-4 px-4">
-                        {/* Desktop Grid Logic (Unchanged) */}
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">All Templates</span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 pb-20">
-                            {sortedTemplates.map(t => {
-                                const isSelected = selectedTemplateIds.includes(t.id);
-                                return (
-                                    <TemplateItem
-                                        key={t.id}
-                                        template={t}
-                                        isSelected={isSelected}
-                                        onToggle={() => toggleTemplate(t.id)}
-                                        onEdit={setEditingTemplate}
-                                        onDelete={handleDeleteTemplate}
-                                        variant="grid"
-                                    />
-                                );
-                            })}
-                        </div>
-                    </div>
+                    {/* Template List: HIDDEN everywhere now (using Palette Drawer) */}
+                    {/* <div className="hidden lg:block space-y-4 px-4"> ... </div> */}
 
 
                     {/* Mobile: Generations appened vertically */}
