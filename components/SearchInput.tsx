@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { SearchIcon } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useDebounce } from "@/hooks/use-debounce"; // We need to check if this exists or use logic inline
 
 export function SearchInput({ placeholder = "Search..." }: { placeholder?: string }) {
     const router = useRouter();
