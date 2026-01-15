@@ -196,66 +196,67 @@ export function GenerationGrid({
                                 )}
 
                                 {/* Standard Hover Actions - Hidden in Selection Mode */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
-                                    <div className="flex gap-2 justify-end">
-                                        {defaultProductId && (
+                                {!selectionMode && (
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+                                        <div className="flex gap-2 justify-end">
+                                            {defaultProductId && (
+                                                <Button
+                                                    size="icon"
+                                                    variant="secondary"
+                                                    className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
+                                                    onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        const { addProductImage } = await import('@/app/actions/product_actions');
+                                                        const { toast } = await import('sonner');
+                                                        const res = await addProductImage(defaultProductId, img.url);
+                                                        if (res.success) {
+                                                            toast.success("Added to product listing");
+                                                        } else {
+                                                            toast.error("Failed to add to listing");
+                                                        }
+                                                    }}
+                                                    title="Add to Default Product"
+                                                >
+                                                    <ShoppingBag className="w-4 h-4" />
+                                                </Button>
+                                            )}
                                             <Button
                                                 size="icon"
                                                 variant="secondary"
                                                 className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
-                                                onClick={async (e) => {
+                                                onClick={(e) => {
                                                     e.stopPropagation();
-                                                    const { addProductImage } = await import('@/app/actions/product_actions');
-                                                    const { toast } = await import('sonner');
-                                                    const res = await addProductImage(defaultProductId, img.url);
-                                                    if (res.success) {
-                                                        toast.success("Added to product listing");
-                                                    } else {
-                                                        toast.error("Failed to add to listing");
-                                                    }
+                                                    setImageToSave(img);
                                                 }}
-                                                title="Add to Default Product"
+                                                title="Save as Template"
                                             >
-                                                <ShoppingBag className="w-4 h-4" />
+                                                <Plus className="w-4 h-4" />
                                             </Button>
-                                        )}
-                                        <Button
-                                            size="icon"
-                                            variant="secondary"
-                                            className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setImageToSave(img);
-                                            }}
-                                            title="Save as Template"
-                                        >
-                                            <Plus className="w-4 h-4" />
-                                        </Button>
-                                        <Button
-                                            size="icon"
-                                            variant="secondary"
-                                            className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setExpandedImage({ ...img, referenceName: refName });
-                                            }}
-                                        >
-                                            <Maximize2 className="w-4 h-4" />
-                                        </Button>
-                                        <Button
-                                            size="icon"
-                                            variant="secondary"
-                                            className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleDownload(img.url, img.id, img.prompt, refName);
-                                            }}
-                                        >
-                                            <Download className="w-4 h-4" />
-                                        </Button>
+                                            <Button
+                                                size="icon"
+                                                variant="secondary"
+                                                className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setExpandedImage({ ...img, referenceName: refName });
+                                                }}
+                                            >
+                                                <Maximize2 className="w-4 h-4" />
+                                            </Button>
+                                            <Button
+                                                size="icon"
+                                                variant="secondary"
+                                                className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDownload(img.url, img.id, img.prompt, refName);
+                                                }}
+                                            >
+                                                <Download className="w-4 h-4" />
+                                            </Button>
+                                        </div>
                                     </div>
-                                </div>
-                        )}
+                                )}
                             </div>
 
                             {/* Subtle Filename Display */}
