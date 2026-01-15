@@ -177,3 +177,42 @@ export async function getLocalProducts() {
         orderBy: { updatedAt: 'desc' }
     });
 }
+
+export async function updateShopifyProduct(dbProduct: { id: string; title: string; description?: string; price?: string; tags?: string }) {
+    try {
+        const integration = await prisma.shopifyIntegration.findFirst();
+        if (!integration) return { success: false, error: "Not connected" };
+        const { shopDomain, accessToken } = integration;
+
+        // Construct Shopify payload
+        const payload: any = {
+            product: {
+                id: Number(dbProduct.id),
+                title: dbProduct.title,
+                body_html: dbProduct.description,
+                tags: dbProduct.tags,
+                // price: dbProduct.price // Price updating requires variant handling, skipping for MVP to avoid errors
+            }
+        };
+
+        const response = await fetch(`https://${shopDomain}/admin/api/2023-10/products/${dbProduct.id}.json`, {
+            method: 'PUT',
+            headers: {
+                'X-Shopify-Access-Token': accessToken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const err = await response.text();
+            throw new Error(`Shopify Update Failed: ${err}`);
+        }
+
+        return { success: true };
+
+    } catch (e) {
+        console.error("Shopify Push Failed:", e);
+        return { success: false, error: "Push failed" };
+    }
+}
