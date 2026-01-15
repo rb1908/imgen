@@ -27,6 +27,9 @@ import { Template } from '@prisma/client';
 import { TemplateItem } from './TemplateItem';
 import { Palette } from 'lucide-react';
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+
 interface SelectTemplatesDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -36,6 +39,10 @@ interface SelectTemplatesDialogProps {
     onSelectAll: () => void;
     onEdit: (template: Template) => void;
     onDelete: (id: string) => void;
+    mode: 'template' | 'custom';
+    onModeChange: (mode: 'template' | 'custom') => void;
+    customPrompt: string;
+    onCustomPromptChange: (prompt: string) => void;
 }
 
 export function SelectTemplatesDialog({
@@ -46,53 +53,80 @@ export function SelectTemplatesDialog({
     onToggle,
     onSelectAll,
     onEdit,
-    onDelete
+    onDelete,
+    mode,
+    onModeChange,
+    customPrompt,
+    onCustomPromptChange
 }: SelectTemplatesDialogProps) {
     const isDesktop = useMediaQuery("(min-width: 768px)");
     const isAllSelected = templates.length > 0 && selectedIds.length === templates.length;
 
     const Content = (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between px-1">
-                <span className="text-sm text-muted-foreground">
-                    {selectedIds.length} selected
-                </span>
-                <div className="flex items-center space-x-2">
-                    <Checkbox
-                        id="select-all-dialog"
-                        checked={isAllSelected}
-                        onCheckedChange={onSelectAll}
-                    />
-                    <Label htmlFor="select-all-dialog" className="text-xs font-medium cursor-pointer">
-                        Select All
-                    </Label>
+        <Tabs value={mode} onValueChange={(v) => onModeChange(v as 'template' | 'custom')} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="template">Templates</TabsTrigger>
+                <TabsTrigger value="custom">Custom Prompt</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="template" className="space-y-4">
+                <div className="flex items-center justify-between px-1">
+                    <span className="text-sm text-muted-foreground">
+                        {selectedIds.length} selected
+                    </span>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            id="select-all-dialog"
+                            checked={isAllSelected}
+                            onCheckedChange={onSelectAll}
+                        />
+                        <Label htmlFor="select-all-dialog" className="text-xs font-medium cursor-pointer">
+                            Select All
+                        </Label>
+                    </div>
                 </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto px-1">
-                {templates.map(t => (
-                    <TemplateItem
-                        key={t.id}
-                        template={t}
-                        isSelected={selectedIds.includes(t.id)}
-                        onToggle={() => onToggle(t.id)}
-                        onEdit={onEdit}
-                        onDelete={onDelete}
-                        variant="grid"
+                <div className="grid grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto px-1">
+                    {templates.map(t => (
+                        <TemplateItem
+                            key={t.id}
+                            template={t}
+                            isSelected={selectedIds.includes(t.id)}
+                            onToggle={() => onToggle(t.id)}
+                            onEdit={onEdit}
+                            onDelete={onDelete}
+                            variant="grid"
+                        />
+                    ))}
+                </div>
+            </TabsContent>
+
+            <TabsContent value="custom" className="space-y-4">
+                <div className="space-y-2">
+                    <Label>Custom Prompt</Label>
+                    <Textarea
+                        placeholder="Describe the variation you want to generate..."
+                        className="min-h-[150px] resize-none"
+                        value={customPrompt}
+                        onChange={(e) => onCustomPromptChange(e.target.value)}
                     />
-                ))}
-            </div>
-        </div>
+                    <p className="text-xs text-muted-foreground">
+                        Your prompt will be sent to the creative agent along with the reference image.
+                    </p>
+                </div>
+            </TabsContent>
+        </Tabs>
     );
+
+    const title = mode === 'template' ? 'Select Templates' : 'Custom Prompt';
+    const description = mode === 'template' ? 'Choose styles to generate variations for.' : 'Enter a custom prompt for your generation.';
 
     if (isDesktop) {
         return (
             <Dialog open={open} onOpenChange={onOpenChange}>
                 <DialogContent className="sm:max-w-[600px]">
                     <DialogHeader>
-                        <DialogTitle>Select Templates</DialogTitle>
-                        <DialogDescription>
-                            Choose the styles you want to generate variations for.
-                        </DialogDescription>
+                        <DialogTitle>{title}</DialogTitle>
+                        <DialogDescription>{description}</DialogDescription>
                     </DialogHeader>
                     {Content}
                     <DialogFooter>
@@ -110,17 +144,15 @@ export function SelectTemplatesDialog({
             <DrawerContent>
                 <div className="mx-auto w-full max-w-sm">
                     <DrawerHeader>
-                        <DrawerTitle>Select Templates</DrawerTitle>
-                        <DrawerDescription>
-                            Choose the styles you want to generate variations for.
-                        </DrawerDescription>
+                        <DrawerTitle>{title}</DrawerTitle>
+                        <DrawerDescription>{description}</DrawerDescription>
                     </DrawerHeader>
                     <div className="p-4">
                         {Content}
                     </div>
                     <DrawerFooter>
                         <DrawerClose asChild>
-                            <Button>Done ({selectedIds.length})</Button>
+                            <Button>Done</Button>
                         </DrawerClose>
                     </DrawerFooter>
                 </div>
