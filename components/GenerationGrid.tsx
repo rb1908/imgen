@@ -1,12 +1,20 @@
+```
 "use client";
 
 import { useState, useEffect } from 'react';
 
 import { GeneratedImage } from '@/app/types';
-import { Loader2, Download, Maximize2, Plus, ChevronLeft, ChevronRight, X, ShoppingBag } from 'lucide-react';
+import { Loader2, Download, Maximize2, Plus, ChevronLeft, ChevronRight, X, ShoppingBag, MoreHorizontal } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { TemplateDialog } from './TemplateDialog';
+import { PendingCard } from './PendingCard';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export interface GenerationGridProps {
     images: (GeneratedImage & { createdAt?: Date; referenceName?: string })[];
@@ -43,7 +51,7 @@ function PendingCard({ prompt }: { prompt: string }) {
                 <div className="h-1.5 w-full bg-primary/20 rounded-full overflow-hidden">
                     <div
                         className="h-full bg-primary transition-all duration-300 ease-out"
-                        style={{ width: `${progress}%` }}
+                        style={{ width: `${ progress }% ` }}
                     />
                 </div>
                 <p className="text-[10px] text-center text-muted-foreground font-mono">
@@ -74,7 +82,7 @@ export function GenerationGrid({
     const getDownloadFilename = (id: string, prompt?: string, refName?: string) => {
         const cleanRefName = (refName || referenceName).replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
         const cleanPrompt = (prompt || 'generated').slice(0, 50).replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
-        return `${cleanRefName}_${cleanPrompt}_${id.slice(0, 4)}.png`;
+        return `${ cleanRefName }_${ cleanPrompt }_${ id.slice(0, 4) }.png`;
     };
 
     const handleDownload = async (imageUrl: string, id: string, prompt?: string, refName?: string) => {
@@ -160,12 +168,12 @@ export function GenerationGrid({
                 {images.map((img) => {
                     const isSelected = selectedIds.includes(img.id);
                     const refName = img.referenceName || referenceName;
-                    const filenameDisplay = `${refName}_${(img.prompt || 'generated').slice(0, 20)}...`;
+                    const filenameDisplay = `${ refName }_${ (img.prompt || 'generated').slice(0, 20) }...`;
 
                     return (
                         <div key={img.id} className="group flex flex-col gap-1">
                             <div
-                                className={`relative aspect-square rounded-xl overflow-hidden bg-secondary cursor-pointer transition-all ${isSelected ? 'ring-4 ring-primary ring-inset' : ''}`}
+                                className={`relative aspect - square rounded - xl overflow - hidden bg - secondary cursor - pointer transition - all ${ isSelected ? 'ring-4 ring-primary ring-inset' : '' } `}
                                 onClick={() => {
                                     if (selectionMode && onToggle) {
                                         onToggle(img.id);
@@ -178,12 +186,12 @@ export function GenerationGrid({
                                     src={img.url}
                                     alt="Generated"
                                     fill
-                                    className={`object-cover transition-transform duration-500 ${!selectionMode && 'group-hover:scale-110'} ${isSelected ? 'scale-95' : ''}`}
+                                    className={`object - cover transition - transform duration - 500 ${ !selectionMode && 'group-hover:scale-110' } ${ isSelected ? 'scale-95' : '' } `}
                                 />
 
                                 {/* Selection Checkbox Overlay */}
                                 {selectionMode && (
-                                    <div className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center z-20 ${isSelected ? 'bg-primary border-primary' : 'bg-black/40 border-white/60'}`}>
+                                    <div className={`absolute top - 2 right - 2 w - 6 h - 6 rounded - full border - 2 flex items - center justify - center z - 20 ${ isSelected ? 'bg-primary border-primary' : 'bg-black/40 border-white/60' } `}>
                                         {isSelected && <div className="w-2.5 h-2.5 bg-white rounded-full" />}
                                     </div>
                                 )}
@@ -255,6 +263,59 @@ export function GenerationGrid({
                                                 <Download className="w-4 h-4" />
                                             </Button>
                                         </div>
+                                    </div>
+                                    </div>
+                                )}
+                                
+                                {/* Mobile Actions Menu (Visible on touch/click) */}
+                                {!selectionMode && (
+                                    <div className="absolute top-2 right-2 md:hidden">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full bg-black/40 text-white border-none backdrop-blur-md">
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                {defaultProductId && (
+                                                    <DropdownMenuItem onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        const { addProductImage } = await import('@/app/actions/product_actions');
+                                                        const { toast } = await import('sonner');
+                                                        const res = await addProductImage(defaultProductId, img.url);
+                                                        if (res.success) {
+                                                            toast.success("Added to product listing");
+                                                        } else {
+                                                            toast.error("Failed to add to listing");
+                                                        }
+                                                    }}>
+                                                        <ShoppingBag className="mr-2 h-4 w-4" />
+                                                        <span>Add to Product</span>
+                                                    </DropdownMenuItem>
+                                                )}
+                                                <DropdownMenuItem onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setImageToSave(img);
+                                                }}>
+                                                    <Plus className="mr-2 h-4 w-4" />
+                                                    <span>Save as Template</span>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setExpandedImage({ ...img, referenceName: refName });
+                                                }}>
+                                                    <Maximize2 className="mr-2 h-4 w-4" />
+                                                    <span>View</span>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDownload(img.url, img.id, img.prompt, refName);
+                                                }}>
+                                                    <Download className="mr-2 h-4 w-4" />
+                                                    <span>Download</span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </div>
                                 )}
                             </div>
