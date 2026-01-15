@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, Image as ImageIcon, Settings, PlusCircle, Sparkles, ChevronLeft, ChevronRight, Palette } from 'lucide-react';
+import { LayoutDashboard, Image as ImageIcon, Settings, PlusCircle, Sparkles, ChevronLeft, ChevronRight, Palette, ShoppingBag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -9,6 +9,7 @@ const sidebarItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
     { icon: Sparkles, label: 'Generations', href: '/generations' },
     { icon: Palette, label: 'Templates', href: '/templates' },
+    { icon: ShoppingBag, label: 'Shopify Import', href: '/shopify-import' },
     { icon: Settings, label: 'Settings', href: '/settings' },
 ];
 
