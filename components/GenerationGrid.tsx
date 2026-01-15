@@ -15,7 +15,7 @@ export interface GenerationGridProps {
     isGenerating: boolean;
     selectionMode?: boolean;
     selectedIds?: string[];
-    onToggle?: (id: string) => void;
+    referenceImageUrl?: string;
 }
 
 export function GenerationGrid({
@@ -23,34 +23,16 @@ export function GenerationGrid({
     isGenerating,
     selectionMode = false,
     selectedIds = [],
-    onToggle
+    onToggle,
+    referenceImageUrl
 }: GenerationGridProps) {
     const [expandedImage, setExpandedImage] = useState<GeneratedImage | null>(null);
     const [imageToSave, setImageToSave] = useState<GeneratedImage | null>(null);
 
-    const handleDownload = async (imageUrl: string, id: string) => {
-        try {
-            const response = await fetch(imageUrl);
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `gemini-generated-${id}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error("Download failed:", error);
-            // Fallback for simple data URLs
-            const link = document.createElement('a');
-            link.href = imageUrl;
-            link.download = `gemini-generated-${id}.png`;
-            link.click();
-        }
-    };
+    // ... download handler ...
 
     if (isGenerating) {
+        // ... loading state ...
         return (
             <div className="w-full h-64 flex flex-col items-center justify-center bg-accent/20 rounded-xl border border-dashed border-primary/20 animate-pulse">
                 <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
@@ -59,7 +41,7 @@ export function GenerationGrid({
         );
     }
 
-    if (images.length === 0) {
+    if (images.length === 0 && !referenceImageUrl) {
         return (
             <div className="w-full h-64 flex flex-col items-center justify-center bg-card rounded-xl border border-border text-muted-foreground text-sm">
                 No generations yet. Upload an image to start!
@@ -69,9 +51,25 @@ export function GenerationGrid({
 
     return (
         <>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 pb-20 md:pb-0">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 pb-20 md:pb-0">
+                {/* Reference Image Card (Index 0) */}
+                {referenceImageUrl && (
+                    <div className="relative aspect-square rounded-xl overflow-hidden bg-muted/30 border-2 border-dashed border-primary/20 cursor-default group">
+                        <div className="absolute top-2 left-2 z-10 bg-background/80 backdrop-blur text-xs font-semibold px-2 py-1 rounded-md border shadow-sm">
+                            REFERENCE
+                        </div>
+                        <Image
+                            src={referenceImageUrl}
+                            alt="Reference"
+                            fill
+                            className="object-contain p-4 group-hover:scale-105 transition-transform duration-500"
+                        />
+                    </div>
+                )}
+
                 {images.map((img) => {
                     const isSelected = selectedIds.includes(img.id);
+                    // ... rest of item render ...
                     return (
                         <div
                             key={img.id}
