@@ -75,6 +75,11 @@ export async function getProjects() {
                 name: true,
                 originalImageUrl: true,
                 createdAt: true,
+                updatedAt: true,
+                description: true,
+                tags: true,
+                price: true,
+                shopifyId: true,
                 _count: {
                     select: { generations: true }
                 },
