@@ -40,84 +40,110 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
     const [renamingProject, setRenamingProject] = useState<Project & { generations: { imageUrl: string, createdAt: Date }[], _count: { generations: number } } | null>(null);
     const [newName, setNewName] = useState("");
 
+    // Upload State
+    const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+    const [uploadingFiles, setUploadingFiles] = useState<string[]>([]);
+
+    // ...
+
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
 
         setIsUploading(true);
         const fileArray = Array.from(files);
+        setUploadingFiles(fileArray.map(f => f.name));
+        setUploadProgress({}); // Reset
+
         let successCount = 0;
         let failCount = 0;
 
         try {
-            // Initialize Client (Client-side safe)
             const supabase = createClient(
                 process.env.NEXT_PUBLIC_SUPABASE_URL!,
                 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
             );
 
-            // Process uploads in parallel
+            // We can't easily parallelize the logic if we want to track individual progress clearly 
+            // without a more complex reducer, but map+Promise.all works.
+            // We'll update the 'uploadProgress' object keyed by filename.
+
             await Promise.all(fileArray.map(async (file) => {
                 try {
                     const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
+                    const path = fileName; // Root of bucket
 
-                    // SDK Upload
-                    const { data, error } = await supabase.storage
+                    // 1. Get Signed Upload URL
+                    const { data: signData, error: signError } = await supabase.storage
                         .from('images')
-                        .upload(fileName, file, {
-                            cacheControl: '3600',
-                            upsert: false
-                        });
+                        .createSignedUploadUrl(path);
 
-                    if (error) throw error;
+                    if (signError || !signData) throw signError || new Error("No signed URL");
 
-                    // Get Public URL
+                    // 2. Upload with Progress via Axios
+                    // We need to import axios dynamically or use global if imported at top
+                    // I will add import at top in a separate edit, assuming it's there.
+                    // For now, I'll use a dynamic import or assume it's available.
+                    // Let's use standard XHR to avoid massive diff if I forgot to add import line.
+                    // Actually, I'll use axios from the installed package.
+
+                    const axios = (await import('axios')).default;
+
+                    await axios.put(signData.signedUrl, file, {
+                        headers: {
+                            'Content-Type': file.type,
+                            'x-upsert': 'false',
+                        },
+                        onUploadProgress: (progressEvent) => {
+                            if (progressEvent.total) {
+                                const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                                setUploadProgress(prev => ({ ...prev, [file.name]: percent }));
+                            }
+                        }
+                    });
+
+                    // 3. Get Public URL (for DB reference)
                     const { data: { publicUrl } } = supabase.storage
                         .from('images')
-                        .getPublicUrl(fileName);
+                        .getPublicUrl(path);
 
-                    // Save to DB
+                    // 4. Create Project in DB
                     const formData = new FormData();
                     formData.append('imageUrl', publicUrl);
-                    formData.append('name', file.name.split('.')[0]); // Use filename without extension as project name
+                    formData.append('name', file.name.split('.')[0]);
 
                     await createProject(formData);
                     successCount++;
+
+                    // Mark complete in progress (100%)
+                    setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
+
                 } catch (err) {
                     console.error(`Failed to upload ${file.name}:`, err);
                     failCount++;
+                    // Mark as error (-1)
+                    setUploadProgress(prev => ({ ...prev, [file.name]: -1 }));
                 }
             }));
 
             if (successCount > 0) {
-                toast.success(`${successCount} project${successCount > 1 ? 's' : ''} created successfully`);
-                // If it was just one, redirect to it? Or just stay on list?
-                // For bulk, staying on list makes more sense so they can see them all.
-                // But if it was just one, maybe redirect? 
-                // Let's rely on standard list refresh (router.refresh called by createProject revalidatePath).
-                // But createProject uses revalidatePath, so the list should update.
-                // However, I previously had router.push for single upload.
-                // Let's decide: if 1 file, redirect. If >1, stay.
-                if (fileArray.length === 1 && successCount === 1) {
-                    // We need the ID to redirect. 
-                    // Since I'm doing Promise.all, capturing the ID of the single one is tricky without changing the structure.
-                    // I'll stick to staying on the dashboard for now for consistency, or refresh.
-                    router.refresh();
-                } else {
-                    router.refresh();
-                }
+                toast.success(`${successCount} project${successCount > 1 ? 's' : ''} created`);
+                router.refresh();
             }
-
             if (failCount > 0) {
-                toast.error(`Failed to create ${failCount} project${failCount > 1 ? 's' : ''}`);
+                toast.error(`${failCount} failed`);
             }
 
         } catch (error: any) {
             console.error(error);
             toast.error("Batch upload encountered errors");
         } finally {
-            setIsUploading(false);
-            // Reset input
+            // Delay clearing so user sees 100%
+            setTimeout(() => {
+                setIsUploading(false);
+                setUploadingFiles([]);
+                setUploadProgress({});
+            }, 2000);
             e.target.value = '';
         }
     };
@@ -389,6 +415,39 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                     </form>
                 </DialogContent>
             </Dialog>
+            {/* Upload Progress Overlay */}
+            {isUploading && uploadingFiles.length > 0 && (
+                <div className="fixed bottom-4 right-4 z-50 w-80 bg-background rounded-lg shadow-2xl border border-border overflow-hidden animate-in slide-in-from-bottom-5">
+                    <div className="p-3 bg-muted/50 border-b flex justify-between items-center">
+                        <span className="text-sm font-semibold">Uploading {uploadingFiles.length} item{uploadingFiles.length !== 1 ? 's' : ''}</span>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
+                    </div>
+                    <div className="max-h-60 overflow-y-auto p-2 space-y-3">
+                        {uploadingFiles.map(filename => {
+                            const p = uploadProgress[filename] || 0;
+                            const isError = p === -1;
+                            const isComplete = p === 100;
+
+                            return (
+                                <div key={filename} className="space-y-1">
+                                    <div className="flex justify-between text-xs">
+                                        <span className="truncate max-w-[180px] text-muted-foreground">{filename}</span>
+                                        <span className={`font-mono ${isError ? 'text-destructive' : isComplete ? 'text-green-500' : 'text-primary'}`}>
+                                            {isError ? 'Err' : isComplete ? 'Done' : `${p}%`}
+                                        </span>
+                                    </div>
+                                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full transition-all duration-200 ${isError ? 'bg-destructive' : isComplete ? 'bg-green-500' : 'bg-primary'}`}
+                                            style={{ width: `${Math.max(0, p)}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
