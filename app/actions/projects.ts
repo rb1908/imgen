@@ -4,6 +4,43 @@ import { prisma } from '@/lib/db';
 import { Project } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { uploadImageToStorage } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+// Helper for signed URLs
+export async function getSignedUploadUrl(fileName: string, fileType: string) {
+    const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY! // Use Service Role for admin privileges
+    );
+
+    const path = `${Date.now()}-${fileName.replace(/[^a-zA-Z0-9.-]/g, '')}`;
+
+    const { data, error } = await supabase.storage
+        .from('images')
+        .createSignedUploadUrl(path);
+
+    if (error || !data) {
+        console.error("Signed URL Error:", error);
+        throw new Error("Failed to get signed URL");
+    }
+
+    return { signedUrl: data.signedUrl, path, publicUrl: null }; // We can't know public URL until uploaded?
+    // Actually, createSignedUploadUrl returns a tokenized URL for uploading.
+    // For retrieving, we need the public URL.
+    // We can predict the public URL if the bucket is public.
+}
+
+export async function getPublicUrl(path: string) {
+    const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    const { data } = supabase.storage
+        .from('images')
+        .getPublicUrl(path);
+    return data.publicUrl;
+}
+
 
 export async function createProject(formData: FormData): Promise<Project> {
     try {
