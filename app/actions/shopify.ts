@@ -50,7 +50,9 @@ export async function getShopifyProducts() {
             id: String(p.id),
             title: p.title,
             image: p.image?.src || null,
-            price: p.variants?.[0]?.price
+            price: p.variants?.[0]?.price,
+            description: p.body_html?.replace(/<[^>]*>?/gm, '') || '', // Strip HTML for now or keep it? Keeping plain text is safer for simple editor.
+            tags: p.tags
         }));
 
         return { success: true, products };
@@ -61,7 +63,7 @@ export async function getShopifyProducts() {
     }
 }
 
-export async function importFromShopify(products: { id: string; title: string; image: string | null }[]) {
+export async function importFromShopify(products: { id: string; title: string; image: string | null; description?: string; tags?: string; price?: string }[]) {
     try {
         // Create projects for each imported product
         const imported = [];
@@ -73,6 +75,10 @@ export async function importFromShopify(products: { id: string; title: string; i
                 data: {
                     name: p.title,
                     originalImageUrl: p.image,
+                    description: p.description,
+                    tags: p.tags,
+                    price: p.price,
+                    shopifyId: p.id
                 }
             });
 

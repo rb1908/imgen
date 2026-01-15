@@ -68,27 +68,41 @@ export async function createProject(formData: FormData): Promise<Project> {
 
 export async function getProjects() {
     try {
-        return await prisma.project.findMany({
+        const projects = await prisma.project.findMany({
             orderBy: { createdAt: 'desc' },
-            include: {
+            select: {
+                id: true,
+                name: true,
+                originalImageUrl: true,
+                createdAt: true,
+                _count: {
+                    select: { generations: true }
+                },
                 generations: {
                     take: 1,
                     orderBy: { createdAt: 'desc' },
-                    select: {
-                        imageUrl: true,
-                        createdAt: true
-                    }
-                },
-                _count: {
-                    select: { generations: true }
+                    select: { imageUrl: true }
                 }
             }
         });
-    } catch (error) {
-        console.error("Failed to fetch projects:", error);
-        // Returning empty array to prevent 500 crash on connection error,
-        // allowing the UI to render "No Projects" instead of death.
+        return projects;
+    } catch (e) {
+        console.error("Failed to fetch projects:", e);
         return [];
+    }
+}
+
+export async function updateProjectMetadata(id: string, data: { description?: string; tags?: string; price?: string }) {
+    try {
+        await prisma.project.update({
+            where: { id },
+            data
+        });
+        revalidatePath(`/project/${id}`);
+        return { success: true };
+    } catch (e) {
+        console.error("Failed to update project metadata:", e);
+        return { success: false, error: "Update failed" };
     }
 }
 

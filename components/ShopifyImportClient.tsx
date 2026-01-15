@@ -14,6 +14,8 @@ interface ShopifyProduct {
     title: string;
     image: string | null;
     price: string;
+    description?: string;
+    tags?: string;
 }
 
 export function ShopifyImportClient() {

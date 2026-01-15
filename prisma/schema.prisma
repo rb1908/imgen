@@ -11,6 +11,10 @@ datasource db {
 model Project {
   id              String       @id @default(uuid())
   name            String?      @default("Untitled Project")
+  description     String?      // Product description
+  tags            String?      // Comma separated tags
+  price           String?      // Price string
+  shopifyId       String?      // External ID if imported
   originalImageUrl String      // Store the base/original image URL
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt

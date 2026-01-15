@@ -8,7 +8,7 @@ import { GenerationGrid } from '@/components/GenerationGrid';
 import { generateVariations } from '@/app/actions/generate';
 import { deleteGenerations } from '@/app/actions/generations';
 import { toast } from 'sonner';
-import { Loader2, Sparkles, Wand2, ArrowLeft, RefreshCcw, CheckCircle2, ChevronDown, ChevronUp, Palette, X, Trash2, Download, CheckSquare, Square } from 'lucide-react';
+import { Loader2, Sparkles, Wand2, ArrowLeft, RefreshCcw, CheckCircle2, ChevronDown, ChevronUp, Palette, X, Trash2, Download, CheckSquare, Square, Edit3 } from 'lucide-react';
 import {
     Drawer,
     DrawerClose,
@@ -31,6 +31,8 @@ import { SelectTemplatesDialog } from './SelectTemplatesDialog';
 import { deleteTemplate } from '@/app/actions/templates';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { updateProjectMetadata } from '@/app/actions/projects';
+import { MetadataEditor } from './MetadataEditor';
 
 interface ProjectWorkspaceProps {
     project: Project & { generations: Generation[] };
@@ -271,8 +273,31 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         )}
                     </AnimatePresence>
 
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex items-center gap-2">
                         <h1 className="text-lg font-bold tracking-tight truncate">{project.name || 'Untitled Project'}</h1>
+                        <Drawer>
+                            <DrawerTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground">
+                                    <Edit3 className="w-3 h-3" />
+                                </Button>
+                            </DrawerTrigger>
+                            <DrawerContent>
+                                <div className="mx-auto w-full max-w-md p-6 h-[80vh]">
+                                    <DrawerHeader>
+                                        <DrawerTitle>Project Details</DrawerTitle>
+                                        <DrawerDescription>Edit metadata for your listing.</DrawerDescription>
+                                    </DrawerHeader>
+                                    <MetadataEditor
+                                        initialDescription={project.description}
+                                        initialTags={project.tags}
+                                        initialPrice={project.price}
+                                        onSave={async (data) => {
+                                            await updateProjectMetadata(project.id, data);
+                                        }}
+                                    />
+                                </div>
+                            </DrawerContent>
+                        </Drawer>
                     </div>
                 </div>
             </div>
@@ -454,6 +479,34 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 customPrompt={customPrompt}
                 onCustomPromptChange={setCustomPrompt}
             />
+
+            {/* Drawer for Metadata */}
+            <Drawer>
+                <DrawerTrigger asChild>
+                    {/* Hidden trigger managed by state or referenced via Ref if needed, 
+                        but effectively we want a button in the header. 
+                        Let's put the button in the header and wrap the whole thing or use a state-controlled drawer. 
+                        Drawer component control is via `open` prop or Context. 
+                        Let's use a controlled state for the Drawer.
+                     */}
+                    {/* Actually, let's just put the trigger button in the header directly if possible, 
+                        or use a state variable `isMetadataOpen` 
+                     */}
+                    <button className="hidden" id="metadata-trigger" />
+                </DrawerTrigger>
+                <DrawerContent>
+                    <div className="mx-auto w-full max-w-sm p-6">
+                        <MetadataEditor
+                            initialDescription={project.description}
+                            initialTags={project.tags}
+                            initialPrice={project.price}
+                            onSave={async (data) => {
+                                await updateProjectMetadata(project.id, data);
+                            }}
+                        />
+                    </div>
+                </DrawerContent>
+            </Drawer>
         </div>
     );
 }
