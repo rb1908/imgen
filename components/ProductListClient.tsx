@@ -9,13 +9,7 @@ import { syncShopifyProducts } from '@/app/actions/shopify';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
-import {
-    Drawer,
-    DrawerContent,
-    DrawerDescription,
-    DrawerHeader,
-    DrawerTitle,
-} from "@/components/ui/drawer"
+import { useRouter } from 'next/navigation';
 import { ProductDetailForm } from './ProductDetailForm';
 
 
@@ -23,9 +17,9 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
     const [products, setProducts] = useState(initialProducts);
     const [isSyncing, setIsSyncing] = useState(false);
     const [search, setSearch] = useState('');
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const router = useRouter();
 
     const handleSync = async () => {
         setIsSyncing(true);
@@ -90,7 +84,7 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                             <div
                                 key={product.id}
                                 className="group border rounded-lg bg-card hover:shadow-md transition-all cursor-pointer overflow-hidden flex flex-col"
-                                onClick={() => setSelectedProduct(product)}
+                                onClick={() => router.push(`/products/${product.id}`)}
                             >
                                 <div className="aspect-[4/3] relative bg-muted">
                                     {product.images[0] ? (
@@ -140,7 +134,7 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                                     <tr
                                         key={product.id}
                                         className="group hover:bg-muted/50 transition-colors cursor-pointer"
-                                        onClick={() => setSelectedProduct(product)}
+                                        onClick={() => router.push(`/products/${product.id}`)}
                                     >
                                         <td className="p-2 pl-4">
                                             <div className="w-10 h-10 relative rounded-md overflow-hidden bg-muted border">
@@ -166,28 +160,11 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                 )}
 
                 {filtered.length === 0 && (
-                    <div className="col-span-full text-center py-20 text-muted-foreground">
+                    <div className="text-center py-20 text-muted-foreground">
                         No products found. Try syncing!
                     </div>
                 )}
             </div>
-
-            {/* Drawer for Editing */}
-            <Drawer open={!!selectedProduct} onOpenChange={o => !o && setSelectedProduct(null)}>
-                <DrawerContent className="h-[85vh]">
-                    <div className="mx-auto w-full max-w-4xl h-full flex flex-col">
-                        <DrawerHeader>
-                            <DrawerTitle>Edit Product</DrawerTitle>
-                            <DrawerDescription>Update details locally. (Push to Shopify coming soon)</DrawerDescription>
-                        </DrawerHeader>
-                        <div className="flex-1 overflow-y-auto p-6">
-                            {selectedProduct && (
-                                <ProductDetailForm product={selectedProduct} />
-                            )}
-                        </div>
-                    </div>
-                </DrawerContent>
-            </Drawer>
         </div>
     );
 }
