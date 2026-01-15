@@ -51,7 +51,7 @@ function PendingCard({ prompt }: { prompt: string }) {
                 <div className="h-1.5 w-full bg-primary/20 rounded-full overflow-hidden">
                     <div
                         className="h-full bg-primary transition-all duration-300 ease-out"
-                        style={{ width: `${ progress }% ` }}
+                        style={{ width: progress + '%' }}
                     />
                 </div>
                 <p className="text-[10px] text-center text-muted-foreground font-mono">
