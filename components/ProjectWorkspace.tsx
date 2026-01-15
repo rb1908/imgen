@@ -168,6 +168,9 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
         }
     };
 
+    // State for pending generations
+    const [pendingGenerations, setPendingGenerations] = useState<{ id: string; prompt: string }[]>([]);
+
     const handleGenerate = async () => {
         if (mode === 'template' && selectedTemplateIds.length === 0) {
             toast.error("Select at least one template");
@@ -179,44 +182,64 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
         }
 
         setGenerationStatus('generating');
-        const messages = [
-            "Analyzing reference image...",
-            "Consulting creative agent...",
-            "Refining prompts...",
-            "Generating variations...",
-            "Finalizing pixels..."
-        ];
-        setStatusMessage(messages[0]);
 
-        // Cycle messages
-        let msgIndex = 0;
-        const interval = setInterval(() => {
-            msgIndex = (msgIndex + 1) % messages.length;
-            setStatusMessage(messages[msgIndex]);
-        }, 2000);
+        // 1. Identify tasks
+        let tasks: { id: string, type: 'template' | 'custom', value: string, promptDisplay: string }[] = [];
 
+        if (mode === 'template') {
+            tasks = selectedTemplateIds.map(tid => {
+                const t = templates.find(temp => temp.id === tid);
+                return {
+                    id: `pending-${Math.random()}`, // Temporary ID
+                    type: 'template',
+                    value: tid,
+                    promptDisplay: t?.name || 'Template'
+                };
+            });
+        } else {
+            tasks = [{
+                id: `pending-${Math.random()}`,
+                type: 'custom',
+                value: customPrompt,
+                promptDisplay: customPrompt
+            }];
+        }
+
+        // 2. Set Pending State
+        setPendingGenerations(tasks.map(t => ({ id: t.id, prompt: t.promptDisplay })));
+        toast.info(`Started ${tasks.length} generation${tasks.length > 1 ? 's' : ''}...`);
+
+        // 3. Parallel Execution
+        // We trigger all, but independent callbacks update the UI
         try {
-            // Don't await the result blocking the UI interaction, 
-            // but we do want to update the list if the user stays
-            const input = mode === 'template' ? selectedTemplateIds : customPrompt;
-            toast.info("Generation started! You can navigate away, we'll finish in the background.");
+            await Promise.all(tasks.map(async (task) => {
+                try {
+                    // Call API for single item
+                    // Note: generateVariations accepts array or string. passing array of 1 ID or just custom string
+                    const input = task.type === 'template' ? [task.value] : task.value;
 
-            const newGenerations = await generateVariations(project.id, mode, input);
+                    const result = await generateVariations(project.id, mode, input);
 
-            // If component is still mounted, update list
-            setGenerations(prev => [...(newGenerations as Generation[]), ...prev]);
-            toast.success("Generations complete!");
+                    // Success: Remove pending, Add real
+                    setPendingGenerations(prev => prev.filter(p => p.id !== task.id));
+                    setGenerations(prev => [...(result as Generation[]), ...prev]);
+
+                } catch (err) {
+                    console.error("Single generation failed", err);
+                    toast.error(`Failed to generate: ${task.promptDisplay}`);
+                    // Remove pending even on error so it doesn't get stuck
+                    setPendingGenerations(prev => prev.filter(p => p.id !== task.id));
+                }
+            }));
 
             if (mode === 'custom') setCustomPrompt('');
+            toast.success("All generations finished!");
 
-            // Scroll to results or provide feedback
-            toast.info("Scroll down to see results!");
         } catch (e) {
-            console.error(e);
-            toast.error("Generation failed");
+            console.error("Batch error", e);
         } finally {
-            clearInterval(interval);
             setGenerationStatus('idle');
+            setPendingGenerations([]); // Cleanup safety
         }
     };
 
@@ -299,6 +322,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         onToggle={toggleGenerationSelection}
                         referenceImageUrl={project.originalImageUrl}
                         referenceName={project.name || 'project'}
+                        pendingImages={pendingGenerations}
                     />
                 </div>
             </div>

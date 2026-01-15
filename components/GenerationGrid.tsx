@@ -10,9 +10,13 @@ import { TemplateDialog } from './TemplateDialog';
 
 // Removed corrupted lines
 
+// ... imports
+import { useEffect, useState } from 'react';
+
 export interface GenerationGridProps {
     images: (GeneratedImage & { createdAt?: Date; referenceName?: string })[];
-    isGenerating: boolean;
+    isGenerating?: boolean; // Deprecated but kept for compatibility if needed, or ignored
+    pendingImages?: { id: string; prompt: string }[]; // New prop
     selectionMode?: boolean;
     selectedIds?: string[];
     onToggle?: (id: string) => void;
@@ -20,9 +24,47 @@ export interface GenerationGridProps {
     referenceImageUrl?: string;
 }
 
+// Internal Pending Card Component
+function PendingCard({ prompt }: { prompt: string }) {
+    const [progress, setProgress] = useState(0);
+
+    useEffect(() => {
+        // Simulate progress to 90%
+        const interval = setInterval(() => {
+            setProgress(prev => {
+                if (prev >= 90) return prev;
+                // Random increment
+                return prev + Math.random() * 5 + 1;
+            });
+        }, 300);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="relative aspect-square rounded-xl overflow-hidden bg-muted border border-dashed border-primary/30 flex flex-col items-center justify-center p-4 gap-3 animate-pulse">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            <div className="w-full max-w-[80%] space-y-1">
+                <div className="h-1.5 w-full bg-primary/20 rounded-full overflow-hidden">
+                    <div
+                        className="h-full bg-primary transition-all duration-300 ease-out"
+                        style={{ width: `${progress}%` }}
+                    />
+                </div>
+                <p className="text-[10px] text-center text-muted-foreground font-mono">
+                    {Math.round(progress)}%
+                </p>
+            </div>
+            <p className="text-xs text-center text-muted-foreground truncate w-full px-2 opacity-70">
+                {prompt}
+            </p>
+        </div>
+    );
+}
+
 export function GenerationGrid({
     images,
     isGenerating,
+    pendingImages = [], // Default to empty
     selectionMode = false,
     selectedIds = [],
     onToggle,
@@ -53,7 +95,6 @@ export function GenerationGrid({
             window.URL.revokeObjectURL(url);
         } catch (error) {
             console.error("Download failed:", error);
-            // Fallback for simple data URLs
             const link = document.createElement('a');
             link.href = imageUrl;
             link.download = filename;
@@ -61,16 +102,9 @@ export function GenerationGrid({
         }
     };
 
-    if (isGenerating) {
-        return (
-            <div className="w-full h-64 flex flex-col items-center justify-center bg-accent/20 rounded-xl border border-dashed border-primary/20 animate-pulse">
-                <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
-                <p className="text-sm text-muted-foreground animate-bounce">Dreaming up variations...</p>
-            </div>
-        );
-    }
+    // Removed the isGenerating blocking return
 
-    if (images.length === 0 && !referenceImageUrl) {
+    if (images.length === 0 && pendingImages.length === 0 && !referenceImageUrl) {
         return (
             <div className="w-full h-64 flex flex-col items-center justify-center bg-card rounded-xl border border-border text-muted-foreground text-sm">
                 No generations yet. Upload an image to start!
@@ -96,6 +130,14 @@ export function GenerationGrid({
                     </div>
                 )}
 
+                {/* Pending Items - Show First or Last? Usually newest first, so first. */}
+                {pendingImages.map(pending => (
+                    <div key={pending.id} className="flex flex-col gap-1">
+                        <PendingCard prompt={pending.prompt} />
+                    </div>
+                ))}
+
+                {/* Real Images */}
                 {images.map((img) => {
                     const isSelected = selectedIds.includes(img.id);
                     const refName = img.referenceName || referenceName;
@@ -204,6 +246,7 @@ export function GenerationGrid({
                             onClick={() => setExpandedImage(null)}
                         >
                             <span className="sr-only">Close</span>
+                            {/* SVG Content */}
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
                         </Button>
                         <Button
