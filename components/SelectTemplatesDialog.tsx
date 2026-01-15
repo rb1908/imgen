@@ -100,11 +100,61 @@ export function SelectTemplatesDialog({
                 </div>
             </TabsContent>
 
+            import {enhancePrompt} from '@/app/actions/enhance';
+            import {Loader2, Sparkles, Wand2} from 'lucide-react';
+            import {useState} from 'react';
+            import {toast} from 'sonner';
+
+            // ... (existing imports)
+
+            // Inside component ...
+            const [isEnhancing, setIsEnhancing] = useState(false);
+
+    const handleEnhance = async () => {
+        if (!customPrompt || customPrompt.length < 3) {
+                toast.error("Enter a basic prompt first");
+            return;
+        }
+
+            setIsEnhancing(true);
+            try {
+            const {enhancedPrompt, error} = await enhancePrompt(customPrompt);
+            if (error) {
+                toast.error(error);
+            } else {
+                onCustomPromptChange(enhancedPrompt);
+            toast.success("Prompt enhanced!");
+            }
+        } catch (e) {
+                toast.error("Failed to enhance prompt");
+        } finally {
+                setIsEnhancing(false);
+        }
+    };
+
+            // ... (Inside TabsContent value="custom")
             <TabsContent value="custom" className="space-y-4">
                 <div className="space-y-2">
-                    <Label>Custom Prompt</Label>
+                    <div className="flex items-center justify-between">
+                        <Label>Custom Prompt</Label>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 text-xs text-primary gap-1.5 hover:bg-primary/10 hover:text-primary pr-2"
+                            onClick={handleEnhance}
+                            disabled={isEnhancing || !customPrompt}
+                            title="Enhance with AI"
+                        >
+                            {isEnhancing ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                                <Wand2 className="w-3 h-3" />
+                            )}
+                            {isEnhancing ? 'Enhancing...' : 'Enhance Prompt'}
+                        </Button>
+                    </div>
                     <Textarea
-                        placeholder="Describe the variation you want to generate..."
+                        placeholder="Describe the variation you want to generate (e.g., 'Modern rustic living room')..."
                         className="min-h-[150px] resize-none"
                         value={customPrompt}
                         onChange={(e) => onCustomPromptChange(e.target.value)}
