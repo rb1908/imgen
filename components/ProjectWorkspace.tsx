@@ -248,118 +248,20 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 </div>
             </div>
 
-            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-8 px-0 lg:px-4 relative overflow-y-auto lg:overflow-visible">
-                {/* Left: Controls & Original Image - SCROLLABLE on Mobile (Main View) */}
-                <div
-                    ref={leftPanelRef}
-                    onScroll={handleScroll}
-                    className="lg:col-span-4 h-full lg:overflow-y-auto pr-0 lg:pr-2 pb-32 lg:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] space-y-6 lg:space-y-6"
-                >
-                    <div className="px-4 space-y-6">
-                        {/* Original Image Card - Collapsible */}
-                        <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden flex-none">
-                            <button
-                                onClick={() => setIsExpanded(!isExpanded)}
-                                className="w-full p-3 flex items-center justify-between bg-muted/20 hover:bg-muted/30 transition-colors"
-                            >
-                                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                                    <Image
-                                        src={project.originalImageUrl}
-                                        width={20}
-                                        height={20}
-                                        alt="Mini"
-                                        className="rounded-sm"
-                                    />
-                                    Reference Image
-                                </span>
-                                {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                            </button>
-
-                            <AnimatePresence>
-                                {isExpanded && (
-                                    <motion.div
-                                        initial={{ height: 0 }}
-                                        animate={{ height: 'auto' }}
-                                        exit={{ height: 0 }}
-                                        className="overflow-hidden"
-                                    >
-                                        <div className="relative aspect-video w-full bg-muted border-t">
-                                            <Image
-                                                src={project.originalImageUrl}
-                                                alt="Original"
-                                                fill
-                                                className="object-contain"
-                                            />
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-                    </div>
-
-
-                    {/* Template List: HIDDEN on Mobile (uses Drawer instead), Grid on Desktop */}
-                    {/* Template List: HIDDEN everywhere now (using Palette Drawer) */}
-                    {/* <div className="hidden lg:block space-y-4 px-4"> ... </div> */}
-
-
-                    {/* Mobile: Generations appened vertically */}
-                    <div className="block lg:hidden px-4 space-y-4 pt-4 border-t">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-semibold flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-primary" />
-                                Results
-                            </h2>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-muted-foreground">{generations.length}</span>
-                                {generations.length > 0 && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-8 px-2 text-primary"
-                                        onClick={() => {
-                                            if (isSelectionMode) {
-                                                setIsSelectionMode(false);
-                                                setSelectedGenerationIds([]);
-                                            } else {
-                                                setIsSelectionMode(true);
-                                            }
-                                        }}
-                                    >
-                                        {isSelectionMode ? 'Cancel' : 'Select'}
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
-                        <GenerationGrid
-                            images={generations.map(g => ({
-                                id: g.id,
-                                url: g.imageUrl,
-                                templateId: g.templateId || 'custom',
-                                originalImage: g.promptUsed || 'Custom Generation',
-                                prompt: g.promptUsed || customPrompt || 'Custom Generation'
-                            }))}
-                            isGenerating={generationStatus === 'generating'}
-                            selectionMode={isSelectionMode}
-                            selectedIds={selectedGenerationIds}
-                            onToggle={toggleGenerationSelection}
-                        />
-                    </div>
-                </div>
-
-                {/* Right: Generations Grid - Desktop Only (Sidebar style) */}
-                <div className="hidden lg:block lg:col-span-8 h-full overflow-y-auto space-y-6 pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-                    {/* Unchanged Desktop Generation Grid */}
-                    <div className="flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur z-10 py-2">
+            {/* Main Content - Unified Grid */}
+            <div className="flex-1 min-h-0 px-4 pb-32 lg:pb-8 relative overflow-y-auto">
+                {/* Generation Grid (Desktop & Mobile Unified) */}
+                <div className="max-w-[1800px] mx-auto">
+                    <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-semibold flex items-center gap-2">
                             <Sparkles className="w-5 h-5 text-primary" />
-                            Generations
+                            Results
                         </h2>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
                             <span className="text-sm text-muted-foreground">{generations.length} images</span>
                             {generations.length > 0 && (
                                 <Button
-                                    variant="outline"
+                                    variant="ghost"
                                     size="sm"
                                     onClick={() => {
                                         if (isSelectionMode) {
@@ -370,27 +272,27 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                                         }
                                     }}
                                 >
-                                    {isSelectionMode ? 'Cancel Selection' : 'Select Multiple'}
+                                    {isSelectionMode ? 'Cancel' : 'Select Multiple'}
                                 </Button>
                             )}
                         </div>
                     </div>
 
-                    <div className="bg-muted/10 rounded-2xl p-6 border border-dashed min-h-[500px]">
-                        <GenerationGrid
-                            images={generations.map(g => ({
-                                id: g.id,
-                                url: g.imageUrl,
-                                templateId: g.templateId || 'custom',
-                                originalImage: g.promptUsed || 'Custom Generation',
-                                prompt: g.promptUsed || customPrompt || 'Custom Generation'
-                            }))}
-                            isGenerating={generationStatus === 'generating'}
-                            selectionMode={isSelectionMode}
-                            selectedIds={selectedGenerationIds}
-                            onToggle={toggleGenerationSelection}
-                        />
-                    </div>
+                    <GenerationGrid
+                        images={generations.map(g => ({
+                            id: g.id,
+                            url: g.imageUrl,
+                            templateId: g.templateId || 'custom',
+                            originalImage: g.promptUsed || 'Custom Generation',
+                            prompt: g.promptUsed || customPrompt || 'Custom Generation',
+                            createdAt: g.createdAt
+                        }))}
+                        isGenerating={generationStatus === 'generating'}
+                        selectionMode={isSelectionMode}
+                        selectedIds={selectedGenerationIds}
+                        onToggle={toggleGenerationSelection}
+                        referenceImageUrl={project.originalImageUrl}
+                    />
                 </div>
             </div>
 

@@ -15,6 +15,7 @@ export interface GenerationGridProps {
     isGenerating: boolean;
     selectionMode?: boolean;
     selectedIds?: string[];
+    onToggle?: (id: string) => void;
     referenceImageUrl?: string;
 }
 
@@ -29,7 +30,27 @@ export function GenerationGrid({
     const [expandedImage, setExpandedImage] = useState<GeneratedImage | null>(null);
     const [imageToSave, setImageToSave] = useState<GeneratedImage | null>(null);
 
-    // ... download handler ...
+    const handleDownload = async (imageUrl: string, id: string) => {
+        try {
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `gemini-generated-${id}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Download failed:", error);
+            // Fallback for simple data URLs
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = `gemini-generated-${id}.png`;
+            link.click();
+        }
+    };
 
     if (isGenerating) {
         // ... loading state ...
