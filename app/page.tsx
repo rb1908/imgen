@@ -1,10 +1,13 @@
-import { getProjects } from '@/app/actions/projects';
-import { ProjectList } from "@/components/ProjectList";
+import { Suspense } from 'react';
+import { ProjectsContent } from '@/components/ProjectsContent';
+import { DashboardSkeleton } from '@/components/Loaders';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Home() {
-    const projects = await getProjects();
-
-    return <ProjectList initialProjects={projects} />;
+export default function Home() {
+    return (
+        <Suspense fallback={<DashboardSkeleton />}>
+            <ProjectsContent />
+        </Suspense>
+    );
 }

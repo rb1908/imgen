@@ -1,14 +1,13 @@
-import { getProject } from '@/app/actions/projects';
-import { getTemplates } from '@/app/actions/templates';
-import { ProjectWorkspace } from '@/components/ProjectWorkspace';
-import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
+import { ProjectContent } from '@/components/ProjectContent';
+import { ProjectSkeleton } from '@/components/Loaders';
 
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const project = await getProject(id);
-    const templates = await getTemplates();
 
-    if (!project) notFound();
-
-    return <ProjectWorkspace project={project} templates={templates} />;
+    return (
+        <Suspense fallback={<ProjectSkeleton />}>
+            <ProjectContent id={id} />
+        </Suspense>
+    );
 }
