@@ -27,6 +27,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TemplateItem } from './TemplateItem';
 import { TemplateDialog } from './TemplateDialog';
+import { SelectTemplatesDialog } from './SelectTemplatesDialog';
 import { deleteTemplate } from '@/app/actions/templates';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -56,6 +57,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
     // Mobile Layout Tab
     const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+    const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
 
     const toggleTemplate = (id: string) => {
         setSelectedTemplateIds(prev =>
