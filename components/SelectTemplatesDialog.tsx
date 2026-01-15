@@ -30,6 +30,11 @@ import { Palette } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 
+import { enhancePrompt } from '@/app/actions/enhance';
+import { Loader2, Wand2 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
 interface SelectTemplatesDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -61,6 +66,30 @@ export function SelectTemplatesDialog({
 }: SelectTemplatesDialogProps) {
     const isDesktop = useMediaQuery("(min-width: 768px)");
     const isAllSelected = templates.length > 0 && selectedIds.length === templates.length;
+
+    const [isEnhancing, setIsEnhancing] = useState(false);
+
+    const handleEnhance = async () => {
+        if (!customPrompt || customPrompt.length < 3) {
+            toast.error("Enter a basic prompt first");
+            return;
+        }
+
+        setIsEnhancing(true);
+        try {
+            const { enhancedPrompt, error } = await enhancePrompt(customPrompt);
+            if (error) {
+                toast.error(error);
+            } else {
+                onCustomPromptChange(enhancedPrompt);
+                toast.success("Prompt enhanced!");
+            }
+        } catch (e) {
+            toast.error("Failed to enhance prompt");
+        } finally {
+            setIsEnhancing(false);
+        }
+    };
 
     const Content = (
         <Tabs value={mode} onValueChange={(v) => onModeChange(v as 'template' | 'custom')} className="w-full">
