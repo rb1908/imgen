@@ -59,54 +59,50 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
         let failCount = 0;
 
         try {
-            const supabase = createClient(
-                // We can't easily parallelize the logic if we want to track individual progress clearly 
-                // without a more complex reducer, but map+Promise.all works.
-                // We'll update the 'uploadProgress' object keyed by filename.
+            // Process uploads in parallel
+            await Promise.all(fileArray.map(async (file) => {
+                try {
+                    // 1. Get Signed URL from Server (Secure)
+                    const { signedUrl, path } = await getSignedUploadUrl(file.name, file.type);
 
-                await Promise.all(fileArray.map(async (file) => {
-                    try {
-                        // 1. Get Signed URL from Server (Secure)
-                        const { signedUrl, path } = await getSignedUploadUrl(file.name, file.type);
+                    // 2. Upload with Progress via Axios
+                    const axios = (await import('axios')).default;
 
-                        // 2. Upload with Progress via Axios
-                        const axios = (await import('axios')).default;
-
-                        await axios.put(signedUrl, file, {
-                            headers: {
-                                'Content-Type': file.type,
-                                'x-upsert': 'false',
-                                // Note: Supabase sometimes requires strict Content-Type match
-                            },
-                            onUploadProgress: (progressEvent) => {
-                                if (progressEvent.total) {
-                                    const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                                    setUploadProgress(prev => ({ ...prev, [file.name]: percent }));
-                                }
+                    await axios.put(signedUrl, file, {
+                        headers: {
+                            'Content-Type': file.type,
+                            'x-upsert': 'false',
+                            // Note: Supabase sometimes requires strict Content-Type match
+                        },
+                        onUploadProgress: (progressEvent) => {
+                            if (progressEvent.total) {
+                                const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                                setUploadProgress(prev => ({ ...prev, [file.name]: percent }));
                             }
-                        });
+                        }
+                    });
 
-                        // 3. Get Public URL (via server helper or client)
-                        const publicUrl = await getPublicUrl(path);
+                    // 3. Get Public URL (via server helper or client)
+                    const publicUrl = await getPublicUrl(path);
 
-                        // 4. Create Project in DB
-                        const formData = new FormData();
-                        formData.append('imageUrl', publicUrl);
-                        formData.append('name', file.name.split('.')[0]);
+                    // 4. Create Project in DB
+                    const formData = new FormData();
+                    formData.append('imageUrl', publicUrl);
+                    formData.append('name', file.name.split('.')[0]);
 
-                        await createProject(formData);
-                        successCount++;
+                    await createProject(formData);
+                    successCount++;
 
-                        // Mark complete in progress (100%)
-                        setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
+                    // Mark complete in progress (100%)
+                    setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
 
-                    } catch (err) {
-                        console.error(`Failed to upload ${file.name}:`, err);
-                        failCount++;
-                        // Mark as error (-1)
-                        setUploadProgress(prev => ({ ...prev, [file.name]: -1 }));
-                    }
-                }));
+                } catch (err) {
+                    console.error(`Failed to upload ${file.name}:`, err);
+                    failCount++;
+                    // Mark as error (-1)
+                    setUploadProgress(prev => ({ ...prev, [file.name]: -1 }));
+                }
+            }));
 
             if (successCount > 0) {
                 toast.success(`${successCount} project${successCount > 1 ? 's' : ''} created`);
