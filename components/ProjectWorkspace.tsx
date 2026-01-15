@@ -401,62 +401,19 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         exit={{ opacity: 0, y: 20 }}
                         className="fixed bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 w-full justify-center px-4 pointer-events-none"
                     >
-                        {/* 1. Palette Button (Triggers Drawer) */}
-                        <Drawer>
-                            <DrawerTrigger asChild>
-                                <Button
-                                    size="icon"
-                                    className="pointer-events-auto rounded-full shadow-xl bg-background text-foreground border h-12 w-12 hover:bg-accent shrink-0 relative"
-                                >
-                                    <Palette className="w-5 h-5" />
-                                    {selectedTemplateIds.length > 0 && (
-                                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground border border-background">
-                                            {selectedTemplateIds.length}
-                                        </span>
-                                    )}
-                                </Button>
-                            </DrawerTrigger>
-                            <DrawerContent>
-                                <div className="mx-auto w-full max-w-sm">
-                                    <DrawerHeader>
-                                        <DrawerTitle>Select Templates</DrawerTitle>
-                                        <DrawerDescription className="flex items-center justify-between">
-                                            <span>Choose styles to generate</span>
-                                            <div className="flex items-center space-x-2">
-                                                <Checkbox
-                                                    id="select-all"
-                                                    checked={isAllTemplatesSelected}
-                                                    onCheckedChange={handleSelectAllTemplatesToggle}
-                                                />
-                                                <Label htmlFor="select-all" className="text-xs font-medium cursor-pointer">
-                                                    Select All
-                                                </Label>
-                                            </div>
-                                        </DrawerDescription>
-                                    </DrawerHeader>
-                                    <div className="p-4 h-[50vh] overflow-y-auto">
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {sortedTemplates.map(t => (
-                                                <TemplateItem
-                                                    key={t.id}
-                                                    template={t}
-                                                    isSelected={selectedTemplateIds.includes(t.id)}
-                                                    onToggle={() => toggleTemplate(t.id)}
-                                                    onEdit={setEditingTemplate}
-                                                    onDelete={handleDeleteTemplate}
-                                                    variant="grid"
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <DrawerFooter>
-                                        <DrawerClose asChild>
-                                            <Button>Done ({selectedTemplateIds.length})</Button>
-                                        </DrawerClose>
-                                    </DrawerFooter>
-                                </div>
-                            </DrawerContent>
-                        </Drawer>
+                        {/* 1. Palette Button (Triggers Dialog) */}
+                        <Button
+                            size="icon"
+                            className="pointer-events-auto rounded-full shadow-xl bg-background text-foreground border h-12 w-12 hover:bg-accent shrink-0 relative"
+                            onClick={() => setIsTemplatePickerOpen(true)}
+                        >
+                            <Palette className="w-5 h-5" />
+                            {selectedTemplateIds.length > 0 && (
+                                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground border border-background">
+                                    {selectedTemplateIds.length}
+                                </span>
+                            )}
+                        </Button>
 
                         {/* 2. Generate Button */}
                         <Button
@@ -541,6 +498,17 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 open={!!editingTemplate}
                 onOpenChange={(open) => !open && setEditingTemplate(null)}
                 template={editingTemplate || undefined}
+            />
+
+            <SelectTemplatesDialog
+                open={isTemplatePickerOpen}
+                onOpenChange={setIsTemplatePickerOpen}
+                templates={sortedTemplates}
+                selectedIds={selectedTemplateIds}
+                onToggle={toggleTemplate}
+                onSelectAll={handleSelectAllTemplatesToggle}
+                onEdit={setEditingTemplate}
+                onDelete={handleDeleteTemplate}
             />
         </div>
     );
