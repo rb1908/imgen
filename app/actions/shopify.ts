@@ -115,3 +115,65 @@ export async function importFromShopify(products: { id: string; title: string; i
         return { success: false, error: "Import failed" };
     }
 }
+// Product Management Actions
+
+export async function syncShopifyProducts() {
+    try {
+        const integration = await prisma.shopifyIntegration.findFirst();
+        if (!integration) return { success: false, error: "Not connected" };
+        const { shopDomain, accessToken } = integration;
+
+        // Fetch all products
+        const response = await fetch(`https://${shopDomain}/admin/api/2023-10/products.json?limit=250&status=active`, {
+            headers: { 'X-Shopify-Access-Token': accessToken }
+        });
+
+        if (!response.ok) throw new Error(`Shopify API error: ${response.statusText}`);
+
+        const data = await response.json();
+        const products = data.products;
+
+        let syncedCount = 0;
+
+        for (const p of products) {
+            const price = p.variants?.[0]?.price || "0.00";
+            const imageUrls = p.images?.map((img: any) => img.src) || [];
+
+            await prisma.product.upsert({
+                where: { id: String(p.id) },
+                update: {
+                    title: p.title,
+                    description: p.body_html?.replace(/<[^>]*>?/gm, '') || '',
+                    price: price,
+                    images: imageUrls,
+                    tags: p.tags,
+                    status: 'active', // Assuming active since we filtered by status=active
+                    syncedAt: new Date()
+                },
+                create: {
+                    id: String(p.id),
+                    title: p.title,
+                    description: p.body_html?.replace(/<[^>]*>?/gm, '') || '',
+                    price: price,
+                    images: imageUrls,
+                    tags: p.tags,
+                    status: 'active'
+                }
+            });
+            syncedCount++;
+        }
+
+        revalidatePath('/products');
+        return { success: true, count: syncedCount };
+
+    } catch (e) {
+        console.error("Sync failed:", e);
+        return { success: false, error: "Sync failed" };
+    }
+}
+
+export async function getLocalProducts() {
+    return await prisma.product.findMany({
+        orderBy: { updatedAt: 'desc' }
+    });
+}

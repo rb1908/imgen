@@ -9,7 +9,7 @@ const navItems = [
     { icon: LayoutDashboard, label: 'Projects', href: '/' },
     { icon: Sparkles, label: 'Gallery', href: '/generations' },
     { icon: Palette, label: 'Looks', href: '/templates' },
-    { icon: ShoppingBag, label: 'Shopify', href: '/shopify-import' },
+    { icon: ShoppingBag, label: 'Products', href: '/products' },
     { icon: Settings, label: 'Settings', href: '/settings' },
 ];
 

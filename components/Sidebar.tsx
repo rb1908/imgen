@@ -9,7 +9,7 @@ const sidebarItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
     { icon: Sparkles, label: 'Generations', href: '/generations' },
     { icon: Palette, label: 'Templates', href: '/templates' },
-    { icon: ShoppingBag, label: 'Shopify Import', href: '/shopify-import' },
+    { icon: ShoppingBag, label: 'Products', href: '/products' },
     { icon: Settings, label: 'Settings', href: '/settings' },
 ];
 
