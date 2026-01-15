@@ -98,6 +98,8 @@ export function GenerationGrid({
                             onClick={() => {
                                 if (selectionMode && onToggle) {
                                     onToggle(img.id);
+                                } else {
+                                    setExpandedImage(img);
                                 }
                             }}
                         >
