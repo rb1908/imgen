@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 import { GeneratedImage } from '@/app/types';
-import { Loader2, Download, Maximize2, Plus } from 'lucide-react';
+import { Loader2, Download, Maximize2, Plus, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { TemplateDialog } from './TemplateDialog';
@@ -96,6 +96,28 @@ export function GenerationGrid({
             link.click();
         }
     };
+
+    // Keyboard Navigation
+    useEffect(() => {
+        if (!expandedImage) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'ArrowLeft') {
+                const currentIndex = images.findIndex(img => img.id === expandedImage.id);
+                const prev = currentIndex > 0 ? images[currentIndex - 1] : images[images.length - 1];
+                setExpandedImage({ ...prev, referenceName: prev.referenceName || referenceName });
+            } else if (e.key === 'ArrowRight') {
+                const currentIndex = images.findIndex(img => img.id === expandedImage.id);
+                const next = currentIndex < images.length - 1 ? images[currentIndex + 1] : images[0];
+                setExpandedImage({ ...next, referenceName: next.referenceName || referenceName });
+            } else if (e.key === 'Escape') {
+                setExpandedImage(null);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [expandedImage, images, referenceName]);
 
     // Removed the isGenerating blocking return
 
@@ -227,30 +249,113 @@ export function GenerationGrid({
 
             {/* Expand Modal */}
             {expandedImage && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4" onClick={() => setExpandedImage(null)}>
-                    <div className="relative max-w-4xl w-full h-auto max-h-[90vh] aspect-square md:aspect-auto md:h-[80vh] rounded-lg overflow-hidden" onClick={e => e.stopPropagation()}>
-                        <Image
-                            src={expandedImage.url}
-                            alt="Expanded"
-                            fill
-                            className="object-contain"
-                        />
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={() => setExpandedImage(null)}>
+
+                    {/* Navigation Buttons - Desktop (Fixed on sides) */}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="fixed left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 w-12 h-12 rounded-full hidden md:flex transition-all"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            const currentIndex = images.findIndex(img => img.id === expandedImage.id);
+                            if (currentIndex > 0) {
+                                const prev = images[currentIndex - 1];
+                                setExpandedImage({ ...prev, referenceName: prev.referenceName || referenceName });
+                            } else {
+                                // Loop to last
+                                const last = images[images.length - 1];
+                                setExpandedImage({ ...last, referenceName: last.referenceName || referenceName });
+                            }
+                        }}
+                    >
+                        <ChevronLeft className="w-8 h-8" />
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="fixed right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 w-12 h-12 rounded-full hidden md:flex transition-all"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            const currentIndex = images.findIndex(img => img.id === expandedImage.id);
+                            if (currentIndex < images.length - 1) {
+                                const next = images[currentIndex + 1];
+                                setExpandedImage({ ...next, referenceName: next.referenceName || referenceName });
+                            } else {
+                                // Loop to first
+                                const first = images[0];
+                                setExpandedImage({ ...first, referenceName: first.referenceName || referenceName });
+                            }
+                        }}
+                    >
+                        <ChevronRight className="w-8 h-8" />
+                    </Button>
+
+                    <div className="relative max-w-5xl w-full h-full flex flex-col items-center justify-center" onClick={e => e.stopPropagation()}>
+
+                        <div className="relative w-full h-[80vh] md:h-[85vh]">
+                            <Image
+                                key={expandedImage.id} // Re-render on change for animation if needed
+                                src={expandedImage.url}
+                                alt="Expanded"
+                                fill
+                                className="object-contain animate-in zoom-in-95 duration-200"
+                                priority
+                            />
+                        </div>
+
+                        {/* Mobile Navigation (Bottom Bar style or overlay) */}
+                        <div className="flex md:hidden items-center gap-8 mt-4">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-white/70 hover:text-white"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    const currentIndex = images.findIndex(img => img.id === expandedImage.id);
+                                    const prev = currentIndex > 0 ? images[currentIndex - 1] : images[images.length - 1];
+                                    setExpandedImage({ ...prev, referenceName: prev.referenceName || referenceName });
+                                }}
+                            >
+                                <ChevronLeft className="w-8 h-8" />
+                            </Button>
+                            <span className="text-white/50 text-sm">
+                                {images.findIndex(img => img.id === expandedImage.id) + 1} / {images.length}
+                            </span>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-white/70 hover:text-white"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    const currentIndex = images.findIndex(img => img.id === expandedImage.id);
+                                    const next = currentIndex < images.length - 1 ? images[currentIndex + 1] : images[0];
+                                    setExpandedImage({ ...next, referenceName: next.referenceName || referenceName });
+                                }}
+                            >
+                                <ChevronRight className="w-8 h-8" />
+                            </Button>
+                        </div>
+
                         <Button
-                            className="absolute top-4 right-4 rounded-full bg-black/50 hover:bg-black/70 text-white border-none"
+                            className="absolute top-0 right-0 md:top-4 md:right-4 rounded-full bg-black/50 hover:bg-black/70 text-white border-none z-50"
                             size="icon"
                             onClick={() => setExpandedImage(null)}
                         >
                             <span className="sr-only">Close</span>
-                            {/* SVG Content */}
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                            <X className="w-6 h-6" />
                         </Button>
-                        <Button
-                            className="absolute bottom-4 right-4 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
-                            onClick={() => handleDownload(expandedImage.url, expandedImage.id, expandedImage.prompt)}
-                        >
-                            <Download className="w-4 h-4 mr-2" />
-                            Download
-                        </Button>
+
+                        <div className="absolute bottom-4 right-4 hidden md:flex">
+                            <Button
+                                className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
+                                onClick={() => handleDownload(expandedImage.url, expandedImage.id, expandedImage.prompt)}
+                            >
+                                <Download className="w-4 h-4 mr-2" />
+                                Download
+                            </Button>
+                        </div>
                     </div>
                 </div>
             )}
