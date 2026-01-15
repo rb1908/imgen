@@ -1,13 +1,21 @@
 import { getEtsyStatus, disconnectEtsy } from '@/app/actions/etsy';
+import { getShopifyStatus, disconnectShopify } from '@/app/actions/shopify';
+import { ShopifyConnect } from '@/components/ShopifyConnect';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle2, ShoppingBag, Loader2, XCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function SettingsPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
-    const etsyStatus = await getEtsyStatus();
+    const [etsyStatus, shopifyStatus] = await Promise.all([
+        getEtsyStatus(),
+        getShopifyStatus()
+    ]);
+
     const isConnected = etsyStatus.connected && !etsyStatus.isExpired;
     const isExpired = etsyStatus.connected && etsyStatus.isExpired;
+
+    const isShopifyConnected = shopifyStatus.connected;
 
     return (
         <div className="max-w-4xl mx-auto p-8 space-y-8">
@@ -20,6 +28,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: { [
                     <CardDescription>Connect your accounts to publish directly.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                    {/* Etsy Integration */}
                     <div className="flex items-center justify-between p-4 border rounded-xl bg-card">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-[#F1641E] rounded-lg flex items-center justify-center text-white font-bold text-xl">
@@ -32,8 +41,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: { [
                                     {isExpired && <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">Session Expired</span>}
                                 </h3>
                                 <p className="text-sm text-muted-foreground">
-                                    {isConnected 
-                                        ? `Connected as User ID: ${etsyStatus.userId}` 
+                                    {isConnected
+                                        ? `Connected as User ID: ${etsyStatus.userId}`
                                         : "Connect your Etsy shop to publish listings directly."}
                                 </p>
                             </div>
@@ -51,6 +60,36 @@ export default async function SettingsPage({ searchParams }: { searchParams: { [
                             )}
                         </div>
                     </div>
+
+                    {/* Shopify Integration */}
+                    <div className="flex items-center justify-between p-4 border rounded-xl bg-card">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-[#95BF47] rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                                S
+                            </div>
+                            <div>
+                                <h3 className="font-semibold flex items-center gap-2">
+                                    Shopify
+                                    {isShopifyConnected && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Connected</span>}
+                                </h3>
+                                <p className="text-sm text-muted-foreground">
+                                    {isShopifyConnected
+                                        ? `Connected to ${shopifyStatus.shopDomain}`
+                                        : "Connect your Shopify store using OAuth."}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div>
+                            {isShopifyConnected ? (
+                                <form action={disconnectShopify}>
+                                    <Button variant="outline" className="text-destructive hover:text-destructive">Disconnect</Button>
+                                </form>
+                            ) : (
+                                <ShopifyConnect />
+                            )}
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
 
@@ -65,6 +104,12 @@ export default async function SettingsPage({ searchParams }: { searchParams: { [
                 <div className="p-4 bg-green-100 text-green-700 rounded-lg flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5" />
                     <p>Successfully connected to Etsy!</p>
+                </div>
+            )}
+            {searchParams?.shopify === 'connected' && (
+                <div className="p-4 bg-green-100 text-green-700 rounded-lg flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5" />
+                    <p>Successfully connected to Shopify!</p>
                 </div>
             )}
         </div>
