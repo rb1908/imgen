@@ -3,9 +3,18 @@
 import { prisma } from '@/lib/db';
 import { Generation } from '@prisma/client';
 
-export async function getAllGenerations(limit = 100) {
+export async function getAllGenerations(limit = 100, query = '') {
     try {
+        const where: any = {};
+        if (query) {
+            where.OR = [
+                { promptUsed: { contains: query, mode: 'insensitive' } },
+                { project: { name: { contains: query, mode: 'insensitive' } } }
+            ];
+        }
+
         const generations = await prisma.generation.findMany({
+            where,
             orderBy: {
                 createdAt: 'desc',
             },
