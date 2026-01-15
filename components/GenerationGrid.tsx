@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 import { GeneratedImage } from '@/app/types';
-import { Loader2, Download, Maximize2, Plus, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Loader2, Download, Maximize2, Plus, ChevronLeft, ChevronRight, X, ShoppingBag } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { TemplateDialog } from './TemplateDialog';
@@ -17,6 +17,7 @@ export interface GenerationGridProps {
     onToggle?: (id: string) => void;
     referenceName?: string;
     referenceImageUrl?: string;
+    defaultProductId?: string | null;
 }
 
 // Internal Pending Card Component
@@ -64,7 +65,8 @@ export function GenerationGrid({
     selectedIds = [],
     onToggle,
     referenceImageUrl,
-    referenceName = 'project'
+    referenceName = 'project',
+    defaultProductId
 }: GenerationGridProps) {
     const [expandedImage, setExpandedImage] = useState<GeneratedImage & { referenceName?: string } | null>(null);
     const [imageToSave, setImageToSave] = useState<GeneratedImage | null>(null);
@@ -194,46 +196,66 @@ export function GenerationGrid({
                                 )}
 
                                 {/* Standard Hover Actions - Hidden in Selection Mode */}
-                                {!selectionMode && (
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
-                                        <div className="flex gap-2 justify-end">
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+                                    <div className="flex gap-2 justify-end">
+                                        {defaultProductId && (
                                             <Button
                                                 size="icon"
                                                 variant="secondary"
                                                 className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
-                                                onClick={(e) => {
+                                                onClick={async (e) => {
                                                     e.stopPropagation();
-                                                    setImageToSave(img);
+                                                    const { addProductImage } = await import('@/app/actions/product_actions');
+                                                    const { toast } = await import('sonner');
+                                                    const res = await addProductImage(defaultProductId, img.url);
+                                                    if (res.success) {
+                                                        toast.success("Added to product listing");
+                                                    } else {
+                                                        toast.error("Failed to add to listing");
+                                                    }
                                                 }}
-                                                title="Save as Template"
+                                                title="Add to Default Product"
                                             >
-                                                <Plus className="w-4 h-4" />
+                                                <ShoppingBag className="w-4 h-4" />
                                             </Button>
-                                            <Button
-                                                size="icon"
-                                                variant="secondary"
-                                                className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setExpandedImage({ ...img, referenceName: refName });
-                                                }}
-                                            >
-                                                <Maximize2 className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                size="icon"
-                                                variant="secondary"
-                                                className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDownload(img.url, img.id, img.prompt, refName);
-                                                }}
-                                            >
-                                                <Download className="w-4 h-4" />
-                                            </Button>
-                                        </div>
+                                        )}
+                                        <Button
+                                            size="icon"
+                                            variant="secondary"
+                                            className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setImageToSave(img);
+                                            }}
+                                            title="Save as Template"
+                                        >
+                                            <Plus className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            size="icon"
+                                            variant="secondary"
+                                            className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setExpandedImage({ ...img, referenceName: refName });
+                                            }}
+                                        >
+                                            <Maximize2 className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            size="icon"
+                                            variant="secondary"
+                                            className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDownload(img.url, img.id, img.prompt, refName);
+                                            }}
+                                        >
+                                            <Download className="w-4 h-4" />
+                                        </Button>
                                     </div>
-                                )}
+                                </div>
+                        )}
                             </div>
 
                             {/* Subtle Filename Display */}

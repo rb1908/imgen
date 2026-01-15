@@ -139,3 +139,17 @@ export async function updateProject(id: string, name: string) {
     revalidatePath('/');
     return project;
 }
+
+export async function setProjectDefaultProduct(id: string, productId: string | null) {
+    try {
+        await prisma.project.update({
+            where: { id },
+            data: { defaultProductId: productId }
+        });
+        revalidatePath(`/project/${id}`);
+        return { success: true };
+    } catch (e) {
+        console.error("Failed to set default product:", e);
+        return { success: false, error: "Failed to link product" };
+    }
+}

@@ -16,6 +16,7 @@ model Project {
   price           String?      // Price string
   shopifyId       String?      // External ID if imported
   originalImageUrl String      // Store the base/original image URL
+  defaultProductId String?     // Link to a Product (Shopify ID)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 

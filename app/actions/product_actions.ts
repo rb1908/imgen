@@ -22,3 +22,26 @@ export async function updateProduct(id: string, data: { title: string; descripti
         throw new Error("Update failed");
     }
 }
+
+export async function addProductImage(productId: string, imageUrl: string) {
+    try {
+        const product = await prisma.product.findUnique({ where: { id: productId } });
+        if (!product) throw new Error("Product not found");
+
+        const images = product.images || [];
+        // Prevent duplicates
+        if (!images.includes(imageUrl)) {
+            await prisma.product.update({
+                where: { id: productId },
+                data: {
+                    images: [...images, imageUrl] // Append to end
+                }
+            });
+        }
+        revalidatePath('/products');
+        return { success: true };
+    } catch (e) {
+        console.error("Failed to add product image:", e);
+        return { success: false, error: "Failed to add image" };
+    }
+}

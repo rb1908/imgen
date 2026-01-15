@@ -31,6 +31,7 @@ import { SelectTemplatesDialog } from './SelectTemplatesDialog';
 import { deleteTemplate } from '@/app/actions/templates';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { ProductSelector } from './ProductSelector';
 
 interface ProjectWorkspaceProps {
     project: Project & { generations: Generation[] };
@@ -271,8 +272,10 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         )}
                     </AnimatePresence>
 
-                    <div className="min-w-0 flex items-center gap-2">
+                    <div className="min-w-0 flex items-center gap-4">
                         <h1 className="text-lg font-bold tracking-tight truncate">{project.name || 'Untitled Project'}</h1>
+                        <div className="hidden md:block w-px h-6 bg-border mx-2" />
+                        <ProductSelector projectId={project.id} initialDefaultProductId={project.defaultProductId} />
                     </div>
                 </div>
             </div>
@@ -322,6 +325,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         onToggle={toggleGenerationSelection}
                         referenceImageUrl={project.originalImageUrl}
                         referenceName={project.name || 'project'}
+                        defaultProductId={project.defaultProductId}
                         pendingImages={pendingGenerations}
                     />
                 </div>
