@@ -1,6 +1,6 @@
 'use client';
 
-import { LayoutDashboard, Image as ImageIcon, Settings, Sparkles } from 'lucide-react';
+import { LayoutDashboard, Image as ImageIcon, Settings, Sparkles, Palette } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 const navItems = [
     { icon: LayoutDashboard, label: 'Projects', href: '/' },
     { icon: Sparkles, label: 'Gallery', href: '/generations' },
-    { icon: ImageIcon, label: 'Looks', href: '/templates' },
+    { icon: Palette, label: 'Looks', href: '/templates' },
     { icon: Settings, label: 'Settings', href: '/settings' },
 ];
 
