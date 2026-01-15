@@ -45,3 +45,29 @@ export async function addProductImage(productId: string, imageUrl: string) {
         return { success: false, error: "Failed to add image" };
     }
 }
+
+export async function addProductImages(productId: string, imageUrls: string[]) {
+    try {
+        const product = await prisma.product.findUnique({ where: { id: productId } });
+        if (!product) throw new Error("Product not found");
+
+        const currentImages = product.images || [];
+        // Filter out duplicates that already exist
+        const newImages = imageUrls.filter(url => !currentImages.includes(url));
+
+        if (newImages.length > 0) {
+            await prisma.product.update({
+                where: { id: productId },
+                data: {
+                    images: [...currentImages, ...newImages]
+                }
+            });
+        }
+
+        revalidatePath('/products');
+        return { success: true, count: newImages.length };
+    } catch (e) {
+        console.error("Failed to add product images:", e);
+        return { success: false, error: "Failed to add images" };
+    }
+}
