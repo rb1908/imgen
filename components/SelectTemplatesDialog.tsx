@@ -129,39 +129,6 @@ export function SelectTemplatesDialog({
                 </div>
             </TabsContent>
 
-            import {enhancePrompt} from '@/app/actions/enhance';
-            import {Loader2, Sparkles, Wand2} from 'lucide-react';
-            import {useState} from 'react';
-            import {toast} from 'sonner';
-
-            // ... (existing imports)
-
-            // Inside component ...
-            const [isEnhancing, setIsEnhancing] = useState(false);
-
-    const handleEnhance = async () => {
-        if (!customPrompt || customPrompt.length < 3) {
-                toast.error("Enter a basic prompt first");
-            return;
-        }
-
-            setIsEnhancing(true);
-            try {
-            const {enhancedPrompt, error} = await enhancePrompt(customPrompt);
-            if (error) {
-                toast.error(error);
-            } else {
-                onCustomPromptChange(enhancedPrompt);
-            toast.success("Prompt enhanced!");
-            }
-        } catch (e) {
-                toast.error("Failed to enhance prompt");
-        } finally {
-                setIsEnhancing(false);
-        }
-    };
-
-            // ... (Inside TabsContent value="custom")
             <TabsContent value="custom" className="space-y-4">
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
