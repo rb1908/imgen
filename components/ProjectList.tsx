@@ -400,7 +400,7 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
             </Dialog>
             {/* Upload Progress Overlay */}
             {isUploading && uploadingFiles.length > 0 && (
-                <div className="fixed bottom-4 right-4 z-50 w-80 bg-background rounded-lg shadow-2xl border border-border overflow-hidden animate-in slide-in-from-bottom-5">
+                <div className="fixed bottom-20 right-4 md:bottom-4 z-50 w-80 max-w-[calc(100vw-2rem)] bg-background rounded-lg shadow-2xl border border-border overflow-hidden animate-in slide-in-from-bottom-5">
                     <div className="p-3 bg-muted/50 border-b flex justify-between items-center">
                         <span className="text-sm font-semibold">Uploading {uploadingFiles.length} item{uploadingFiles.length !== 1 ? 's' : ''}</span>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
