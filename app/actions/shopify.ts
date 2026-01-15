@@ -184,14 +184,18 @@ export async function updateShopifyProduct(dbProduct: { id: string; title: strin
         if (!integration) return { success: false, error: "Not connected" };
         const { shopDomain, accessToken } = integration;
 
-        // Construct Shopify payload
+        // Check if ID is a UUID (Local Draft) or Numeric (Shopify ID)
+        const isLocalDraft = dbProduct.id.length > 20 && isNaN(Number(dbProduct.id)); // Simple heuristic: UUIDs are long non-numbers
+
+        let method = 'PUT';
+        let url = `https://${shopDomain}/admin/api/2023-10/products/${dbProduct.id}.json`;
+
         const payload: any = {
             product: {
-                id: Number(dbProduct.id),
                 title: dbProduct.title,
                 body_html: dbProduct.description,
                 tags: dbProduct.tags,
-                // price: dbProduct.price // Price updating requires variant handling, skipping for MVP to avoid errors
+                // price: dbProduct.price // Price updating requires variant handling
             }
         };
 
@@ -199,8 +203,16 @@ export async function updateShopifyProduct(dbProduct: { id: string; title: strin
             payload.product.images = dbProduct.images.map(url => ({ src: url }));
         }
 
-        const response = await fetch(`https://${shopDomain}/admin/api/2023-10/products/${dbProduct.id}.json`, {
-            method: 'PUT',
+        if (isLocalDraft) {
+            method = 'POST';
+            url = `https://${shopDomain}/admin/api/2023-10/products.json`;
+            // Remove ID from payload for creation
+        } else {
+            payload.product.id = Number(dbProduct.id);
+        }
+
+        const response = await fetch(url, {
+            method,
             headers: {
                 'X-Shopify-Access-Token': accessToken,
                 'Content-Type': 'application/json'
@@ -210,13 +222,56 @@ export async function updateShopifyProduct(dbProduct: { id: string; title: strin
 
         if (!response.ok) {
             const err = await response.text();
-            throw new Error(`Shopify Update Failed: ${err}`);
+            throw new Error(`Shopify ${method === 'POST' ? 'Create' : 'Update'} Failed: ${err}`);
+        }
+
+        const responseData = await response.json();
+
+        // If we created a new product, we MUST update our local DB to swap the UUID for the real Shopify ID
+        if (isLocalDraft && responseData.product?.id) {
+            const newShopifyId = String(responseData.product.id);
+            const oldUuid = dbProduct.id;
+
+            console.log(`Replacing Local Draft ID ${oldUuid} with Shopify ID ${newShopifyId}`);
+
+            // Transaction to swap IDs safely
+            await prisma.$transaction(async (tx) => {
+                // 1. Find all projects referencing this draft
+                // Note: Prisma doesn't support changing PK directly easily.
+                // We create NEW product, update references, delete OLD product.
+
+                await tx.product.create({
+                    data: {
+                        id: newShopifyId,
+                        title: responseData.product.title,
+                        description: responseData.product.body_html?.replace(/<[^>]*>?/gm, '') || '',
+                        price: dbProduct.price, // Keep local price for now
+                        tags: responseData.product.tags,
+                        images: dbProduct.images || [],
+                        status: 'active',
+                        syncedAt: new Date()
+                    }
+                });
+
+                // 2. Update Projects referencing the old UUID
+                await tx.project.updateMany({
+                    where: { defaultProductId: oldUuid },
+                    data: { defaultProductId: newShopifyId }
+                });
+
+                // 3. Delete the old draft
+                await tx.product.delete({
+                    where: { id: oldUuid }
+                });
+            });
+
+            return { success: true, newId: newShopifyId };
         }
 
         return { success: true };
 
     } catch (e) {
         console.error("Shopify Push Failed:", e);
-        return { success: false, error: "Push failed" };
+        return { success: false, error: e instanceof Error ? e.message : "Push failed" };
     }
 }
