@@ -118,7 +118,13 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                     const response = await fetch(gen.imageUrl);
                     const blob = await response.blob();
                     const ext = gen.imageUrl.split('.').pop()?.split('?')[0] || 'png';
-                    zip.file(`generation-${i + 1}-${gen.id.slice(0, 8)}.${ext}`, blob);
+
+                    // New naming convention: REF_PROMPT_ID.ext
+                    const refName = (project.name || 'project').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+                    const cleanPrompt = (gen.promptUsed || customPrompt || 'generated').slice(0, 50).replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+                    const filename = `${refName}_${cleanPrompt}_${gen.id.slice(0, 4)}.${ext}`;
+
+                    zip.file(filename, blob);
                 } catch (e) {
                     console.error("Failed to download image", gen.id, e);
                 }
@@ -292,7 +298,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         selectedIds={selectedGenerationIds}
                         onToggle={toggleGenerationSelection}
                         referenceImageUrl={project.originalImageUrl}
-                        referenceName={project.name}
+                        referenceName={project.name || 'project'}
                     />
                 </div>
             </div>
