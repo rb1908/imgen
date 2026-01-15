@@ -5,7 +5,7 @@ export async function GenerationsContent() {
     const generations = await getAllGenerations();
 
     return (
-        <div className="bg-muted/10 rounded-2xl p-6 border border-dashed min-h-[500px]">
+        <div className="min-h-[500px]">
             <GenerationGrid
                 images={generations.map(g => ({
                     id: g.id,
