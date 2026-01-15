@@ -17,6 +17,7 @@ export interface GenerationGridProps {
     selectedIds?: string[];
     onToggle?: (id: string) => void;
     referenceName?: string;
+    referenceImageUrl?: string;
 }
 
 export function GenerationGrid({
