@@ -131,7 +131,7 @@ export function TemplateItem({ template, isSelected, onToggle, onEdit, onDelete,
             {/* Content */}
             <div className="p-3 flex flex-col gap-1">
                 <span className="font-medium text-sm truncate">{template.name}</span>
-                <span className="text-xs text-muted-foreground line-clamp-2">{template.prompt}</span>
+                <span className="text-xs text-muted-foreground line-clamp-1">{template.prompt}</span>
             </div>
 
             {/* Actions (Dropdown) */}

@@ -26,11 +26,10 @@ export function TemplateManager({ templates }: TemplateManagerProps) {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-semibold tracking-tight">Prompt Templates</h2>
+            <div className="flex items-center justify-end">
                 <Button onClick={() => setIsCreating(true)} size="sm" className="gap-2">
                     <Plus className="w-4 h-4" />
-                    New Template
+                    New Look
                 </Button>
             </div>
 

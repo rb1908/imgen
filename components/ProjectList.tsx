@@ -158,36 +158,36 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
     };
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8 py-10 px-4 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-primary/10">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto space-y-6 py-8 px-4 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-primary/10">
+            <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight">ImageForge Projects</h1>
-                    <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">Manage your creative workspaces.</p>
+                    <h1 className="text-2xl font-bold tracking-tight">Projects</h1>
+                    <p className="text-muted-foreground text-sm">Your images & product sets</p>
                 </div>
-                <div className="flex items-center gap-4">
-                    {/* View Toggle */}
-                    <div className="flex items-center p-1 bg-muted rounded-lg border">
+
+                <div className="flex items-center gap-3">
+                    {/* View Toggle - kept subtle */}
+                    <div className="flex items-center p-0.5 bg-muted/50 rounded-lg border">
                         <button
                             onClick={() => setViewMode('grid')}
-                            className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                             title="Grid View"
                         >
-                            <LayoutGrid className="w-4 h-4" />
+                            <LayoutGrid className="w-3.5 h-3.5" />
                         </button>
                         <button
                             onClick={() => setViewMode('list')}
-                            className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                             title="List View"
                         >
-                            <List className="w-4 h-4" />
+                            <List className="w-3.5 h-3.5" />
                         </button>
                     </div>
 
                     <div className="relative">
-                        <Button size="lg" className="gap-2 shadow-lg hover:shadow-primary/20 transition-all" disabled={isUploading}>
-                            {isUploading ? <Plus className="animate-spin" /> : <Plus />}
-                            <span className="hidden md:inline">{isUploading ? "Creating..." : "New Project"}</span>
-                            <span className="md:hidden">{isUploading ? "..." : "New"}</span>
+                        <Button size="sm" className="gap-2 shadow-sm" disabled={isUploading}>
+                            {isUploading ? <Plus className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                            <span>{isUploading ? "Creating..." : "New"}</span>
                         </Button>
                         <input
                             type="file"
@@ -229,9 +229,6 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                                         </div>
 
                                         {/* 1st Generation Preview or Placeholder */}
-
-
-                                        {/* 1st Generation Preview or Placeholder */}
                                         {project.generations.length > 0 && (
                                             <div className="relative h-full bg-muted/50 border-l border-white/10">
                                                 <Image
@@ -254,7 +251,7 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                                         <div className="min-w-0 flex-1">
                                             <h3 className="font-semibold line-clamp-1 text-sm md:text-base">{project.name}</h3>
                                             <p className="text-[10px] md:text-xs text-muted-foreground truncate">
-                                                {project.generations.length} generations
+                                                {project.generations.length} images
                                             </p>
                                         </div>
 

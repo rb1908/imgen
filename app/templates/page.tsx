@@ -21,8 +21,8 @@ export default function TemplatesPage() {
             <SimpleBreadcrumb />
             <div className="flex col-span-1 justify-between items-end mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Templates</h1>
-                    <p className="text-muted-foreground mt-2">Manage your style presets and prompts.</p>
+                    <h1 className="text-3xl font-bold tracking-tight">Looks</h1>
+                    <p className="text-muted-foreground mt-2">Saved visual styles</p>
                 </div>
             </div>
 
