@@ -292,6 +292,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         selectedIds={selectedGenerationIds}
                         onToggle={toggleGenerationSelection}
                         referenceImageUrl={project.originalImageUrl}
+                        referenceName={project.name}
                     />
                 </div>
             </div>

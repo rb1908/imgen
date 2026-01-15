@@ -16,7 +16,7 @@ export interface GenerationGridProps {
     selectionMode?: boolean;
     selectedIds?: string[];
     onToggle?: (id: string) => void;
-    referenceImageUrl?: string;
+    referenceName?: string;
 }
 
 export function GenerationGrid({
@@ -25,19 +25,27 @@ export function GenerationGrid({
     selectionMode = false,
     selectedIds = [],
     onToggle,
-    referenceImageUrl
+    referenceImageUrl,
+    referenceName = 'project'
 }: GenerationGridProps) {
     const [expandedImage, setExpandedImage] = useState<GeneratedImage | null>(null);
     const [imageToSave, setImageToSave] = useState<GeneratedImage | null>(null);
 
-    const handleDownload = async (imageUrl: string, id: string) => {
+    const getDownloadFilename = (id: string, prompt?: string) => {
+        const cleanRefName = referenceName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+        const cleanPrompt = (prompt || 'generated').slice(0, 50).replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+        return `${cleanRefName}_${cleanPrompt}_${id.slice(0, 4)}.png`;
+    };
+
+    const handleDownload = async (imageUrl: string, id: string, prompt?: string) => {
+        const filename = getDownloadFilename(id, prompt);
         try {
             const response = await fetch(imageUrl);
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `gemini-generated-${id}.png`;
+            link.download = filename;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -47,13 +55,12 @@ export function GenerationGrid({
             // Fallback for simple data URLs
             const link = document.createElement('a');
             link.href = imageUrl;
-            link.download = `gemini-generated-${id}.png`;
+            link.download = filename;
             link.click();
         }
     };
 
     if (isGenerating) {
-        // ... loading state ...
         return (
             <div className="w-full h-64 flex flex-col items-center justify-center bg-accent/20 rounded-xl border border-dashed border-primary/20 animate-pulse">
                 <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
@@ -90,7 +97,6 @@ export function GenerationGrid({
 
                 {images.map((img) => {
                     const isSelected = selectedIds.includes(img.id);
-                    // ... rest of item render ...
                     return (
                         <div
                             key={img.id}
@@ -157,7 +163,7 @@ export function GenerationGrid({
                                             className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleDownload(img.url, img.id);
+                                                handleDownload(img.url, img.id, img.prompt);
                                             }}
                                         >
                                             <Download className="w-4 h-4" />
@@ -190,7 +196,7 @@ export function GenerationGrid({
                         </Button>
                         <Button
                             className="absolute bottom-4 right-4 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
-                            onClick={() => handleDownload(expandedImage.url, expandedImage.id)}
+                            onClick={() => handleDownload(expandedImage.url, expandedImage.id, expandedImage.prompt)}
                         >
                             <Download className="w-4 h-4 mr-2" />
                             Download
