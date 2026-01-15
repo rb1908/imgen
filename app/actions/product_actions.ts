@@ -87,8 +87,11 @@ export async function addProductImages(productId: string, imageUrls: string[]) {
             });
         }
 
+        // Fetch updated product to return
+        const updatedProduct = await prisma.product.findUnique({ where: { id: productId } });
+
         revalidatePath('/products');
-        return { success: true, count: newImages.length };
+        return { success: true, count: newImages.length, product: updatedProduct };
     } catch (e) {
         console.error("Failed to add product images:", e);
         return { success: false, error: "Failed to add images" };
