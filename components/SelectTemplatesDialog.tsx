@@ -151,7 +151,7 @@ export function SelectTemplatesDialog({
                     </div>
                     <Textarea
                         placeholder="Describe the variation you want to generate (e.g., 'Modern rustic living room')..."
-                        className="min-h-[150px] resize-none"
+                        className="min-h-[150px] resize-none text-base md:text-sm"
                         value={customPrompt}
                         onChange={(e) => onCustomPromptChange(e.target.value)}
                     />
