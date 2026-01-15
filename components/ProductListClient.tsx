@@ -4,19 +4,21 @@ import { useState } from 'react';
 import { Product } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { RefreshCw, Search, Filter, Edit3, Loader2, List, LayoutGrid } from 'lucide-react';
+import { RefreshCw, Search, Filter, Edit3, Loader2, List, LayoutGrid, Plus } from 'lucide-react';
 import { syncShopifyProducts } from '@/app/actions/shopify';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ProductDetailForm } from './ProductDetailForm';
+import { CreateProductDialog } from './CreateProductDialog';
 
 
 export function ProductListClient({ initialProducts }: { initialProducts: Product[] }) {
     const [products, setProducts] = useState(initialProducts);
     const [isSyncing, setIsSyncing] = useState(false);
     const [search, setSearch] = useState('');
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const router = useRouter();
@@ -68,6 +70,11 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                             <List className="w-4 h-4" />
                         </button>
                     </div>
+
+                    <Button variant="secondary" size="sm" onClick={() => setIsCreateOpen(true)} className="mr-2">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create
+                    </Button>
 
                     <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
                         <RefreshCw className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
@@ -165,6 +172,8 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                     </div>
                 )}
             </div>
+
+            <CreateProductDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
         </div>
     );
 }

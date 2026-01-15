@@ -2,6 +2,29 @@
 
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { randomUUID } from 'crypto';
+
+export async function createProduct(data: { title: string; description?: string; price?: string; tags?: string }) {
+    try {
+        const id = randomUUID();
+        const product = await prisma.product.create({
+            data: {
+                id,
+                title: data.title,
+                description: data.description,
+                price: data.price,
+                tags: data.tags,
+                images: [],
+                status: 'draft' // Default to draft for local creation
+            }
+        });
+        revalidatePath('/products');
+        return { success: true, product };
+    } catch (e) {
+        console.error("Failed to create product:", e);
+        return { success: false, error: "Create failed" };
+    }
+}
 
 export async function updateProduct(id: string, data: { title: string; description: string; tags: string; price: string; images: string[] }) {
     try {
