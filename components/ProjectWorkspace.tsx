@@ -385,7 +385,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
-                        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 w-auto max-w-[90vw] bg-foreground text-background rounded-full px-4 py-2 shadow-2xl border border-border/20"
+                        className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 w-auto max-w-[90vw] bg-foreground text-background rounded-full px-4 py-2 shadow-2xl border border-border/20"
                     >
                         <div className="flex items-center gap-2 mr-2 border-r border-background/20 pr-4">
                             <Checkbox
