@@ -79,7 +79,9 @@ export async function getProjects() {
                 description: true,
                 tags: true,
                 price: true,
+                price: true,
                 shopifyId: true,
+                defaultProductId: true,
                 _count: {
                     select: { generations: true }
                 },
