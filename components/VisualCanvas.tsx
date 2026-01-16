@@ -424,6 +424,7 @@ export function VisualCanvas({
                     onSelectAll={() => { }}
                     onEdit={() => { }}
                     onDelete={() => { }}
+                    forceDrawer={true}
                 />
 
             </div>

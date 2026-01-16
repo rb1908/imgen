@@ -44,6 +44,7 @@ export interface SelectTemplatesDialogProps {
     onSelectAll: () => void;
     onEdit: (template: Template) => void;
     onDelete: (id: string) => void;
+    forceDrawer?: boolean;
 }
 
 export function SelectTemplatesDialog({
@@ -54,7 +55,8 @@ export function SelectTemplatesDialog({
     onToggle,
     onSelectAll,
     onEdit,
-    onDelete
+    onDelete,
+    forceDrawer = false
 }: SelectTemplatesDialogProps) {
     const isDesktop = useMediaQuery("(min-width: 768px)");
     const isAllSelected = templates.length > 0 && selectedIds.length === templates.length;
@@ -95,7 +97,7 @@ export function SelectTemplatesDialog({
     const title = 'Select Templates';
     const description = 'Choose styles to generate variations for.';
 
-    if (isDesktop) {
+    if (isDesktop && !forceDrawer) {
         return (
             <Dialog open={open} onOpenChange={onOpenChange}>
                 <DialogContent className="sm:max-w-[600px]">
