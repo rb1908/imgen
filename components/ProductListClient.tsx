@@ -43,7 +43,6 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
     const filtered = products.filter(p => p.title.toLowerCase().includes(search.toLowerCase()));
 
     return (
-    return (
         <PageScaffold>
             <PageHeader title="Products">
                 <div className="flex items-center gap-2">
