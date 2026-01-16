@@ -56,7 +56,7 @@ export function SelectTemplatesDialog({
     onSelectAll,
     onEdit,
     onDelete,
-    forceDrawer = false
+    forceDrawer = true
 }: SelectTemplatesDialogProps) {
     const isDesktop = useMediaQuery("(min-width: 768px)");
     const isAllSelected = templates.length > 0 && selectedIds.length === templates.length;
