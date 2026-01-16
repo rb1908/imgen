@@ -372,15 +372,39 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
             {/* Gemini-Style Floating Prompt Bar */}
             <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 pt-12 bg-gradient-to-t from-background via-background/80 to-transparent z-[100] pointer-events-none md:pl-72">
                 <div className="max-w-3xl mx-auto pointer-events-auto">
-                    <div className="bg-muted/80 backdrop-blur-xl border shadow-2xl rounded-[2rem] p-2 pl-3 flex items-end gap-2 transition-all focus-within:bg-background focus-within:ring-1 focus-within:ring-primary/20">
+                    <div className="bg-zinc-900/95 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-[2rem] p-2 pl-2 flex items-end gap-2 transition-all ring-1 ring-white/5">
 
-
+                        {/* Left Actions */}
+                        <div className="flex items-center gap-1 pb-1">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white shrink-0"
+                                onClick={() => {
+                                    // Future: Add Image or Context
+                                    toast.info("Add context feature coming soon");
+                                }}
+                            >
+                                <Plus className="w-5 h-5" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white shrink-0"
+                                onClick={() => {
+                                    // Open Settings or Mode
+                                    toast.info("Settings coming soon");
+                                }}
+                            >
+                                <Menu className="w-5 h-5" />
+                            </Button>
+                        </div>
 
                         {/* Input Area */}
-                        <div className="flex-1 min-h-[44px] py-3">
+                        <div className="flex-1 min-h-[48px] py-3.5">
                             <textarea
-                                className="w-full bg-transparent border-none outline-none text-base placeholder:text-muted-foreground/70 resize-none max-h-32 py-0 px-1 leading-relaxed"
-                                placeholder={selectedTemplateIds.length > 0 ? "Add context to your template..." : "What do you want to generate?"}
+                                className="w-full bg-transparent border-none outline-none text-[16px] text-zinc-100 placeholder:text-zinc-500 resize-none max-h-32 py-0 px-1 leading-relaxed font-normal"
+                                placeholder={selectedTemplateIds.length > 0 ? "Add context..." : "What do you want to write?"}
                                 rows={1}
                                 value={customPrompt}
                                 onChange={(e) => {
@@ -398,56 +422,43 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         </div>
 
                         {/* Right Actions */}
-                        <div className="flex items-center gap-1 pb-0.5">
-                            {/* Enhance Button (New) */}
-                            {customPrompt.length > 0 && (
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-9 w-9 rounded-full text-indigo-500 hover:bg-indigo-500/10 hover:text-indigo-600 mr-1"
-                                    onClick={async () => {
-                                        if (customPrompt.length < 3) return;
-                                        const loadingId = toast.loading("Enhancing prompt...");
-                                        try {
-                                            const { enhancePrompt } = await import('@/app/actions/enhance');
-                                            const { enhancedPrompt, error } = await enhancePrompt(customPrompt);
-                                            if (error) {
-                                                toast.error(error, { id: loadingId });
-                                            } else {
-                                                setCustomPrompt(enhancedPrompt);
-                                                toast.success("Prompt enhanced!", { id: loadingId });
-                                            }
-                                        } catch (e) {
-                                            toast.error("Failed to enhance", { id: loadingId });
-                                        }
-                                    }}
-                                    title="Enhance with AI"
-                                >
-                                    <Wand2 className="w-4 h-4" />
-                                </Button>
-                            )}
-                            {/* Templates Pill */}
+                        <div className="flex items-center gap-2 pb-1 pr-1">
+                            {/* Templates Pill (Fast Style) */}
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setIsTemplatePickerOpen(true)}
                                 className={cn(
-                                    "h-9 rounded-full bg-transparent border border-transparent hover:border-border text-xs font-medium px-3 transition-all mr-1",
-                                    selectedTemplateIds.length > 0 ? "text-primary bg-primary/10 border-primary/20" : "text-muted-foreground"
+                                    "h-9 rounded-full bg-zinc-800 border-0 hover:bg-zinc-700 text-xs font-medium px-4 transition-all text-zinc-300",
+                                    selectedTemplateIds.length > 0 && "text-indigo-300 bg-indigo-500/20 hover:bg-indigo-500/30"
                                 )}
                             >
-                                <Palette className="w-3.5 h-3.5 mr-1.5" />
-                                {selectedTemplateIds.length > 0 ? `${selectedTemplateIds.length}` : 'Templates'}
+                                {selectedTemplateIds.length > 0 ? `${selectedTemplateIds.length} Selected` : 'Fast'}
                             </Button>
 
-                            {/* Generate Button */}
+                            {/* Mic (Visual) */}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white shrink-0"
+                                title="Dictate"
+                            >
+                                <div className="w-5 h-5 flex items-center justify-center">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+                                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+                                    </svg>
+                                </div>
+                            </Button>
+
+                            {/* Generate Button (Sparkles) */}
                             <Button
                                 size="icon"
                                 className={cn(
                                     "h-10 w-10 rounded-full flex-shrink-0 transition-all shadow-sm",
                                     generationStatus === 'generating'
-                                        ? "bg-muted text-muted-foreground"
-                                        : "bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 active:scale-95"
+                                        ? "bg-zinc-800 text-zinc-500 animate-pulse"
+                                        : "bg-white text-black hover:bg-zinc-200 hover:scale-105 active:scale-95"
                                 )}
                                 onClick={handleGenerate}
                                 disabled={generationStatus === 'generating' || (!selectedTemplateIds.length && !customPrompt.trim())}
@@ -455,7 +466,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                                 {generationStatus === 'generating' ? (
                                     <Loader2 className="w-5 h-5 animate-spin" />
                                 ) : (
-                                    <Sparkles className="w-5 h-5" />
+                                    <Sparkles className="w-5 h-5 fill-black" />
                                 )}
                             </Button>
                         </div>
