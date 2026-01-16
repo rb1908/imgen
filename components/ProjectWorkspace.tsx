@@ -363,76 +363,76 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                     />
                 </div >
             </div >
-        </div >
 
-        {/* Chat-like Bottom Bar */ }
-        < div className = "flex-none p-4 bg-background/80 backdrop-blur-lg border-t z-50 pb-8 md:pb-4" >
-            <div className="max-w-3xl mx-auto flex items-end gap-2">
-                {/* Template Picker Toggle */}
-                <Button
-                    variant={selectedTemplateIds.length > 0 ? "default" : "outline"}
-                    size="icon"
-                    className="h-12 w-12 rounded-full flex-shrink-0"
-                    onClick={() => setIsTemplatePickerOpen(true)}
-                    title="Select Template"
-                >
-                    {selectedTemplateIds.length > 0 ? (
-                        <div className="font-bold text-xs">{selectedTemplateIds.length}</div>
-                    ) : (
-                        <Palette className="w-5 h-5" />
-                    )}
-                </Button>
 
-                {/* Chat Input Container */}
-                <div className="flex-1 bg-muted/50 rounded-3xl border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary px-4 py-3 flex items-center gap-2 min-h-[48px]">
-                    <textarea
-                        className="bg-transparent border-none outline-none text-sm w-full placeholder:text-muted-foreground resize-none max-h-32 py-1"
-                        placeholder={mode === 'template' ? "Add context to your template..." : "Describe what you want to generate..."}
-                        rows={1}
-                        value={customPrompt}
-                        onChange={(e) => {
-                            setCustomPrompt(e.target.value);
-                            // Auto-grow could be added here
-                            e.target.style.height = 'auto';
-                            e.target.style.height = e.target.scrollHeight + 'px';
-                        }}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleGenerate();
-                            }
-                        }}
-                    />
+            {/* Chat-like Bottom Bar */}
+            < div className="flex-none p-4 bg-background/80 backdrop-blur-lg border-t z-50 pb-8 md:pb-4" >
+                <div className="max-w-3xl mx-auto flex items-end gap-2">
+                    {/* Template Picker Toggle */}
+                    <Button
+                        variant={selectedTemplateIds.length > 0 ? "default" : "outline"}
+                        size="icon"
+                        className="h-12 w-12 rounded-full flex-shrink-0"
+                        onClick={() => setIsTemplatePickerOpen(true)}
+                        title="Select Template"
+                    >
+                        {selectedTemplateIds.length > 0 ? (
+                            <div className="font-bold text-xs">{selectedTemplateIds.length}</div>
+                        ) : (
+                            <Palette className="w-5 h-5" />
+                        )}
+                    </Button>
 
-                    {/* Enhance Button */}
+                    {/* Chat Input Container */}
+                    <div className="flex-1 bg-muted/50 rounded-3xl border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary px-4 py-3 flex items-center gap-2 min-h-[48px]">
+                        <textarea
+                            className="bg-transparent border-none outline-none text-sm w-full placeholder:text-muted-foreground resize-none max-h-32 py-1"
+                            placeholder={mode === 'template' ? "Add context to your template..." : "Describe what you want to generate..."}
+                            rows={1}
+                            value={customPrompt}
+                            onChange={(e) => {
+                                setCustomPrompt(e.target.value);
+                                // Auto-grow could be added here
+                                e.target.style.height = 'auto';
+                                e.target.style.height = e.target.scrollHeight + 'px';
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleGenerate();
+                                }
+                            }}
+                        />
+
+                        {/* Enhance Button */}
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-indigo-400 hover:text-indigo-500 hover:bg-indigo-500/10 rounded-full"
+                            title="Enhance Prompt"
+                            onClick={() => toast.info("Enhance coming soon!")}
+                        >
+                            <Sparkles className="w-4 h-4" />
+                        </Button>
+                    </div>
+
+                    {/* Send / Generate Button */}
                     <Button
                         size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 text-indigo-400 hover:text-indigo-500 hover:bg-indigo-500/10 rounded-full"
-                        title="Enhance Prompt"
-                        onClick={() => toast.info("Enhance coming soon!")}
+                        className={cn(
+                            "h-12 w-12 rounded-full flex-shrink-0 transition-all",
+                            generationStatus === 'generating' ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground hover:scale-105 active:scale-95 shadow-md"
+                        )}
+                        onClick={handleGenerate}
+                        disabled={generationStatus === 'generating' || (mode === 'template' && selectedTemplateIds.length === 0 && !customPrompt) || (mode === 'custom' && !customPrompt.trim())}
                     >
-                        <Sparkles className="w-4 h-4" />
+                        {generationStatus === 'generating' ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                            <Wand2 className="w-5 h-5" />
+                        )}
                     </Button>
                 </div>
-
-                {/* Send / Generate Button */}
-                <Button
-                    size="icon"
-                    className={cn(
-                        "h-12 w-12 rounded-full flex-shrink-0 transition-all",
-                        generationStatus === 'generating' ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground hover:scale-105 active:scale-95 shadow-md"
-                    )}
-                    onClick={handleGenerate}
-                    disabled={generationStatus === 'generating' || (mode === 'template' && selectedTemplateIds.length === 0 && !customPrompt) || (mode === 'custom' && !customPrompt.trim())}
-                >
-                    {generationStatus === 'generating' ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                        <Wand2 className="w-5 h-5" />
-                    )}
-                </Button>
-            </div>
             </div >
 
 
