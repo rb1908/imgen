@@ -477,10 +477,6 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 onSelectAll={handleSelectAllTemplatesToggle}
                 onEdit={setEditingTemplate}
                 onDelete={handleDeleteTemplate}
-                mode={mode}
-                onModeChange={setMode}
-                customPrompt={customPrompt}
-                onCustomPromptChange={setCustomPrompt}
             />
 
 
