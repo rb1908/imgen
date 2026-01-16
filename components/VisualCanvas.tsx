@@ -125,7 +125,7 @@ export function VisualCanvas({
 
     if (viewMode === 'gallery') {
         return (
-            <div className="relative h-full w-full bg-zinc-950 flex flex-col p-6 text-white overflow-y-auto">
+            <div className="relative h-full w-full bg-white flex flex-col p-6 text-zinc-900 overflow-y-auto">
                 <div className="max-w-7xl mx-auto w-full space-y-12">
 
                     {/* Header */}
@@ -134,7 +134,7 @@ export function VisualCanvas({
                         <div />
 
                         {isSelectingReference && (
-                            <div className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-4 py-2 rounded-full animate-pulse font-medium text-sm flex items-center gap-2">
+                            <div className="bg-indigo-50 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-full animate-pulse font-medium text-sm flex items-center gap-2">
                                 <Sparkles className="w-4 h-4" />
                                 Select a reference image
                             </div>
@@ -143,7 +143,7 @@ export function VisualCanvas({
 
                     {/* Section 1: Listing Images */}
                     <section className="space-y-4">
-                        <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+                        <div className="flex items-center gap-2 pb-2 border-b border-zinc-100">
                             <h3 className="text-lg font-semibold flex items-center gap-2">
                                 <ImageIcon className="w-4 h-4 text-zinc-400" />
                                 Listing Images
@@ -153,9 +153,9 @@ export function VisualCanvas({
 
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                             {/* "Add New" Action Card */}
-                            <div className="aspect-[3/4] rounded-xl border border-dashed border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 transition-colors flex flex-col items-center justify-center p-4 gap-4 group relative overflow-hidden">
+                            <div className="aspect-[3/4] rounded-xl border border-dashed border-zinc-200 bg-zinc-50 hover:bg-zinc-100 transition-colors flex flex-col items-center justify-center p-4 gap-4 group relative overflow-hidden">
                                 <div className="text-center space-y-1 z-10">
-                                    <span className="font-medium text-zinc-200">Add New</span>
+                                    <span className="font-medium text-zinc-700">Add New</span>
                                     <p className="text-xs text-zinc-500">Upload or Generate</p>
                                 </div>
 
@@ -165,7 +165,7 @@ export function VisualCanvas({
                                         <Button
                                             variant="outline"
                                             size="icon"
-                                            className="h-10 w-10 rounded-full bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:text-white transition-all"
+                                            className="h-10 w-10 rounded-full bg-white border-zinc-200 hover:bg-zinc-50 hover:text-black transition-all shadow-sm"
                                             onClick={() => {
                                                 toast.info("Upload feature coming soon");
                                             }}
@@ -180,10 +180,10 @@ export function VisualCanvas({
                                         variant="outline"
                                         size="icon"
                                         className={cn(
-                                            "h-10 w-10 rounded-full border-zinc-700 hover:text-white transition-all",
+                                            "h-10 w-10 rounded-full shadow-sm transition-all",
                                             isSelectingReference
-                                                ? "bg-indigo-500 text-white border-indigo-500 hover:bg-indigo-600"
-                                                : "bg-zinc-800 hover:bg-indigo-500/20 hover:border-indigo-500/50 hover:text-indigo-400"
+                                                ? "bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700"
+                                                : "bg-white border-zinc-200 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600"
                                         )}
                                         onClick={() => {
                                             setIsSelectingReference(!isSelectingReference);
@@ -206,10 +206,10 @@ export function VisualCanvas({
                                     key={`prod-${idx}`}
                                     onClick={() => handleImageClick(img.url)}
                                     className={cn(
-                                        "aspect-[3/4] rounded-xl relative overflow-hidden cursor-pointer group bg-zinc-900 border transition-all duration-200",
+                                        "aspect-[3/4] rounded-xl relative overflow-hidden cursor-pointer group bg-zinc-100 border transition-all duration-200 shadow-sm hover:shadow-md",
                                         isSelectingReference
                                             ? "hover:ring-4 ring-indigo-500/40 border-indigo-500/50 hover:scale-[1.02]"
-                                            : "border-transparent hover:border-zinc-700 hover:shadow-xl"
+                                            : "border-transparent hover:border-zinc-200"
                                     )}
                                 >
                                     <Image
@@ -221,7 +221,7 @@ export function VisualCanvas({
                                             !isSelectingReference && "group-hover:scale-105"
                                         )}
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    {/* <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" /> */}
                                 </div>
                             ))}
                         </div>
@@ -230,8 +230,8 @@ export function VisualCanvas({
                     {/* Section 2: AI Generations */}
                     {unseenGenerations.length > 0 && (
                         <section className="space-y-4">
-                            <div className="flex items-center gap-2 pb-2 border-b border-white/5">
-                                <h3 className="text-lg font-semibold flex items-center gap-2 text-indigo-400">
+                            <div className="flex items-center gap-2 pb-2 border-b border-zinc-100">
+                                <h3 className="text-lg font-semibold flex items-center gap-2 text-indigo-600">
                                     <Sparkles className="w-4 h-4" />
                                     AI Creations
                                     <span className="text-xs font-normal text-zinc-500 ml-2">{unseenGenerations.length} items</span>
@@ -244,10 +244,10 @@ export function VisualCanvas({
                                         key={`gen-${gen.id}`}
                                         onClick={() => handleImageClick(gen.url)}
                                         className={cn(
-                                            "aspect-[3/4] rounded-xl relative overflow-hidden cursor-pointer group bg-zinc-900 border transition-all duration-200",
+                                            "aspect-[3/4] rounded-xl relative overflow-hidden cursor-pointer group bg-zinc-100 border transition-all duration-200 shadow-sm hover:shadow-md",
                                             isSelectingReference
                                                 ? "hover:ring-4 ring-indigo-500/40 border-indigo-500/50 hover:scale-[1.02]"
-                                                : "border-transparent hover:border-zinc-700 hover:shadow-xl"
+                                                : "border-transparent hover:border-zinc-200"
                                         )}
                                     >
                                         <Image
@@ -267,7 +267,7 @@ export function VisualCanvas({
                                         <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <Button
                                                 size="icon"
-                                                className="h-8 w-8 rounded-full bg-white text-black hover:bg-zinc-200"
+                                                className="h-8 w-8 rounded-full bg-white text-black hover:bg-zinc-100 shadow-md"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     onAddToProduct(gen.url);
@@ -289,7 +289,7 @@ export function VisualCanvas({
 
     // EDITOR VIEWER (The "Hero" View)
     return (
-        <div className="relative h-full w-full bg-zinc-950 flex flex-col overflow-hidden text-white">
+        <div className="relative h-full w-full bg-white flex flex-col overflow-hidden text-zinc-900">
 
             {/* Back to Gallery */}
             <div className="absolute top-6 left-6 z-20">
@@ -297,7 +297,7 @@ export function VisualCanvas({
                     variant="ghost"
                     size="sm"
                     onClick={() => setViewMode('gallery')}
-                    className="text-white/70 hover:text-white hover:bg-white/10 gap-2 pl-2 rounded-full"
+                    className="text-zinc-500 hover:text-black hover:bg-black/5 gap-2 pl-2 rounded-full"
                 >
                     <ArrowLeft className="w-4 h-4" />
                     Back to Gallery
@@ -305,18 +305,19 @@ export function VisualCanvas({
             </div>
 
             {/* 1. Hero Canvas - Full Bleed */}
-            <div className="absolute inset-0 flex items-center justify-center bg-zinc-900/50">
+            <div className="absolute inset-0 flex items-center justify-center bg-zinc-50">
                 <div className="relative w-full h-full flex items-center justify-center pb-20 p-4">
                     {activeImage ? (
                         <Image
                             src={activeImage}
                             alt="Hero"
                             fill
-                            className="object-contain"
+                            className="object-contain mix-blend-multiply" // Optional mix-blend if white bg
                             priority
+                        // Removed mix-blend as it might look weird on some images, just object-contain is safer
                         />
                     ) : (
-                        <div className="text-zinc-500">No image selected</div>
+                        <div className="text-zinc-400">No image selected</div>
                     )}
 
                     {/* Add to Listing Action (Floating Overlay) */}
@@ -324,7 +325,7 @@ export function VisualCanvas({
                         <div className="absolute top-6 right-6 z-10">
                             <Button
                                 onClick={() => onAddToProduct(activeImage)}
-                                className="bg-black/80 hover:bg-black text-white shadow-lg backdrop-blur-md rounded-full px-4 border border-white/10"
+                                className="bg-white hover:bg-zinc-50 text-black shadow-lg border border-zinc-200 rounded-full px-4"
                                 size="sm"
                             >
                                 <Plus className="w-4 h-4 mr-1.5" />
@@ -348,7 +349,7 @@ export function VisualCanvas({
                         <Button
                             size="icon"
                             className={cn(
-                                "h-14 w-14 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.4)] bg-white text-black hover:scale-110 transition-transform duration-200 hover:bg-zinc-100",
+                                "h-14 w-14 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-zinc-200 bg-white text-black hover:scale-110 transition-transform duration-200 hover:bg-zinc-50",
                                 isGenerating && "animate-pulse ring-4 ring-indigo-500/20"
                             )}
                             onClick={() => {
@@ -369,7 +370,8 @@ export function VisualCanvas({
                         animate={{ y: 0 }}
                         exit={{ y: "100%" }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="absolute bottom-0 left-0 right-0 bg-zinc-900 border-t border-white/10 z-[100] rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+                        // Light Mode Sheet Styles
+                        className="absolute bottom-0 left-0 right-0 bg-white border-t border-zinc-200 z-[100] rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
                     >
                         <div className="max-w-3xl mx-auto w-full p-4 pb-4 flex flex-col gap-3 relative">
 
@@ -378,7 +380,7 @@ export function VisualCanvas({
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 rounded-full text-zinc-500 hover:text-white hover:bg-white/10"
+                                    className="h-8 w-8 rounded-full text-zinc-400 hover:text-black hover:bg-zinc-100"
                                     onClick={() => setIsPromptOpen(false)}
                                 >
                                     <ChevronDown className="w-5 h-5" />
@@ -388,11 +390,11 @@ export function VisualCanvas({
                             {/* Input Area */}
                             <div className="w-full relative mt-2">
                                 <textarea
-                                    className="w-full bg-transparent border-none outline-none text-[18px] text-zinc-100 placeholder:text-zinc-500 resize-none py-2 px-1 leading-relaxed font-normal min-h-[80px]"
+                                    className="w-full bg-transparent border-none outline-none text-[18px] text-zinc-900 placeholder:text-zinc-400 resize-none py-2 px-1 leading-relaxed font-normal min-h-[80px]"
                                     placeholder={selectedTemplateIds.length > 0 ? "Add context..." : "What do you want to change?"}
                                     rows={selectedTemplateIds.length > 0 || customPrompt.length > 0 ? 3 : 2}
                                     value={customPrompt}
-                                    autoFocus
+                                    // autoFocus // Removed autoFocus to prevent layout jumping on mobile sometimes
                                     onChange={(e) => {
                                         setCustomPrompt(e.target.value);
                                     }}
@@ -413,7 +415,7 @@ export function VisualCanvas({
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-10 w-10 rounded-full text-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-300 transition-all animate-in fade-in zoom-in duration-200"
+                                        className="h-10 w-10 rounded-full text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 transition-all animate-in fade-in zoom-in duration-200"
                                         onClick={handleEnhance}
                                         disabled={isEnhancing}
                                         title="Enhance"
@@ -428,14 +430,14 @@ export function VisualCanvas({
                                     size="icon"
                                     onClick={() => setIsTemplatePickerOpen(true)}
                                     className={cn(
-                                        "h-10 w-10 rounded-full hover:bg-zinc-800 transition-all",
-                                        selectedTemplateIds.length > 0 ? "text-indigo-400 bg-indigo-500/10" : "text-zinc-400 hover:text-white"
+                                        "h-10 w-10 rounded-full hover:bg-zinc-100 transition-all",
+                                        selectedTemplateIds.length > 0 ? "text-indigo-600 bg-indigo-50" : "text-zinc-400 hover:text-black"
                                     )}
                                     title="Select Templates"
                                 >
                                     <Palette className="w-5 h-5" />
                                     {selectedTemplateIds.length > 0 && (
-                                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-500 text-[10px] text-white">
+                                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] text-white">
                                             {selectedTemplateIds.length}
                                         </span>
                                     )}
@@ -447,8 +449,8 @@ export function VisualCanvas({
                                     className={cn(
                                         "h-10 w-10 rounded-full flex-shrink-0 transition-all shadow-sm",
                                         isGenerating
-                                            ? "bg-zinc-800 text-zinc-500 animate-pulse"
-                                            : "bg-white text-black hover:bg-zinc-200 hover:scale-105 active:scale-95"
+                                            ? "bg-zinc-100 text-zinc-400 animate-pulse"
+                                            : "bg-black text-white hover:bg-zinc-800 hover:scale-105 active:scale-95"
                                     )}
                                     onClick={handleGenerateClick}
                                     disabled={isGenerating || (!selectedTemplateIds.length && !customPrompt.trim())}
@@ -456,7 +458,7 @@ export function VisualCanvas({
                                     {isGenerating ? (
                                         <Loader2 className="w-5 h-5 animate-spin" />
                                     ) : (
-                                        <Sparkles className="w-5 h-5 fill-black" />
+                                        <Sparkles className="w-5 h-5 fill-white" />
                                     )}
                                 </Button>
                             </div>
