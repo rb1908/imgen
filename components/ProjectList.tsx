@@ -1,7 +1,7 @@
-import { PageHeader } from '@/components/PageHeader';
-// Force Vercel Rebuild - Timestamp: verify_upload_fix
+// Force Vercel Rebuild - Timestamp: verify_upload_fix_2
 'use client';
 
+import { PageHeader } from '@/components/PageHeader';
 import { PageScaffold } from '@/components/PageScaffold';
 import { useState, useEffect } from 'react';
 import { Project, Generation } from '@prisma/client';
