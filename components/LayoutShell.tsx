@@ -26,10 +26,10 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
 
     if (!isMounted) {
         return (
-            <div className="flex min-h-screen">
+            <div className="flex min-h-screen w-screen max-w-[100vw] overflow-hidden">
                 {/* SSR/Loading state - default expanded to match server */}
                 <div className="w-64 border-r border-border h-screen bg-card fixed left-0 top-0 hidden md:block" />
-                <main className="flex-1 ml-64 p-8">
+                <main className="flex-1 md:ml-64 ml-0 p-4 md:p-8 w-full max-w-full overflow-hidden">
                     {children}
                 </main>
             </div>
