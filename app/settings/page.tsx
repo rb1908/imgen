@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/PageHeader';
 import Link from 'next/link';
 import { PageScaffold } from '@/components/PageScaffold';
 import { ChevronRight, Globe, Palette, User, Settings, ArrowRight } from 'lucide-react';
@@ -42,10 +43,10 @@ export default function SettingsHub() {
     return (
         <PageScaffold>
             <div className="max-w-xl mx-auto space-y-8">
-                <div className="space-y-2">
-                    <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-                    <p className="text-muted-foreground">Manage your preferences and connections.</p>
-                </div>
+                <PageHeader
+                    title="Settings"
+                    description="Manage your preferences and connections."
+                />
 
                 <div className="grid gap-4">
                     {filters.map((item) => (

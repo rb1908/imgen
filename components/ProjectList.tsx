@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/PageHeader';
 // Force Vercel Rebuild - Timestamp: verify_upload_fix
 'use client';
 
@@ -173,49 +174,45 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
 
     return (
         <PageScaffold>
-            <div className="space-y-6">
-                <div className="flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur z-10 py-2 -my-2 md:static md:bg-transparent md:p-0 md:m-0">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight">Projects</h1>
-                        <p className="text-muted-foreground text-sm">Your images & product sets</p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        {/* View Toggle */}
-                        <div className="flex items-center p-0.5 bg-muted/50 rounded-lg border">
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                                title="Grid View"
-                            >
-                                <LayoutGrid className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                                onClick={() => setViewMode('list')}
-                                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                                title="List View"
-                            >
-                                <List className="w-3.5 h-3.5" />
-                            </button>
-                        </div>
-
-                        <div className="relative">
-                            <Button size="sm" className="gap-2 shadow-sm" disabled={isUploading}>
-                                {isUploading ? <Plus className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                                <span>{isUploading ? "Creating..." : "New"}</span>
-                            </Button>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                multiple
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                                onChange={handleFileUpload}
-                                disabled={isUploading}
-                            />
-                        </div>
-                    </div>
+            <PageHeader
+                title="Projects"
+                description="Your images & product sets"
+            >
+                {/* View Toggle */}
+                <div className="flex items-center p-0.5 bg-muted/50 rounded-lg border">
+                    <button
+                        onClick={() => setViewMode('grid')}
+                        className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                        title="Grid View"
+                    >
+                        <LayoutGrid className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                        onClick={() => setViewMode('list')}
+                        className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                        title="List View"
+                    >
+                        <List className="w-3.5 h-3.5" />
+                    </button>
                 </div>
 
+                <div className="relative">
+                    <Button size="sm" className="gap-2 shadow-sm" disabled={isUploading}>
+                        {isUploading ? <Plus className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                        <span>{isUploading ? "Creating..." : "New"}</span>
+                    </Button>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        onChange={handleFileUpload}
+                        disabled={isUploading}
+                    />
+                </div>
+            </PageHeader>
+
+            <div className="space-y-6">
                 {projects.length === 0 ? (
                     <div className="text-center py-20 border-2 border-dashed rounded-xl bg-muted/30">
                         <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">

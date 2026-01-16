@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/PageHeader';
 import { PageScaffold } from '@/components/PageScaffold';
 import { getAllGenerations } from '@/app/actions/generations';
 import { GenerationGrid } from '@/components/GenerationGrid';
@@ -7,6 +8,10 @@ export async function GenerationsContent({ query }: { query?: string }) {
 
     return (
         <PageScaffold>
+            <PageHeader
+                title="Gallery"
+                description="Explore all generated images."
+            />
             <div className="min-h-[500px]">
                 {generations.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
