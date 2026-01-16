@@ -129,11 +129,10 @@ export function VisualCanvas({
                 <div className="max-w-7xl mx-auto w-full space-y-12">
 
                     {/* Header */}
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h2 className="text-2xl font-bold tracking-tight">Studio Gallery</h2>
-                            <p className="text-zinc-400 mt-1">Manage your listing media and AI creations.</p>
-                        </div>
+                    <div className="flex items-center justify-between mb-8 min-h-[40px]">
+                        {/* Title removed as per request */}
+                        <div />
+
                         {isSelectingReference && (
                             <div className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-4 py-2 rounded-full animate-pulse font-medium text-sm flex items-center gap-2">
                                 <Sparkles className="w-4 h-4" />
