@@ -292,7 +292,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
 
     return (
-        <div className="h-full flex flex-col gap-6 relative bg-zinc-950 text-white">
+        <div className="h-full flex flex-col gap-6 relative bg-white text-zinc-900">
             {/* Header */}
             <div className="flex-none flex items-center gap-4 px-4 border-b h-14 transition-all">
                 <Link href="/" className="p-2 hover:bg-accent rounded-full text-muted-foreground transition-colors">
@@ -415,7 +415,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         animate={{ y: 0 }}
                         exit={{ y: "100%" }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-white/10 z-[100] md:pl-72 rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+                        className="fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-200 z-[100] md:pl-72 rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
                     >
                         <div className="max-w-3xl mx-auto w-full p-4 pb-4 flex flex-col gap-3 relative">
 
@@ -431,10 +431,9 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                                 </Button>
                             </div>
 
-                            {/* Input Area (Full Width) */}
                             <div className="w-full relative mt-2">
                                 <textarea
-                                    className="w-full bg-transparent border-none outline-none text-[18px] text-zinc-100 placeholder:text-zinc-500 resize-none py-2 px-1 leading-relaxed font-normal min-h-[80px]"
+                                    className="w-full bg-transparent border-none outline-none text-[18px] text-zinc-900 placeholder:text-zinc-400 resize-none py-2 px-1 leading-relaxed font-normal min-h-[80px]"
                                     placeholder={selectedTemplateIds.length > 0 ? "Add context..." : "What do you want to write?"}
                                     rows={selectedTemplateIds.length > 0 || customPrompt.length > 0 ? 3 : 2}
                                     value={customPrompt}
@@ -459,7 +458,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-10 w-10 rounded-full text-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-300 transition-all animate-in fade-in zoom-in duration-200"
+                                        className="h-10 w-10 rounded-full text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 transition-all animate-in fade-in zoom-in duration-200"
                                         onClick={async () => {
                                             if (customPrompt.length < 3) return;
                                             const loadingId = toast.loading("Enhancing...");
@@ -488,8 +487,8 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                                     size="icon"
                                     onClick={() => setIsTemplatePickerOpen(true)}
                                     className={cn(
-                                        "h-10 w-10 rounded-full hover:bg-zinc-800 transition-all",
-                                        selectedTemplateIds.length > 0 ? "text-indigo-400 bg-indigo-500/10" : "text-zinc-400 hover:text-white"
+                                        "h-10 w-10 rounded-full hover:bg-zinc-100 transition-all",
+                                        selectedTemplateIds.length > 0 ? "text-indigo-600 bg-indigo-50" : "text-zinc-400 hover:text-black"
                                     )}
                                     title="Select Templates"
                                 >
@@ -507,8 +506,8 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                                     className={cn(
                                         "h-10 w-10 rounded-full flex-shrink-0 transition-all shadow-sm",
                                         generationStatus === 'generating'
-                                            ? "bg-zinc-800 text-zinc-500 animate-pulse"
-                                            : "bg-white text-black hover:bg-zinc-200 hover:scale-105 active:scale-95"
+                                            ? "bg-zinc-100 text-zinc-400 animate-pulse"
+                                            : "bg-black text-white hover:bg-zinc-800 hover:scale-105 active:scale-95"
                                     )}
                                     onClick={handleGenerate}
                                     disabled={generationStatus === 'generating' || (!selectedTemplateIds.length && !customPrompt.trim())}
@@ -516,7 +515,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                                     {generationStatus === 'generating' ? (
                                         <Loader2 className="w-5 h-5 animate-spin" />
                                     ) : (
-                                        <Sparkles className="w-5 h-5 fill-black" />
+                                        <Sparkles className="w-5 h-5 fill-white" />
                                     )}
                                 </Button>
                             </div>
