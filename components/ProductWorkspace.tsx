@@ -86,7 +86,7 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
                                 activeTab === 'studio' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                             )}
                         >
-                            Studio
+                            Images
                         </button>
                         <button
                             onClick={() => setActiveTab('details')}
@@ -101,7 +101,7 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
 
                     <div className="hidden md:flex flex-col">
                         <span className="font-semibold text-sm leading-none truncate max-w-[200px]">{product.title}</span>
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Studio Workspace</span>
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Images Workspace</span>
                     </div>
                 </div>
                 <div>

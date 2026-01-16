@@ -128,28 +128,11 @@ export function VisualCanvas({
             <div className="relative h-full w-full bg-white flex flex-col p-6 text-zinc-900 overflow-y-auto">
                 <div className="max-w-7xl mx-auto w-full space-y-12">
 
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-8 min-h-[40px]">
-                        {/* Title removed as per request */}
-                        <div />
-
-                        {isSelectingReference && (
-                            <div className="bg-indigo-50 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-full animate-pulse font-medium text-sm flex items-center gap-2">
-                                <Sparkles className="w-4 h-4" />
-                                Select a reference image
-                            </div>
-                        )}
-                    </div>
+                    {/* Header Removed */}
 
                     {/* Section 1: Listing Images */}
-                    <section className="space-y-4">
-                        <div className="flex items-center gap-2 pb-2 border-b border-zinc-100">
-                            <h3 className="text-lg font-semibold flex items-center gap-2">
-                                <ImageIcon className="w-4 h-4 text-zinc-400" />
-                                Listing Images
-                                <span className="text-xs font-normal text-zinc-500 ml-2">{listingImages.length} items</span>
-                            </h3>
-                        </div>
+                    <section className="space-y-4 pt-4">
+                        {/* Title Removed */}
 
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                             {/* "Add New" Action Card */}
