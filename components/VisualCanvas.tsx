@@ -322,11 +322,16 @@ export function VisualCanvas({
                                         onClick={() => setIsTemplatePickerOpen(true)}
                                         className={cn(
                                             "h-10 w-10 rounded-full hover:bg-zinc-100 transition-all",
-                                            selectedTemplateIds.length > 0 ? "text-indigo-600 bg-indigo-50" : "text-zinc-400 hover:text-black" // Simplify template selection vis
+                                            selectedTemplateIds.length > 0 ? "text-indigo-600 bg-indigo-50" : "text-indigo-600 hover:text-indigo-700"
                                         )}
                                         title="Select Templates"
                                     >
                                         <Palette className="w-5 h-5" />
+                                        {selectedTemplateIds.length > 0 && (
+                                            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-500 text-[10px] text-white">
+                                                {selectedTemplateIds.length}
+                                            </span>
+                                        )}
                                     </Button>
 
                                     {/* Generate Button (Run) */}
