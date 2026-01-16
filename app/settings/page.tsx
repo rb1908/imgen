@@ -42,7 +42,7 @@ export default function SettingsHub() {
 
     return (
         <PageScaffold>
-            <div className="max-w-xl mx-auto space-y-8">
+            <div className="max-w-xl mx-auto space-y-8 p-4 md:p-8">
                 <PageHeader
                     title="Settings"
                 />

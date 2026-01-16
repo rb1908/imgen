@@ -11,7 +11,7 @@ interface PageHeaderProps {
 export function PageHeader({ title, description, children, className }: PageHeaderProps) {
     return (
         <div className={cn(
-            "flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur z-10 py-2 -my-2 md:static md:bg-transparent md:p-0 md:m-0 mb-6",
+            "flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-50 px-4 py-3 md:px-8 border-b",
             className
         )}>
             <div>

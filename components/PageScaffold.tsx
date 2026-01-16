@@ -16,7 +16,7 @@ export function PageScaffold({ children, className, fullWidth = false }: PageSca
         <div className="h-full w-full overflow-hidden flex flex-col">
             {/* Scrollable Area */}
             {/* 'touch-pan-y' prevents horizontal swipe gestures from triggering browser nav or scroll chaining */}
-            <div className="flex-1 w-full overflow-y-auto overscroll-contain touch-pan-y p-4 md:p-8">
+            <div className="flex-1 w-full overflow-y-auto overscroll-contain touch-pan-y">
                 <div className={cn(
                     "w-full mx-auto",
                     fullWidth ? "max-w-none" : "max-w-6xl",

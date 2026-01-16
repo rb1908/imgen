@@ -16,7 +16,7 @@ export async function GenerationsContent({ query }: { query?: string }) {
                     <SearchInput placeholder="Search looks..." />
                 </div>
             </PageHeader>
-            <div className="min-h-[500px]">
+            <div className="min-h-[500px] p-4 md:p-8">
                 {generations.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                         <p>No results found matching "{query}".</p>

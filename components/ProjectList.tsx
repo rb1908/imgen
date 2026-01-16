@@ -211,7 +211,7 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                 </div>
             </PageHeader>
 
-            <div className="space-y-6">
+            <div className="space-y-6 p-4 md:p-8">
                 {projects.length === 0 ? (
                     <div className="text-center py-20 border-2 border-dashed rounded-xl bg-muted/30">
                         <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">

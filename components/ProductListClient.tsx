@@ -88,7 +88,7 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
             </PageHeader>
 
             {/* List */}
-            <div className="space-y-6">
+            <div className="space-y-6 p-4 md:p-8">
                 {viewMode === 'grid' ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
                         {filtered.map(product => (
