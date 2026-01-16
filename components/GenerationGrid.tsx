@@ -24,6 +24,7 @@ export interface GenerationGridProps {
     referenceName?: string;
     referenceImageUrl?: string;
     defaultProductId?: string | null;
+    onAddToProduct?: (url: string) => Promise<void>;
 }
 
 // Internal Pending Card Component
@@ -72,7 +73,8 @@ export function GenerationGrid({
     onToggle,
     referenceImageUrl,
     referenceName = 'project',
-    defaultProductId
+    defaultProductId,
+    onAddToProduct
 }: GenerationGridProps) {
     const [expandedImage, setExpandedImage] = useState<GeneratedImage & { referenceName?: string } | null>(null);
     const [imageToSave, setImageToSave] = useState<GeneratedImage | null>(null);
@@ -205,23 +207,27 @@ export function GenerationGrid({
                                 {!selectionMode && (
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
                                         <div className="flex gap-2 justify-end">
-                                            {defaultProductId && (
+                                            {(defaultProductId || onAddToProduct) && (
                                                 <Button
                                                     size="icon"
                                                     variant="secondary"
                                                     className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
                                                     onClick={async (e) => {
                                                         e.stopPropagation();
-                                                        const { addProductImage } = await import('@/app/actions/product_actions');
-                                                        const { toast } = await import('sonner');
-                                                        const res = await addProductImage(defaultProductId, img.url);
-                                                        if (res.success) {
-                                                            toast.success("Added to product listing");
-                                                        } else {
-                                                            toast.error("Failed to add to listing");
+                                                        if (onAddToProduct) {
+                                                            await onAddToProduct(img.url);
+                                                        } else if (defaultProductId) {
+                                                            const { addProductImage } = await import('@/app/actions/product_actions');
+                                                            const { toast } = await import('sonner');
+                                                            const res = await addProductImage(defaultProductId, img.url);
+                                                            if (res.success) {
+                                                                toast.success("Added to product listing");
+                                                            } else {
+                                                                toast.error("Failed to add to listing");
+                                                            }
                                                         }
                                                     }}
-                                                    title="Add to Default Product"
+                                                    title="Add to Product"
                                                 >
                                                     <ShoppingBag className="w-4 h-4" />
                                                 </Button>
@@ -274,16 +280,20 @@ export function GenerationGrid({
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                {defaultProductId && (
+                                                {(defaultProductId || onAddToProduct) && (
                                                     <DropdownMenuItem onClick={async (e) => {
                                                         e.stopPropagation();
-                                                        const { addProductImage } = await import('@/app/actions/product_actions');
-                                                        const { toast } = await import('sonner');
-                                                        const res = await addProductImage(defaultProductId, img.url);
-                                                        if (res.success) {
-                                                            toast.success("Added to product listing");
-                                                        } else {
-                                                            toast.error("Failed to add to listing");
+                                                        if (onAddToProduct) {
+                                                            await onAddToProduct(img.url);
+                                                        } else if (defaultProductId) {
+                                                            const { addProductImage } = await import('@/app/actions/product_actions');
+                                                            const { toast } = await import('sonner');
+                                                            const res = await addProductImage(defaultProductId, img.url);
+                                                            if (res.success) {
+                                                                toast.success("Added to product listing");
+                                                            } else {
+                                                                toast.error("Failed to add to listing");
+                                                            }
                                                         }
                                                     }}>
                                                         <ShoppingBag className="mr-2 h-4 w-4" />

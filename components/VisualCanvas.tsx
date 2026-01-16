@@ -193,6 +193,7 @@ export function VisualCanvas({
                         isGenerating={isGenerating}
                         referenceImageUrl={referenceImageUrl || undefined}
                         referenceName="Studio Reference"
+                        onAddToProduct={onAddToProduct}
                     />
                 </div>
 
