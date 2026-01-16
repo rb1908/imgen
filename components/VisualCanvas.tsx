@@ -38,6 +38,7 @@ interface VisualCanvasProps {
     onAddToProduct: (url: string) => Promise<void>;
     templates: Template[];
     isGenerating: boolean;
+    initialStudioOpen?: boolean;
 }
 
 type ViewMode = 'gallery' | 'editor';
@@ -50,13 +51,15 @@ export function VisualCanvas({
     onGenerate,
     onAddToProduct,
     templates,
-    isGenerating
+    isGenerating,
+    initialStudioOpen = false
 }: VisualCanvasProps) {
     // View State
     const [viewMode, setViewMode] = useState<ViewMode>('gallery');
 
     // AI Studio State
-    const [isAIStudioOpen, setIsAIStudioOpen] = useState(false); // Controls the AI Studio View
+    // AI Studio State
+    const [isAIStudioOpen, setIsAIStudioOpen] = useState(initialStudioOpen); // Controls the AI Studio View
 
     const [customPrompt, setCustomPrompt] = useState('');
     const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);

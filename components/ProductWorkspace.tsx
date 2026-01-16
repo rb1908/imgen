@@ -122,6 +122,7 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
                                 onAddToProduct={handleAddToProduct}
                                 templates={templates}
                                 isGenerating={isGenerating}
+                                initialStudioOpen={true}
                             />
                         </div>
                     </motion.div>
