@@ -58,6 +58,9 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
     // const [mode, setMode] = useState<'template' | 'custom'>('template'); // Removed
 
 
+    // Prompt Bar State
+    const [isPromptOpen, setIsPromptOpen] = useState(false);
+
     // Mobile Layout Tab
     const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
     const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
