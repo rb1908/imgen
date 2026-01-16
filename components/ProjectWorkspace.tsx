@@ -410,63 +410,60 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                     )}
                 </Button>
             </div>
-        </SheetContent>
-                        </Sheet >
-                    </div >
-                </div >
 
 
-        {/* Main Content - Unified Grid */ }
-        < div className = "flex-1 min-h-0 px-4 pb-32 lg:pb-8 relative overflow-y-auto" >
-            {/* Generation Grid (Desktop & Mobile Unified) */ }
-            < div className = "max-w-[1800px] mx-auto" >
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-primary" />
-                                Results
-                            </h2>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-muted-foreground">{generations.length} images</span>
-                                {generations.length > 0 && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => {
-                                            if (isSelectionMode) {
-                                                setIsSelectionMode(false);
-                                                setSelectedGenerationIds([]);
-                                            } else {
-                                                setIsSelectionMode(true);
-                                            }
-                                        }}
-                                    >
-                                        {isSelectionMode ? 'Cancel' : 'Select Multiple'}
-                                    </Button>
-                                )}
-                            </div>
+
+            {/* Main Content - Unified Grid */}
+            < div className="flex-1 min-h-0 px-4 pb-32 lg:pb-8 relative overflow-y-auto" >
+                {/* Generation Grid (Desktop & Mobile Unified) */}
+                < div className="max-w-[1800px] mx-auto" >
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold flex items-center gap-2">
+                            <Sparkles className="w-5 h-5 text-primary" />
+                            Results
+                        </h2>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">{generations.length} images</span>
+                            {generations.length > 0 && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        if (isSelectionMode) {
+                                            setIsSelectionMode(false);
+                                            setSelectedGenerationIds([]);
+                                        } else {
+                                            setIsSelectionMode(true);
+                                        }
+                                    }}
+                                >
+                                    {isSelectionMode ? 'Cancel' : 'Select Multiple'}
+                                </Button>
+                            )}
                         </div>
+                    </div>
 
-                        <GenerationGrid
-                            images={generations.map(g => ({
-                                id: g.id,
-                                url: g.imageUrl,
-                                templateId: g.templateId || 'custom',
-                                originalImage: g.promptUsed || 'Custom Generation',
-                                prompt: g.promptUsed || customPrompt || 'Custom Generation',
-                                createdAt: g.createdAt
-                            }))}
-                            isGenerating={generationStatus === 'generating'}
-                            selectionMode={isSelectionMode}
-                            selectedIds={selectedGenerationIds}
-                            onToggle={toggleGenerationSelection}
-                            referenceImageUrl={project.originalImageUrl}
-                            referenceName={project.name || 'project'}
-                            defaultProductId={project.defaultProductId}
-                            pendingImages={pendingGenerations}
-                        />
-                    </div >
+                    <GenerationGrid
+                        images={generations.map(g => ({
+                            id: g.id,
+                            url: g.imageUrl,
+                            templateId: g.templateId || 'custom',
+                            originalImage: g.promptUsed || 'Custom Generation',
+                            prompt: g.promptUsed || customPrompt || 'Custom Generation',
+                            createdAt: g.createdAt
+                        }))}
+                        isGenerating={generationStatus === 'generating'}
+                        selectionMode={isSelectionMode}
+                        selectedIds={selectedGenerationIds}
+                        onToggle={toggleGenerationSelection}
+                        referenceImageUrl={project.originalImageUrl}
+                        referenceName={project.name || 'project'}
+                        defaultProductId={project.defaultProductId}
+                        pendingImages={pendingGenerations}
+                    />
                 </div >
             </div >
+        </div >
 
         {/* Chat-like Bottom Bar */ }
         < div className = "flex-none p-4 bg-background/80 backdrop-blur-lg border-t z-50 pb-8 md:pb-4" >
