@@ -123,6 +123,7 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
                                 templates={templates}
                                 isGenerating={isGenerating}
                                 initialStudioOpen={true}
+                                onClose={() => setIsStudioOpen(false)}
                             />
                         </div>
                     </motion.div>

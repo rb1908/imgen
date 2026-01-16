@@ -40,6 +40,7 @@ interface VisualCanvasProps {
     templates: Template[];
     isGenerating: boolean;
     initialStudioOpen?: boolean;
+    onClose?: () => void;
 }
 
 type ViewMode = 'gallery' | 'editor';
@@ -53,7 +54,8 @@ export function VisualCanvas({
     onAddToProduct,
     templates,
     isGenerating,
-    initialStudioOpen = false
+    initialStudioOpen = false,
+    onClose
 }: VisualCanvasProps) {
     // View State
     const [viewMode, setViewMode] = useState<ViewMode>('gallery');
@@ -168,7 +170,10 @@ export function VisualCanvas({
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => setIsAIStudioOpen(false)}
+                            onClick={() => {
+                                if (onClose) onClose();
+                                else setIsAIStudioOpen(false);
+                            }}
                             className="rounded-full -ml-2"
                         >
                             <ArrowLeft className="w-5 h-5" />
