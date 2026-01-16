@@ -1,3 +1,4 @@
+import { SearchInput } from '@/components/SearchInput';
 import { PageHeader } from '@/components/PageHeader';
 import { PageScaffold } from '@/components/PageScaffold';
 import { getAllGenerations } from '@/app/actions/generations';
@@ -11,7 +12,11 @@ export async function GenerationsContent({ query }: { query?: string }) {
             <PageHeader
                 title="Gallery"
                 description="Explore all generated images."
-            />
+            >
+                <div className="w-64 max-w-[200px] md:max-w-xs">
+                    <SearchInput placeholder="Search looks..." />
+                </div>
+            </PageHeader>
             <div className="min-h-[500px]">
                 {generations.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
