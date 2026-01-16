@@ -41,6 +41,7 @@ interface VisualCanvasProps {
     templates: Template[];
     isGenerating: boolean;
     initialStudioOpen?: boolean;
+    initialViewMode?: 'gallery' | 'editor';
     onClose?: () => void;
 }
 
@@ -56,10 +57,11 @@ export function VisualCanvas({
     templates,
     isGenerating,
     initialStudioOpen = false,
+    initialViewMode = 'gallery',
     onClose
 }: VisualCanvasProps) {
     // View State
-    const [viewMode, setViewMode] = useState<ViewMode>('gallery');
+    const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
 
     // AI Studio State
     const [isAIStudioOpen, setIsAIStudioOpen] = useState(initialStudioOpen); // Controls the AI Studio View

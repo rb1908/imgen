@@ -27,6 +27,7 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
 
     // UI State
     const [isStudioOpen, setIsStudioOpen] = useState(false);
+    const [startViewMode, setStartViewMode] = useState<'gallery' | 'editor'>('gallery');
 
     // Handlers
     const handleGenerate = async (mode: 'template' | 'custom', input: string[] | string, referenceImageUrl?: string) => {
@@ -92,7 +93,12 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
                 <ListingEditor
                     product={product}
                     onOpenStudio={(url) => {
-                        if (url) setActiveImage(url);
+                        if (url) {
+                            setActiveImage(url);
+                            setStartViewMode('editor');
+                        } else {
+                            setStartViewMode('gallery');
+                        }
                         setIsStudioOpen(true);
                     }}
                 />
@@ -126,6 +132,7 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
                                 templates={templates}
                                 isGenerating={isGenerating}
                                 initialStudioOpen={true}
+                                initialViewMode={startViewMode}
                                 onClose={() => setIsStudioOpen(false)}
                             />
                         </div>
