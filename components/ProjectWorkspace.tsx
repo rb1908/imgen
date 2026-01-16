@@ -8,7 +8,7 @@ import { GenerationGrid } from '@/components/GenerationGrid';
 import { generateVariations } from '@/app/actions/generate';
 import { deleteGenerations } from '@/app/actions/generations';
 import { toast } from 'sonner';
-import { Loader2, Sparkles, Wand2, ArrowLeft, RefreshCcw, CheckCircle2, ChevronDown, ChevronUp, Palette, X, Trash2, Download, CheckSquare, Square, ShoppingBag, Menu } from 'lucide-react';
+import { Loader2, Sparkles, Wand2, ArrowLeft, RefreshCcw, CheckCircle2, ChevronDown, ChevronUp, Palette, X, Trash2, Download, CheckSquare, Square, ShoppingBag, Menu, Plus } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import {
     Drawer,
@@ -365,75 +365,87 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
             </div >
 
 
-            {/* Chat-like Bottom Bar */}
-            < div className="flex-none p-4 bg-background/80 backdrop-blur-lg border-t z-50 pb-8 md:pb-4" >
-                <div className="max-w-3xl mx-auto flex items-end gap-2">
-                    {/* Template Picker Toggle */}
-                    <Button
-                        variant={selectedTemplateIds.length > 0 ? "default" : "outline"}
-                        size="icon"
-                        className="h-12 w-12 rounded-full flex-shrink-0"
-                        onClick={() => setIsTemplatePickerOpen(true)}
-                        title="Select Template"
-                    >
-                        {selectedTemplateIds.length > 0 ? (
-                            <div className="font-bold text-xs">{selectedTemplateIds.length}</div>
-                        ) : (
-                            <Palette className="w-5 h-5" />
-                        )}
-                    </Button>
+            {/* Gemini-Style Floating Prompt Bar */}
+            <div className="flex-none px-4 pb-6 pt-2 z-50 pointer-events-none">
+                <div className="max-w-3xl mx-auto pointer-events-auto">
+                    <div className="bg-secondary/40 backdrop-blur-xl border shadow-lg rounded-[2rem] p-2 pl-3 flex items-end gap-2 transition-all focus-within:bg-secondary/60 focus-within:ring-1 focus-within:ring-primary/20">
 
-                    {/* Chat Input Container */}
-                    <div className="flex-1 bg-muted/50 rounded-3xl border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary px-4 py-3 flex items-center gap-2 min-h-[48px]">
-                        <textarea
-                            className="bg-transparent border-none outline-none text-sm w-full placeholder:text-muted-foreground resize-none max-h-32 py-1"
-                            placeholder={mode === 'template' ? "Add context to your template..." : "Describe what you want to generate..."}
-                            rows={1}
-                            value={customPrompt}
-                            onChange={(e) => {
-                                setCustomPrompt(e.target.value);
-                                // Auto-grow could be added here
-                                e.target.style.height = 'auto';
-                                e.target.style.height = e.target.scrollHeight + 'px';
-                            }}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleGenerate();
-                                }
-                            }}
-                        />
-
-                        {/* Enhance Button */}
+                        {/* Plus / Add Context */}
                         <Button
-                            size="icon"
                             variant="ghost"
-                            className="h-8 w-8 text-indigo-400 hover:text-indigo-500 hover:bg-indigo-500/10 rounded-full"
-                            title="Enhance Prompt"
-                            onClick={() => toast.info("Enhance coming soon!")}
+                            size="icon"
+                            className="h-10 w-10 rounded-full text-muted-foreground hover:bg-background/50 hover:text-foreground shrink-0 mb-0.5"
+                            onClick={() => setIsTemplatePickerOpen(true)}
+                            title="Select Template"
                         >
-                            <Sparkles className="w-4 h-4" />
+                            <Plus className="w-5 h-5" />
                         </Button>
-                    </div>
 
-                    {/* Send / Generate Button */}
-                    <Button
-                        size="icon"
-                        className={cn(
-                            "h-12 w-12 rounded-full flex-shrink-0 transition-all",
-                            generationStatus === 'generating' ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground hover:scale-105 active:scale-95 shadow-md"
-                        )}
-                        onClick={handleGenerate}
-                        disabled={generationStatus === 'generating' || (mode === 'template' && selectedTemplateIds.length === 0 && !customPrompt) || (mode === 'custom' && !customPrompt.trim())}
-                    >
-                        {generationStatus === 'generating' ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                            <Wand2 className="w-5 h-5" />
-                        )}
-                    </Button>
+                        {/* Input Area */}
+                        <div className="flex-1 min-h-[44px] py-3">
+                            <textarea
+                                className="w-full bg-transparent border-none outline-none text-base placeholder:text-muted-foreground/70 resize-none max-h-32 py-0 px-1 leading-relaxed"
+                                placeholder={mode === 'template' ? "Add context to your template..." : "What do you want to generate?"}
+                                rows={1}
+                                value={customPrompt}
+                                onChange={(e) => {
+                                    setCustomPrompt(e.target.value);
+                                    e.target.style.height = 'auto';
+                                    e.target.style.height = e.target.scrollHeight + 'px';
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleGenerate();
+                                    }
+                                }}
+                            />
+                        </div>
+
+                        {/* Right Actions */}
+                        <div className="flex items-center gap-1 pb-0.5">
+                            {/* Templates Pill (Like 'Fast' in Gemini) */}
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setIsTemplatePickerOpen(true)}
+                                className={cn(
+                                    "h-9 rounded-full bg-background/30 hover:bg-background/60 text-xs font-medium px-3 transition-colors mr-1",
+                                    selectedTemplateIds.length > 0 ? "text-primary bg-primary/10 hover:bg-primary/20" : "text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                <Palette className="w-3.5 h-3.5 mr-1.5" />
+                                {selectedTemplateIds.length > 0 ? `${selectedTemplateIds.length} Selected` : 'Templates'}
+                            </Button>
+
+                            {/* Mic (Visual Placeholder) 
+                            <Button size="icon" variant="ghost" className="h-10 w-10 rounded-full text-muted-foreground">
+                                <Mic className="w-5 h-5" />
+                            </Button>
+                            */}
+
+                            {/* Generate Button */}
+                            <Button
+                                size="icon"
+                                className={cn(
+                                    "h-10 w-10 rounded-full flex-shrink-0 transition-all shadow-sm",
+                                    generationStatus === 'generating'
+                                        ? "bg-muted text-muted-foreground"
+                                        : "bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 active:scale-95"
+                                )}
+                                onClick={handleGenerate}
+                                disabled={generationStatus === 'generating' || (mode === 'template' && selectedTemplateIds.length === 0 && !customPrompt) || (mode === 'custom' && !customPrompt.trim())}
+                            >
+                                {generationStatus === 'generating' ? (
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                ) : (
+                                    <Sparkles className="w-5 h-5" />
+                                )}
+                            </Button>
+                        </div>
+                    </div>
                 </div>
-            </div >
+            </div>
 
 
 
