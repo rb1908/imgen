@@ -8,7 +8,8 @@ import { GenerationGrid } from '@/components/GenerationGrid';
 import { generateVariations } from '@/app/actions/generate';
 import { deleteGenerations } from '@/app/actions/generations';
 import { toast } from 'sonner';
-import { Loader2, Sparkles, Wand2, ArrowLeft, RefreshCcw, CheckCircle2, ChevronDown, ChevronUp, Palette, X, Trash2, Download, CheckSquare, Square, ShoppingBag } from 'lucide-react';
+import { Loader2, Sparkles, Wand2, ArrowLeft, RefreshCcw, CheckCircle2, ChevronDown, ChevronUp, Palette, X, Trash2, Download, CheckSquare, Square, ShoppingBag, Menu } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import {
     Drawer,
     DrawerClose,
@@ -59,6 +60,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
     // Mobile Layout Tab
     const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
     const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
 
     const toggleTemplate = (id: string) => {
         setSelectedTemplateIds(prev =>
