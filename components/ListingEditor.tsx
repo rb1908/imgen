@@ -31,10 +31,10 @@ function CollapsibleSection({ title, children, defaultOpen = true }: Collapsible
     const [isOpen, setIsOpen] = useState(defaultOpen);
 
     return (
-        <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
+        <div className="border-b border-gray-100 bg-white first:border-t">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center justify-between p-4 bg-gray-50/50 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between py-4 px-6 hover:bg-gray-50/50 transition-colors"
             >
                 <h3 className="font-semibold text-gray-900 text-sm">{title}</h3>
                 <ChevronDown className={cn("w-4 h-4 text-gray-500 transition-transform duration-200", isOpen ? "transform rotate-180" : "")} />
@@ -47,7 +47,7 @@ function CollapsibleSection({ title, children, defaultOpen = true }: Collapsible
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
                     >
-                        <div className="p-4 border-t border-gray-100">
+                        <div className="px-6 pb-6 pt-0">
                             {children}
                         </div>
                     </motion.div>
@@ -69,7 +69,7 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
         description: product.description || '',
         price: product.price || '',
         tags: product.tags || '',
-        status: 'active' // Adding a mock status field for the Ecomiq look
+        status: 'active'
     });
 
     const [isPushing, setIsPushing] = useState(false);
@@ -133,13 +133,13 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
     return (
         <div className="h-full flex flex-col bg-white border-l border-gray-100">
             <div className="flex-1 overflow-y-auto custom-scrollbar">
-                <div className="p-6 space-y-8">
+                {/* Removed padding from container to allow edge-to-edge */}
+                <div className="py-0">
 
-                    <div className="space-y-6">
+                    <div className="space-y-0">
                         {/* Section: Images */}
                         <CollapsibleSection title="Media">
                             <div className="space-y-3">
-                                <Label className="text-sm font-medium text-gray-700">Product Images</Label>
                                 <div className="flex flex-wrap gap-3">
                                     {/* Product Images */}
                                     {product.images.map((img, i) => (
@@ -159,7 +159,7 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
                                         className="w-20 h-20 rounded-lg bg-indigo-50 border border-indigo-100 flex flex-col items-center justify-center gap-1 hover:bg-indigo-100 transition-colors text-indigo-600 group"
                                     >
                                         <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                                        <span className="text-[10px] font-medium">AI Studio</span>
+                                        <span className="text-[10px] font-medium">Studio</span>
                                     </button>
                                 </div>
                             </div>
