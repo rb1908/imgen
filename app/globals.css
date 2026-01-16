@@ -229,10 +229,10 @@
   }
 
   html {
-    @apply overflow-x-hidden scroll-smooth;
+    @apply overflow-x-hidden scroll-smooth touch-pan-y;
   }
 
   body {
-    @apply bg-background text-foreground overflow-x-hidden overscroll-none;
+    @apply bg-background text-foreground overflow-x-hidden overscroll-none touch-pan-y;
   }
 }
