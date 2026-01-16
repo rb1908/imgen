@@ -404,6 +404,33 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
                         {/* Right Actions */}
                         <div className="flex items-center gap-1 pb-0.5">
+                            {/* Enhance Button (New) */}
+                            {customPrompt.length > 0 && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-9 w-9 rounded-full text-indigo-500 hover:bg-indigo-500/10 hover:text-indigo-600 mr-1"
+                                    onClick={async () => {
+                                        if (customPrompt.length < 3) return;
+                                        const loadingId = toast.loading("Enhancing prompt...");
+                                        try {
+                                            const { enhancePrompt } = await import('@/app/actions/enhance');
+                                            const { enhancedPrompt, error } = await enhancePrompt(customPrompt);
+                                            if (error) {
+                                                toast.error(error, { id: loadingId });
+                                            } else {
+                                                setCustomPrompt(enhancedPrompt);
+                                                toast.success("Prompt enhanced!", { id: loadingId });
+                                            }
+                                        } catch (e) {
+                                            toast.error("Failed to enhance", { id: loadingId });
+                                        }
+                                    }}
+                                    title="Enhance with AI"
+                                >
+                                    <Wand2 className="w-4 h-4" />
+                                </Button>
+                            )}
                             {/* Templates Pill */}
                             <Button
                                 variant="ghost"
