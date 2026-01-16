@@ -176,7 +176,6 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
         <PageScaffold>
             <PageHeader
                 title="Projects"
-                description="Your images & product sets"
             >
                 {/* View Toggle */}
                 <div className="flex items-center p-0.5 bg-muted/50 rounded-lg border">

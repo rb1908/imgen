@@ -45,7 +45,6 @@ export default function SettingsHub() {
             <div className="max-w-xl mx-auto space-y-8">
                 <PageHeader
                     title="Settings"
-                    description="Manage your preferences and connections."
                 />
 
                 <div className="grid gap-4">

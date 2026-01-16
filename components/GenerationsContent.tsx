@@ -11,7 +11,6 @@ export async function GenerationsContent({ query }: { query?: string }) {
         <PageScaffold>
             <PageHeader
                 title="Gallery"
-                description="Explore all generated images."
             >
                 <div className="w-64 max-w-[200px] md:max-w-xs">
                     <SearchInput placeholder="Search looks..." />
