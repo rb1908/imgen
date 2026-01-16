@@ -1,7 +1,6 @@
 import { PageScaffold } from '@/components/PageScaffold';
 import { getAllGenerations } from '@/app/actions/generations';
 import { GenerationGrid } from '@/components/GenerationGrid';
-import { PageScaffold } from '@/components/PageScaffold';
 
 export async function GenerationsContent({ query }: { query?: string }) {
     const generations = await getAllGenerations(100, query);

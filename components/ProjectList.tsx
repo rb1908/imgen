@@ -4,7 +4,6 @@ import { PageScaffold } from '@/components/PageScaffold';
 
 import { useState, useEffect } from 'react';
 import { Project, Generation } from '@prisma/client';
-import { PageScaffold } from '@/components/PageScaffold';
 import { createProject, deleteProject, updateProject, getSignedUploadUrl, getPublicUrl } from '@/app/actions/projects';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, FolderOpen, Image as ImageIcon, LayoutGrid, List, Pencil, MoreVertical } from 'lucide-react';
@@ -172,7 +171,6 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
         }
     };
 
-    return (
     return (
         <PageScaffold>
             <div className="space-y-6">
