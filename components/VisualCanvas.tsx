@@ -203,10 +203,6 @@ export function VisualCanvas({
                 onSelectAll={() => { }}
                 onEdit={() => { }}
                 onDelete={() => { }}
-                mode={'template'}
-                onModeChange={() => { }}
-                customPrompt={customPrompt}
-                onCustomPromptChange={setCustomPrompt}
             />
         </div>
     );
