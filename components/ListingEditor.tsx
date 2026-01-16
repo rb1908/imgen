@@ -9,8 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { updateProduct } from '@/app/actions/product_actions';
 import { updateShopifyProduct } from '@/app/actions/shopify';
-import { Loader2, X, ChevronRight, LayoutGrid, Tag, DollarSign, Type } from 'lucide-react';
+import { updateShopifyProduct } from '@/app/actions/shopify';
+import { Loader2, X, ChevronRight, LayoutGrid, Tag, DollarSign, Type, Sparkles, Plus, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 import {
     Select,
     SelectContent,
@@ -22,9 +24,10 @@ import {
 interface ListingEditorProps {
     product: Product;
     onUpdate?: (updates: Partial<Product>) => void;
+    onOpenStudio: () => void;
 }
 
-export function ListingEditor({ product, onUpdate }: ListingEditorProps) {
+export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditorProps) {
     const [formData, setFormData] = useState({
         title: product.title,
         description: product.description || '',
@@ -98,8 +101,34 @@ export function ListingEditor({ product, onUpdate }: ListingEditorProps) {
 
                     {/* Header Section */}
                     <div>
-                        <h2 className="text-lg font-semibold text-gray-900">Product Organization</h2>
-                        <p className="text-sm text-gray-500">Manage listing details and visibility.</p>
+                        <h2 className="text-xl font-bold text-gray-900">Product Details</h2>
+                    </div>
+
+                    {/* Section: Images */}
+                    <div className="space-y-3">
+                        <Label className="text-sm font-medium text-gray-700">Images</Label>
+                        <div className="flex flex-wrap gap-3">
+                            {/* Product Images */}
+                            {product.images.map((img, i) => (
+                                <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 group">
+                                    <Image src={img} alt="" fill className="object-cover" />
+                                </div>
+                            ))}
+
+                            {/* Upload Placeholder */}
+                            <button className="w-20 h-20 rounded-lg border border-dashed border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors text-gray-400 hover:text-gray-600">
+                                <Plus className="w-6 h-6" />
+                            </button>
+
+                            {/* AI Studio Trigger */}
+                            <button
+                                onClick={onOpenStudio}
+                                className="w-20 h-20 rounded-lg bg-indigo-50 border border-indigo-100 flex flex-col items-center justify-center gap-1 hover:bg-indigo-100 transition-colors text-indigo-600 group"
+                            >
+                                <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                <span className="text-[10px] font-medium">AI Studio</span>
+                            </button>
+                        </div>
                     </div>
 
                     {/* Section: Main Info */}
