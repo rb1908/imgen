@@ -54,8 +54,9 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
     const [selectedGenerationIds, setSelectedGenerationIds] = useState<string[]>([]);
     const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
 
-    // Tab state: 'templates' or 'custom'
-    const [mode, setMode] = useState<'template' | 'custom'>('template');
+    // State inferred from selectedTemplateIds
+    // const [mode, setMode] = useState<'template' | 'custom'>('template'); // Removed
+
 
     // Mobile Layout Tab
     const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
@@ -202,11 +203,14 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
     const [pendingGenerations, setPendingGenerations] = useState<{ id: string; prompt: string }[]>([]);
 
     const handleGenerate = async () => {
-        if (mode === 'template' && selectedTemplateIds.length === 0) {
+        const isTemplateMode = selectedTemplateIds.length > 0;
+
+        if (isTemplateMode && selectedTemplateIds.length === 0) {
+            // Should not happen if inferred, but for safety
             toast.error("Select at least one template");
             return;
         }
-        if (mode === 'custom' && !customPrompt.trim()) {
+        if (!isTemplateMode && !customPrompt.trim()) {
             toast.error("Enter a prompt");
             return;
         }
@@ -216,7 +220,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
         // 1. Identify tasks
         let tasks: { id: string, type: 'template' | 'custom', value: string, promptDisplay: string }[] = [];
 
-        if (mode === 'template') {
+        if (isTemplateMode) {
             tasks = selectedTemplateIds.map(tid => {
                 const t = templates.find(temp => temp.id === tid);
                 return {
@@ -248,7 +252,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                     // Note: generateVariations accepts array or string. passing array of 1 ID or just custom string
                     const input = task.type === 'template' ? [task.value] : task.value;
 
-                    const result = await generateVariations(project.id, mode, input);
+                    const result = await generateVariations(project.id, isTemplateMode ? 'template' : 'custom', input);
 
                     // Success: Remove pending, Add real
                     setPendingGenerations(prev => prev.filter(p => p.id !== task.id));
@@ -262,7 +266,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 }
             }));
 
-            if (mode === 'custom') setCustomPrompt('');
+            if (!isTemplateMode) setCustomPrompt('');
             toast.success("All generations finished!");
 
         } catch (e) {
@@ -376,7 +380,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         <div className="flex-1 min-h-[44px] py-3">
                             <textarea
                                 className="w-full bg-transparent border-none outline-none text-base placeholder:text-muted-foreground/70 resize-none max-h-32 py-0 px-1 leading-relaxed"
-                                placeholder={mode === 'template' ? "Add context to your template..." : "What do you want to generate?"}
+                                placeholder={selectedTemplateIds.length > 0 ? "Add context to your template..." : "What do you want to generate?"}
                                 rows={1}
                                 value={customPrompt}
                                 onChange={(e) => {
@@ -446,7 +450,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                                         : "bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 active:scale-95"
                                 )}
                                 onClick={handleGenerate}
-                                disabled={generationStatus === 'generating' || (mode === 'template' && selectedTemplateIds.length === 0 && !customPrompt) || (mode === 'custom' && !customPrompt.trim())}
+                                disabled={generationStatus === 'generating' || (!selectedTemplateIds.length && !customPrompt.trim())}
                             >
                                 {generationStatus === 'generating' ? (
                                     <Loader2 className="w-5 h-5 animate-spin" />
