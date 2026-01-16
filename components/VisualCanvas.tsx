@@ -112,22 +112,27 @@ export function VisualCanvas({
         setIsPromptOpen(false); // Collapse on generate
     };
 
-    // Combine images and generations for the gallery
-    const allImages = [
-        ...productImages.map(url => ({ url, type: 'product' as const })),
-        ...generations.map(g => ({ url: g.url, type: 'generation' as const, id: g.id }))
-    ];
+    // Split images for display
+    // 1. Listing Images (Product Images)
+    const listingImages = productImages.map(url => ({ url, type: 'product' as const }));
+
+    // 2. AI Generations (Exclude images that are effectively already in the listing to avoid dupes, if strict 'not part of listing' is desired. 
+    // However, usually users want to see all generations. But the user explicitly said "images that are not part of the listing".
+    // We'll trust that request.)
+    const unseenGenerations = generations
+        .filter(g => !productImages.includes(g.url))
+        .map(g => ({ url: g.url, type: 'generation' as const, id: g.id }));
 
     if (viewMode === 'gallery') {
         return (
             <div className="relative h-full w-full bg-zinc-950 flex flex-col p-6 text-white overflow-y-auto">
-                <div className="max-w-7xl mx-auto w-full">
+                <div className="max-w-7xl mx-auto w-full space-y-12">
 
                     {/* Header */}
-                    <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-2xl font-bold tracking-tight">Studio Gallery</h2>
-                            <p className="text-zinc-400 mt-1">Select an image to edit or start a new generation.</p>
+                            <p className="text-zinc-400 mt-1">Manage your listing media and AI creations.</p>
                         </div>
                         {isSelectingReference && (
                             <div className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-4 py-2 rounded-full animate-pulse font-medium text-sm flex items-center gap-2">
@@ -137,99 +142,147 @@ export function VisualCanvas({
                         )}
                     </div>
 
-                    {/* Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {/* Section 1: Listing Images */}
+                    <section className="space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+                            <h3 className="text-lg font-semibold flex items-center gap-2">
+                                <ImageIcon className="w-4 h-4 text-zinc-400" />
+                                Listing Images
+                                <span className="text-xs font-normal text-zinc-500 ml-2">{listingImages.length} items</span>
+                            </h3>
+                        </div>
 
-                        {/* "Add New" Action Card */}
-                        <div className="aspect-[3/4] rounded-xl border border-dashed border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 transition-colors flex flex-col items-center justify-center p-4 gap-4 group relative overflow-hidden">
-                            <div className="text-center space-y-1 z-10">
-                                <span className="font-medium text-zinc-200">Add New</span>
-                                <p className="text-xs text-zinc-500">Upload or Generate</p>
-                            </div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                            {/* "Add New" Action Card */}
+                            <div className="aspect-[3/4] rounded-xl border border-dashed border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 transition-colors flex flex-col items-center justify-center p-4 gap-4 group relative overflow-hidden">
+                                <div className="text-center space-y-1 z-10">
+                                    <span className="font-medium text-zinc-200">Add New</span>
+                                    <p className="text-xs text-zinc-500">Upload or Generate</p>
+                                </div>
 
-                            <div className="flex items-center gap-3 z-10">
-                                {/* Upload Action */}
-                                <div className="relative">
-                                    {/* Using a label to trigger file input handled elsewhere or just a mock for now. 
-                                        Ideally this routes to onAddToProduct logic but that takes a URL.
-                                        For now, let's assume we use ImageUploader in a dialog if requested?
-                                        User asked for "Show two icons".
-                                    */}
+                                <div className="flex items-center gap-3 z-10">
+                                    {/* Upload Action */}
+                                    <div className="relative">
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-10 w-10 rounded-full bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:text-white transition-all"
+                                            onClick={() => {
+                                                toast.info("Upload feature coming soon");
+                                            }}
+                                            title="Upload Image"
+                                        >
+                                            <Upload className="w-5 h-5" />
+                                        </Button>
+                                    </div>
+
+                                    {/* AI Generate Action */}
                                     <Button
                                         variant="outline"
                                         size="icon"
-                                        className="h-10 w-10 rounded-full bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:text-white transition-all"
+                                        className={cn(
+                                            "h-10 w-10 rounded-full border-zinc-700 hover:text-white transition-all",
+                                            isSelectingReference
+                                                ? "bg-indigo-500 text-white border-indigo-500 hover:bg-indigo-600"
+                                                : "bg-zinc-800 hover:bg-indigo-500/20 hover:border-indigo-500/50 hover:text-indigo-400"
+                                        )}
                                         onClick={() => {
-                                            toast.info("Upload feature coming soon");
-                                            // Trigger upload logic
+                                            setIsSelectingReference(!isSelectingReference);
+                                            if (!isSelectingReference) {
+                                                toast.info("Select an image to use as reference");
+                                            } else {
+                                                toast.dismiss();
+                                            }
                                         }}
-                                        title="Upload Image"
+                                        title="Generate with AI"
                                     >
-                                        <Upload className="w-5 h-5" />
+                                        <Sparkles className="w-5 h-5" />
                                     </Button>
                                 </div>
+                            </div>
 
-                                {/* AI Generate Action */}
-                                <Button
-                                    variant="outline"
-                                    size="icon"
+                            {/* Listing Images Grid */}
+                            {listingImages.map((img, idx) => (
+                                <div
+                                    key={`prod-${idx}`}
+                                    onClick={() => handleImageClick(img.url)}
                                     className={cn(
-                                        "h-10 w-10 rounded-full border-zinc-700 hover:text-white transition-all",
+                                        "aspect-[3/4] rounded-xl relative overflow-hidden cursor-pointer group bg-zinc-900 border transition-all duration-200",
                                         isSelectingReference
-                                            ? "bg-indigo-500 text-white border-indigo-500 hover:bg-indigo-600"
-                                            : "bg-zinc-800 hover:bg-indigo-500/20 hover:border-indigo-500/50 hover:text-indigo-400"
+                                            ? "hover:ring-4 ring-indigo-500/40 border-indigo-500/50 hover:scale-[1.02]"
+                                            : "border-transparent hover:border-zinc-700 hover:shadow-xl"
                                     )}
-                                    onClick={() => {
-                                        setIsSelectingReference(!isSelectingReference);
-                                        if (!isSelectingReference) {
-                                            toast.info("Select an image to use as reference");
-                                        } else {
-                                            toast.dismiss();
-                                        }
-                                    }}
-                                    title="Generate with AI"
                                 >
-                                    <Sparkles className="w-5 h-5" />
-                                </Button>
-                            </div>
+                                    <Image
+                                        src={img.url}
+                                        alt="Product Image"
+                                        fill
+                                        className={cn(
+                                            "object-cover transition-transform duration-500",
+                                            !isSelectingReference && "group-hover:scale-105"
+                                        )}
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                            ))}
                         </div>
+                    </section>
 
-                        {/* Image Items */}
-                        {allImages.map((img, idx) => (
-                            <div
-                                key={`${img.type}-${idx}`}
-                                onClick={() => handleImageClick(img.url)}
-                                className={cn(
-                                    "aspect-[3/4] rounded-xl relative overflow-hidden cursor-pointer group bg-zinc-900 border transition-all duration-200",
-                                    isSelectingReference
-                                        ? "hover:ring-4 ring-indigo-500/40 border-indigo-500/50 hover:scale-[1.02]"
-                                        : "border-transparent hover:border-zinc-700 hover:shadow-xl"
-                                )}
-                            >
-                                <Image
-                                    src={img.url}
-                                    alt="Gallery Item"
-                                    fill
-                                    className={cn(
-                                        "object-cover transition-transform duration-500",
-                                        !isSelectingReference && "group-hover:scale-105"
-                                    )}
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                                {img.type === 'product' && (
-                                    <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-medium text-white/90">
-                                        Product
-                                    </div>
-                                )}
-                                {img.type === 'generation' && (
-                                    <div className="absolute top-2 left-2 bg-indigo-500/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-medium text-white">
-                                        AI Generated
-                                    </div>
-                                )}
+                    {/* Section 2: AI Generations */}
+                    {unseenGenerations.length > 0 && (
+                        <section className="space-y-4">
+                            <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+                                <h3 className="text-lg font-semibold flex items-center gap-2 text-indigo-400">
+                                    <Sparkles className="w-4 h-4" />
+                                    AI Creations
+                                    <span className="text-xs font-normal text-zinc-500 ml-2">{unseenGenerations.length} items</span>
+                                </h3>
                             </div>
-                        ))}
-                    </div>
+
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                                {unseenGenerations.map((gen, idx) => (
+                                    <div
+                                        key={`gen-${gen.id}`}
+                                        onClick={() => handleImageClick(gen.url)}
+                                        className={cn(
+                                            "aspect-[3/4] rounded-xl relative overflow-hidden cursor-pointer group bg-zinc-900 border transition-all duration-200",
+                                            isSelectingReference
+                                                ? "hover:ring-4 ring-indigo-500/40 border-indigo-500/50 hover:scale-[1.02]"
+                                                : "border-transparent hover:border-zinc-700 hover:shadow-xl"
+                                        )}
+                                    >
+                                        <Image
+                                            src={gen.url}
+                                            alt="AI Generation"
+                                            fill
+                                            className={cn(
+                                                "object-cover transition-transform duration-500",
+                                                !isSelectingReference && "group-hover:scale-105"
+                                            )}
+                                        />
+                                        <div className="absolute top-2 left-2 bg-indigo-500/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-medium text-white shadow-sm">
+                                            AI Generated
+                                        </div>
+
+                                        {/* Quick Action: Add to Listing */}
+                                        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Button
+                                                size="icon"
+                                                className="h-8 w-8 rounded-full bg-white text-black hover:bg-zinc-200"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onAddToProduct(gen.url);
+                                                }}
+                                                title="Add to Listing"
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
                 </div>
             </div>
         );
