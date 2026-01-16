@@ -389,6 +389,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 selectedTemplateCount={selectedTemplateIds.length}
                 onOpenTemplatePicker={() => setIsTemplatePickerOpen(true)}
                 onClearTemplates={() => setSelectedTemplateIds([])}
+                className="md:pl-72"
             />
 
             <TemplateDialog

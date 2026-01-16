@@ -16,6 +16,7 @@ interface PromptBarProps {
     onOpenTemplatePicker: () => void;
     onClearTemplates: () => void;
     children?: React.ReactNode; // For Reference Image previews
+    className?: string; // For the open state container
 }
 
 export function PromptBar({
@@ -28,7 +29,8 @@ export function PromptBar({
     selectedTemplateCount,
     onOpenTemplatePicker,
     onClearTemplates,
-    children
+    children,
+    className
 }: PromptBarProps) {
     const [isEnhancing, setIsEnhancing] = useState(false);
 
@@ -60,7 +62,7 @@ export function PromptBar({
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0, opacity: 0 }}
-                    className="absolute bottom-6 right-6 z-[100] md:right-10"
+                    className="fixed bottom-6 right-6 z-[100] md:right-10"
                 >
                     <Button
                         size="icon"
@@ -84,7 +86,10 @@ export function PromptBar({
                     animate={{ y: 0 }}
                     exit={{ y: "100%" }}
                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                    className="absolute bottom-0 left-0 right-0 bg-white border-t border-zinc-200 z-[100] rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
+                    className={cn(
+                        "fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-200 z-[100] rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]",
+                        className
+                    )}
                 >
                     <div className="max-w-3xl mx-auto w-full p-4 pb-4 flex flex-col gap-3 relative">
 
