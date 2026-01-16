@@ -314,7 +314,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
 
             {/* Main Content - Unified Grid */}
-            <div className="flex-1 min-h-0 px-4 pb-32 lg:pb-8 relative overflow-y-auto">
+            <div className="flex-1 min-h-0 px-4 pb-32 relative overflow-y-auto">
                 {/* Generation Grid (Desktop & Mobile Unified) */}
                 <div className="max-w-[1800px] mx-auto">
                     <div className="flex items-center justify-between mb-4">
@@ -366,9 +366,9 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
 
             {/* Gemini-Style Floating Prompt Bar */}
-            <div className="flex-none px-4 pb-6 pt-2 z-50 pointer-events-none">
+            <div className="absolute bottom-0 left-0 w-full px-4 pb-6 pt-12 bg-gradient-to-t from-background via-background/80 to-transparent z-50 pointer-events-none">
                 <div className="max-w-3xl mx-auto pointer-events-auto">
-                    <div className="bg-secondary/40 backdrop-blur-xl border shadow-lg rounded-[2rem] p-2 pl-3 flex items-end gap-2 transition-all focus-within:bg-secondary/60 focus-within:ring-1 focus-within:ring-primary/20">
+                    <div className="bg-muted/80 backdrop-blur-xl border shadow-2xl rounded-[2rem] p-2 pl-3 flex items-end gap-2 transition-all focus-within:bg-background focus-within:ring-1 focus-within:ring-primary/20">
 
                         {/* Plus / Add Context */}
                         <Button
