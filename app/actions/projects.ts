@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { Project } from '@prisma/client';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 import { uploadImageToStorage } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
 
@@ -24,10 +24,7 @@ export async function getSignedUploadUrl(fileName: string, fileType: string) {
         throw new Error("Failed to get signed URL");
     }
 
-    return { signedUrl: data.signedUrl, path, publicUrl: null }; // We can't know public URL until uploaded?
-    // Actually, createSignedUploadUrl returns a tokenized URL for uploading.
-    // For retrieving, we need the public URL.
-    // We can predict the public URL if the bucket is public.
+    return { signedUrl: data.signedUrl, path, publicUrl: null };
 }
 
 export async function getPublicUrl(path: string) {
@@ -58,6 +55,7 @@ export async function createProject(formData: FormData): Promise<Project> {
             }
         });
 
+        revalidateTag('projects');
         revalidatePath('/');
         return project;
     } catch (e) {
@@ -66,40 +64,45 @@ export async function createProject(formData: FormData): Promise<Project> {
     }
 }
 
-export async function getProjects() {
-    try {
-        const projects = await prisma.project.findMany({
-            orderBy: { createdAt: 'desc' },
-            select: {
-                id: true,
-                name: true,
-                originalImageUrl: true,
-                createdAt: true,
-                updatedAt: true,
-                description: true,
-                tags: true,
-                price: true,
-                shopifyId: true,
-                defaultProductId: true,
-                _count: {
-                    select: { generations: true }
-                },
-                generations: {
-                    take: 1,
-                    orderBy: { createdAt: 'desc' },
-                    select: {
-                        imageUrl: true,
-                        createdAt: true
+// Cached version of getProjects
+export const getProjects = unstable_cache(
+    async () => {
+        try {
+            const projects = await prisma.project.findMany({
+                orderBy: { createdAt: 'desc' },
+                select: {
+                    id: true,
+                    name: true,
+                    originalImageUrl: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    description: true,
+                    tags: true,
+                    price: true,
+                    shopifyId: true,
+                    defaultProductId: true,
+                    _count: {
+                        select: { generations: true }
+                    },
+                    generations: {
+                        take: 1,
+                        orderBy: { createdAt: 'desc' },
+                        select: {
+                            imageUrl: true,
+                            createdAt: true
+                        }
                     }
                 }
-            }
-        });
-        return projects;
-    } catch (e) {
-        console.error("Failed to fetch projects:", e);
-        return [];
-    }
-}
+            });
+            return projects;
+        } catch (e) {
+            console.error("Failed to fetch projects:", e);
+            return [];
+        }
+    },
+    ['projects-list'],
+    { tags: ['projects'] }
+);
 
 export async function updateProjectMetadata(id: string, data: { description?: string; tags?: string; price?: string }) {
     try {
@@ -107,6 +110,7 @@ export async function updateProjectMetadata(id: string, data: { description?: st
             where: { id },
             data
         });
+        revalidateTag('projects');
         revalidatePath(`/project/${id}`);
         return { success: true };
     } catch (e) {
@@ -124,6 +128,7 @@ export async function getProject(id: string) {
 
 export async function deleteProject(id: string) {
     await prisma.project.delete({ where: { id } });
+    revalidateTag('projects');
     revalidatePath('/');
 }
 
@@ -137,6 +142,7 @@ export async function updateProject(id: string, name: string) {
         data: { name: name.trim() }
     });
 
+    revalidateTag('projects');
     revalidatePath('/');
     return project;
 }
@@ -147,6 +153,7 @@ export async function setProjectDefaultProduct(id: string, productId: string | n
             where: { id },
             data: { defaultProductId: productId }
         });
+        revalidateTag('projects');
         revalidatePath(`/project/${id}`);
         return { success: true };
     } catch (e) {
@@ -179,6 +186,7 @@ export async function getOrCreateProjectForProduct(product: { id: string; title:
             include: { generations: { orderBy: { createdAt: 'desc' } } }
         });
 
+        revalidateTag('projects');
         return newProject;
     } catch (e) {
         console.error("Failed to get/create project for product:", e);
