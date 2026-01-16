@@ -11,6 +11,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import Link from 'next/link';
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
 
@@ -43,8 +45,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
 
     // ...
 
-    const pathname = usePathname();
-    const [isSheetOpen, setIsSheetOpen] = useState(false);
+
 
     const sidebarItems = [
         { icon: LayoutDashboard, label: 'Projects', href: '/projects' },
