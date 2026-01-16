@@ -5,8 +5,6 @@ export default async function ProductsPage() {
     const products = await getLocalProducts();
 
     return (
-    return (
         <ProductListClient initialProducts={products} />
-    );
     );
 }
