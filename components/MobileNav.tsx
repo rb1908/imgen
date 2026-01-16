@@ -1,3 +1,4 @@
+
 'use client';
 
 import { LayoutDashboard, Image as ImageIcon, Settings, Sparkles, Palette, ShoppingBag } from 'lucide-react';
@@ -15,29 +16,36 @@ const navItems = [
 export function MobileNav() {
     const pathname = usePathname();
 
+    const isMatch = (href: string) => {
+        if (href === '/') return pathname === '/';
+        return pathname.startsWith(href);
+    };
+
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-t border-border p-1 md:hidden">
-            <nav className="flex items-center justify-around">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] md:hidden">
+            <nav className="flex items-center gap-1 p-1.5 rounded-full bg-black/90 backdrop-blur-xl border border-white/10 shadow-2xl">
                 {navItems.map((item) => {
-                    const isActive = pathname === item.href;
+                    const isActive = isMatch(item.href);
+
                     return (
                         <Link
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex flex-col items-center justify-center p-1 rounded-lg transition-all",
+                                "relative flex items-center justify-center rounded-full transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] overflow-hidden",
                                 isActive
-                                    ? "text-primary"
-                                    : "text-muted-foreground hover:text-foreground"
+                                    ? "bg-[#FF6B35] text-white pl-4 pr-5 py-3 gap-2"
+                                    : "text-white/60 hover:text-white hover:bg-white/10 w-11 h-11"
                             )}
                         >
-                            <div className={cn(
-                                "p-1 rounded-full mb-0.5 transition-all",
-                                isActive ? "bg-primary/10" : "bg-transparent"
+                            <item.icon className={cn("transition-transform", isActive ? "w-4 h-4" : "w-5 h-5")} />
+
+                            <span className={cn(
+                                "whitespace-nowrap font-medium text-sm transition-all duration-300 origin-left",
+                                isActive ? "w-auto opacity-100 scale-100" : "w-0 opacity-0 scale-95 hidden"
                             )}>
-                                <item.icon className="w-4 h-4" />
-                            </div>
-                            <span className="text-[9px] font-medium">{item.label}</span>
+                                {item.label}
+                            </span>
                         </Link>
                     );
                 })}
@@ -45,3 +53,4 @@ export function MobileNav() {
         </div>
     );
 }
+
