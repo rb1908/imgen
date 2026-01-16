@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const sidebarItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
+    { icon: LayoutDashboard, label: 'Projects', href: '/projects' },
     { icon: Sparkles, label: 'Generations', href: '/generations' },
     { icon: ShoppingBag, label: 'Products', href: '/products' },
     { icon: Settings, label: 'Settings', href: '/settings' },
