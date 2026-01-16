@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { Project } from '@prisma/client';
-import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
+import { revalidatePath } from 'next/cache';
 import { uploadImageToStorage } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
 
@@ -55,7 +55,7 @@ export async function createProject(formData: FormData): Promise<Project> {
             }
         });
 
-        revalidateTag('projects');
+        revalidatePath('/projects');
         revalidatePath('/');
         return project;
     } catch (e) {
@@ -64,45 +64,40 @@ export async function createProject(formData: FormData): Promise<Project> {
     }
 }
 
-// Cached version of getProjects
-export const getProjects = unstable_cache(
-    async () => {
-        try {
-            const projects = await prisma.project.findMany({
-                orderBy: { createdAt: 'desc' },
-                select: {
-                    id: true,
-                    name: true,
-                    originalImageUrl: true,
-                    createdAt: true,
-                    updatedAt: true,
-                    description: true,
-                    tags: true,
-                    price: true,
-                    shopifyId: true,
-                    defaultProductId: true,
-                    _count: {
-                        select: { generations: true }
-                    },
-                    generations: {
-                        take: 1,
-                        orderBy: { createdAt: 'desc' },
-                        select: {
-                            imageUrl: true,
-                            createdAt: true
-                        }
+export async function getProjects() {
+    try {
+        const projects = await prisma.project.findMany({
+            orderBy: { createdAt: 'desc' },
+            select: {
+                id: true,
+                name: true,
+                originalImageUrl: true,
+                createdAt: true,
+                updatedAt: true,
+                description: true,
+                tags: true,
+                price: true,
+                shopifyId: true,
+                defaultProductId: true,
+                _count: {
+                    select: { generations: true }
+                },
+                generations: {
+                    take: 1,
+                    orderBy: { createdAt: 'desc' },
+                    select: {
+                        imageUrl: true,
+                        createdAt: true
                     }
                 }
-            });
-            return projects;
-        } catch (e) {
-            console.error("Failed to fetch projects:", e);
-            return [];
-        }
-    },
-    ['projects-list'],
-    { tags: ['projects'] }
-);
+            }
+        });
+        return projects;
+    } catch (e) {
+        console.error("Failed to fetch projects:", e);
+        return [];
+    }
+}
 
 export async function updateProjectMetadata(id: string, data: { description?: string; tags?: string; price?: string }) {
     try {
@@ -110,8 +105,8 @@ export async function updateProjectMetadata(id: string, data: { description?: st
             where: { id },
             data
         });
-        revalidateTag('projects');
         revalidatePath(`/project/${id}`);
+        revalidatePath('/projects');
         return { success: true };
     } catch (e) {
         console.error("Failed to update project metadata:", e);
@@ -128,7 +123,7 @@ export async function getProject(id: string) {
 
 export async function deleteProject(id: string) {
     await prisma.project.delete({ where: { id } });
-    revalidateTag('projects');
+    revalidatePath('/projects');
     revalidatePath('/');
 }
 
@@ -142,7 +137,7 @@ export async function updateProject(id: string, name: string) {
         data: { name: name.trim() }
     });
 
-    revalidateTag('projects');
+    revalidatePath('/projects');
     revalidatePath('/');
     return project;
 }
@@ -153,8 +148,8 @@ export async function setProjectDefaultProduct(id: string, productId: string | n
             where: { id },
             data: { defaultProductId: productId }
         });
-        revalidateTag('projects');
         revalidatePath(`/project/${id}`);
+        revalidatePath('/projects');
         return { success: true };
     } catch (e) {
         console.error("Failed to set default product:", e);
@@ -186,7 +181,7 @@ export async function getOrCreateProjectForProduct(product: { id: string; title:
             include: { generations: { orderBy: { createdAt: 'desc' } } }
         });
 
-        revalidateTag('projects');
+        revalidatePath('/projects');
         return newProject;
     } catch (e) {
         console.error("Failed to get/create project for product:", e);
