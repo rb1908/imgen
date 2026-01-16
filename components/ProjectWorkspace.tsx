@@ -225,7 +225,9 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
             return;
         }
 
+
         setGenerationStatus('generating');
+        setIsPromptOpen(false); // Collapse prompt bar immediately
 
         // 1. Identify tasks
         let tasks: { id: string, type: 'template' | 'custom', value: string, promptDisplay: string }[] = [];
@@ -391,12 +393,19 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                     >
                         <Button
                             size="icon"
-                            className="h-14 w-14 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.4)] bg-white text-black hover:scale-110 transition-transform duration-200 hover:bg-zinc-100"
+                            className={cn(
+                                "h-14 w-14 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.4)] bg-white text-black hover:scale-110 transition-transform duration-200 hover:bg-zinc-100",
+                                generationStatus === 'generating' && "animate-pulse ring-4 ring-indigo-500/20"
+                            )}
                             onClick={() => {
                                 setIsPromptOpen(true);
                             }}
                         >
-                            <Sparkles className="w-6 h-6 fill-black" />
+                            {generationStatus === 'generating' ? (
+                                <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+                            ) : (
+                                <Sparkles className="w-6 h-6 fill-black" />
+                            )}
                         </Button>
                     </motion.div>
                 ) : (
