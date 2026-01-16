@@ -369,107 +369,71 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
             </div >
 
 
-            {/* Gemini-Style Floating Prompt Bar */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 pt-12 bg-gradient-to-t from-background via-background/80 to-transparent z-[100] pointer-events-none md:pl-72">
-                <div className="max-w-3xl mx-auto pointer-events-auto">
-                    <div className="bg-zinc-900/95 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-[2rem] p-2 pl-2 flex items-end gap-2 transition-all ring-1 ring-white/5">
+            {/* Fixed Bottom Sheet Prompt Bar */}
+            <div className="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-white/10 z-[100] md:pl-72 transition-all">
+                <div className="max-w-3xl mx-auto w-full p-4 flex items-end gap-3">
 
-                        {/* Left Actions */}
-                        <div className="flex items-center gap-1 pb-1">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-10 w-10 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white shrink-0"
-                                onClick={() => {
-                                    // Future: Add Image or Context
-                                    toast.info("Add context feature coming soon");
-                                }}
-                            >
-                                <Plus className="w-5 h-5" />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-10 w-10 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white shrink-0"
-                                onClick={() => {
-                                    // Open Settings or Mode
-                                    toast.info("Settings coming soon");
-                                }}
-                            >
-                                <Menu className="w-5 h-5" />
-                            </Button>
-                        </div>
+                    {/* Input Area */}
+                    <div className="flex-1 min-h-[48px] py-1">
+                        <textarea
+                            className="w-full bg-transparent border-none outline-none text-[16px] text-zinc-100 placeholder:text-zinc-500 resize-none max-h-32 py-2 px-0 leading-relaxed font-normal"
+                            placeholder={selectedTemplateIds.length > 0 ? "Add context..." : "What do you want to write?"}
+                            rows={1}
+                            value={customPrompt}
+                            onChange={(e) => {
+                                setCustomPrompt(e.target.value);
+                                e.target.style.height = 'auto';
+                                e.target.style.height = e.target.scrollHeight + 'px';
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleGenerate();
+                                }
+                            }}
+                        />
+                    </div>
 
-                        {/* Input Area */}
-                        <div className="flex-1 min-h-[48px] py-3.5">
-                            <textarea
-                                className="w-full bg-transparent border-none outline-none text-[16px] text-zinc-100 placeholder:text-zinc-500 resize-none max-h-32 py-0 px-1 leading-relaxed font-normal"
-                                placeholder={selectedTemplateIds.length > 0 ? "Add context..." : "What do you want to write?"}
-                                rows={1}
-                                value={customPrompt}
-                                onChange={(e) => {
-                                    setCustomPrompt(e.target.value);
-                                    e.target.style.height = 'auto';
-                                    e.target.style.height = e.target.scrollHeight + 'px';
-                                }}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                        e.preventDefault();
-                                        handleGenerate();
-                                    }
-                                }}
-                            />
-                        </div>
+                    {/* Right Actions */}
+                    <div className="flex items-center gap-2 pb-1">
 
-                        {/* Right Actions */}
-                        <div className="flex items-center gap-2 pb-1 pr-1">
-                            {/* Templates Pill (Fast Style) */}
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setIsTemplatePickerOpen(true)}
-                                className={cn(
-                                    "h-9 rounded-full bg-zinc-800 border-0 hover:bg-zinc-700 text-xs font-medium px-4 transition-all text-zinc-300",
-                                    selectedTemplateIds.length > 0 && "text-indigo-300 bg-indigo-500/20 hover:bg-indigo-500/30"
-                                )}
-                            >
-                                {selectedTemplateIds.length > 0 ? `${selectedTemplateIds.length} Selected` : 'Fast'}
-                            </Button>
+                        {/* Template Palette Icon */}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setIsTemplatePickerOpen(true)}
+                            className={cn(
+                                "h-10 w-10 rounded-full hover:bg-zinc-800 transition-all",
+                                selectedTemplateIds.length > 0 ? "text-indigo-400 bg-indigo-500/10" : "text-zinc-400 hover:text-white"
+                            )}
+                            title="Select Templates"
+                        >
+                            <Palette className="w-5 h-5" />
+                            {selectedTemplateIds.length > 0 && (
+                                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-500 text-[10px] text-white">
+                                    {selectedTemplateIds.length}
+                                </span>
+                            )}
+                        </Button>
 
-                            {/* Mic (Visual) */}
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-10 w-10 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white shrink-0"
-                                title="Dictate"
-                            >
-                                <div className="w-5 h-5 flex items-center justify-center">
-                                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
-                                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-                                    </svg>
-                                </div>
-                            </Button>
-
-                            {/* Generate Button (Sparkles) */}
-                            <Button
-                                size="icon"
-                                className={cn(
-                                    "h-10 w-10 rounded-full flex-shrink-0 transition-all shadow-sm",
-                                    generationStatus === 'generating'
-                                        ? "bg-zinc-800 text-zinc-500 animate-pulse"
-                                        : "bg-white text-black hover:bg-zinc-200 hover:scale-105 active:scale-95"
-                                )}
-                                onClick={handleGenerate}
-                                disabled={generationStatus === 'generating' || (!selectedTemplateIds.length && !customPrompt.trim())}
-                            >
-                                {generationStatus === 'generating' ? (
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                ) : (
-                                    <Sparkles className="w-5 h-5 fill-black" />
-                                )}
-                            </Button>
-                        </div>
+                        {/* Generate Button (Sparkles) */}
+                        <Button
+                            size="icon"
+                            className={cn(
+                                "h-10 w-10 rounded-full flex-shrink-0 transition-all shadow-sm",
+                                generationStatus === 'generating'
+                                    ? "bg-zinc-800 text-zinc-500 animate-pulse"
+                                    : "bg-white text-black hover:bg-zinc-200 hover:scale-105 active:scale-95"
+                            )}
+                            onClick={handleGenerate}
+                            disabled={generationStatus === 'generating' || (!selectedTemplateIds.length && !customPrompt.trim())}
+                        >
+                            {generationStatus === 'generating' ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                                <Sparkles className="w-5 h-5 fill-black" />
+                            )}
+                        </Button>
                     </div>
                 </div>
             </div>
