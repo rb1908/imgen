@@ -292,7 +292,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
 
     return (
-        <div className="h-full flex flex-col gap-6 relative">
+        <div className="h-full flex flex-col gap-6 relative bg-zinc-950 text-white">
             {/* Header */}
             <div className="flex-none flex items-center gap-4 px-4 border-b h-14 transition-all">
                 <Link href="/" className="p-2 hover:bg-accent rounded-full text-muted-foreground transition-colors">
