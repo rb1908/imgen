@@ -3,6 +3,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { prisma } from '@/lib/db';
 import { uploadImageToStorage } from '@/lib/supabase';
+import { revalidatePath } from 'next/cache';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || '';
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -156,6 +157,9 @@ export async function generateVariations(
         if (flat.length === 0) {
             console.error("[Generate] All attempts failed. No images generated.");
             throw new Error("Generation failed - Helper Logs checked.");
+        }
+        if (flat.length > 0) {
+            revalidatePath('/generations');
         }
         return flat;
 

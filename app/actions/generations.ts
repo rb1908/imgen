@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { Generation } from '@prisma/client';
+import { revalidatePath } from 'next/cache';
 
 export async function getAllGenerations(limit = 100, query = '') {
     try {
@@ -43,6 +44,7 @@ export async function deleteGenerations(ids: string[]) {
                 }
             }
         });
+        revalidatePath('/generations');
         return { success: true };
     } catch (error) {
         console.error("Failed to delete generations:", error);
