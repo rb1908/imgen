@@ -18,22 +18,18 @@ interface ListingEditorProps {
     onUpdate?: (updates: Partial<Product>) => void;
 }
 
+
 export function ListingEditor({ product, onUpdate }: ListingEditorProps) {
     const [formData, setFormData] = useState({
         title: product.title,
         description: product.description || '',
         price: product.price || '',
         tags: product.tags || '',
-        // Images are managed by Parent/Canvas, but we need them for sync. 
-        // We'll trust that `product.images` passed in props is up to date 
-        // OR we should accept images as a separate prop if they change frequently.
-        // For sync, we use the PROPS product images.
     });
 
-    const [isSaving, setIsSaving] = useState(false);
     const [isPushing, setIsPushing] = useState(false);
 
-    // Update local state if prop changes (e.g. if we switch products or parent updates)
+    // Update local state if prop changes
     useEffect(() => {
         setFormData({
             title: product.title,
@@ -43,25 +39,13 @@ export function ListingEditor({ product, onUpdate }: ListingEditorProps) {
         });
     }, [product]);
 
-    // Auto-save on blur or debounce could be nice, but explicit "Sync" is requested.
-    // We'll keep explicit save/sync for now to be safe, but maybe auto-save local?
-
     const handlePush = async () => {
         setIsPushing(true);
         try {
-            // 1. Save Local First
-            const updatedData = {
-                ...formData,
-                images: product.images // Use current images from prop
-            };
-
+            // 1. Save Local + Sync
+            const updatedData = { ...formData, images: product.images };
             await updateProduct(product.id, updatedData);
-
-            // 2. Sync to Shopify
-            const res = await updateShopifyProduct({
-                id: product.id,
-                ...updatedData
-            });
+            const res = await updateShopifyProduct({ id: product.id, ...updatedData });
 
             if (res.success) {
                 toast.success("Published to Shopify");
@@ -76,57 +60,73 @@ export function ListingEditor({ product, onUpdate }: ListingEditorProps) {
 
     return (
         <div className="h-full flex flex-col bg-card border-l">
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                {/* General Section */}
                 <div className="space-y-4">
-                    <h3 className="font-semibold text-lg tracking-tight">Listing Details</h3>
-
                     <div className="space-y-2">
-                        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Title</Label>
+                        <Label className="text-sm font-medium text-foreground">Title</Label>
                         <Input
                             value={formData.title}
                             onChange={e => setFormData({ ...formData, title: e.target.value })}
-                            className="font-medium text-lg"
+                            className="text-lg font-medium px-3 py-6"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Price</Label>
+                        <Label className="text-sm font-medium text-foreground">Price</Label>
                         <Input
                             value={formData.price}
                             onChange={e => setFormData({ ...formData, price: e.target.value })}
+                            className="max-w-[150px]"
                         />
                     </div>
+                </div>
 
+                {/* Divider - Metadata */}
+                <div className="relative py-2">
+                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground tracking-wider">Metadata</span></div>
+                </div>
+
+                <div className="space-y-4">
                     <div className="space-y-2">
-                        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tags</Label>
+                        <Label className="text-sm font-medium text-foreground">Tags</Label>
                         <Input
                             value={formData.tags}
                             onChange={e => setFormData({ ...formData, tags: e.target.value })}
                             placeholder="vintage, handmade, ceramic..."
+                            className="bg-muted/30"
                         />
+                        <p className="text-[10px] text-muted-foreground">Comma separated keywords for SEO.</p>
                     </div>
+                </div>
 
-                    <div className="space-y-2">
-                        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Description</Label>
-                        <Textarea
-                            value={formData.description}
-                            onChange={e => setFormData({ ...formData, description: e.target.value })}
-                            className="min-h-[200px] resize-none"
-                        />
-                    </div>
+                {/* Divider - Description */}
+                <div className="relative py-2">
+                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground tracking-wider">Description</span></div>
+                </div>
+
+                <div className="space-y-2 h-full min-h-[300px]">
+                    {/* Note editor style for Textarea */}
+                    <Textarea
+                        value={formData.description}
+                        onChange={e => setFormData({ ...formData, description: e.target.value })}
+                        className="min-h-[300px] resize-none border-border/50 bg-muted/10 p-4 leading-relaxed focus-visible:ring-1 focus-visible:ring-offset-0"
+                        placeholder="Describe your product..."
+                    />
                 </div>
             </div>
 
             {/* Bottom Action Bar */}
             <div className="p-4 border-t bg-card/50 backdrop-blur-sm">
-                <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+                <div className="flex items-center justify-center text-[10px] text-muted-foreground mb-3 text-center">
                     <span>
-                        {product.updatedAt ? `Last saved ${new Date(product.updatedAt).toLocaleTimeString()}` : 'Not saved'}
+                        {product.updatedAt ? `Synced ${new Date(product.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Not synced'}
                     </span>
-                    <span>Ready to publish</span>
                 </div>
                 <Button
-                    className="w-full h-12 text-base font-semibold shadow-xl"
+                    className="w-full h-12 text-base font-semibold shadow-md bg-black text-white hover:bg-black/90"
                     size="lg"
                     onClick={handlePush}
                     disabled={isPushing}
@@ -134,13 +134,10 @@ export function ListingEditor({ product, onUpdate }: ListingEditorProps) {
                     {isPushing ? (
                         <>
                             <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                            Syncing...
+                            Publishing...
                         </>
                     ) : (
-                        <>
-                            Sync to Shopify
-                            <ArrowRight className="w-5 h-5 ml-2" />
-                        </>
+                        "Publish to Shopify"
                     )}
                 </Button>
             </div>
