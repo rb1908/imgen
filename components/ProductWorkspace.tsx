@@ -69,9 +69,9 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
     };
 
     return (
-        <div className="h-screen flex flex-col bg-background">
+        <div className="h-screendvh flex flex-col bg-background overflow-hidden overscroll-none touch-pan-y">
             {/* Minimal Header */}
-            <header className="flex-none h-14 border-b flex items-center px-4 justify-between bg-card z-10">
+            <header className="flex-none h-14 border-b flex items-center px-4 justify-between bg-card z-10 w-full overflow-hidden">
                 <div className="flex items-center gap-4">
                     <Link href="/products" className="text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-accent rounded-full">
                         <ArrowLeft className="w-5 h-5" />
@@ -110,10 +110,10 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
             </header>
 
             {/* Main Layout */}
-            <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative w-full">
                 {/* Visual Canvas (Mobile: Tab A, Desktop: Left Pane) */}
                 <div className={cn(
-                    "flex-1 md:flex-none md:w-[65%] h-full relative order-1 transition-transform duration-300 ease-in-out",
+                    "flex-1 md:flex-none md:w-[65%] h-full relative order-1",
                     // Mobile visibility logic
                     activeTab === 'studio' ? "block" : "hidden md:block" // Hidden on mobile if not active tab, always visible on desktop
                 )}>
@@ -131,7 +131,7 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
 
                 {/* Listing Editor (Mobile: Tab B, Desktop: Right Pane) */}
                 <div className={cn(
-                    "flex-1 md:flex-none md:w-[35%] h-full border-l overflow-hidden bg-card order-2 z-20 shadow-md",
+                    "flex-1 md:flex-none md:w-[35%] h-full border-l overflow-hidden bg-white order-2 z-20 shadow-md",
                     // Mobile visibility logic
                     activeTab === 'details' ? "block" : "hidden md:block"
                 )}>
