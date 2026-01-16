@@ -1,7 +1,7 @@
-import { PageScaffold } from '@/components/PageScaffold';
 // Force Vercel Rebuild - Timestamp: verify_upload_fix
 'use client';
 
+import { PageScaffold } from '@/components/PageScaffold';
 import { useState, useEffect } from 'react';
 import { Project, Generation } from '@prisma/client';
 import { createProject, deleteProject, updateProject, getSignedUploadUrl, getPublicUrl } from '@/app/actions/projects';
