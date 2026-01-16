@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MobileNav } from '@/components/MobileNav';
+import { usePathname } from 'next/navigation';
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -40,19 +41,25 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
 
     // ...
 
+    const pathname = usePathname();
+    // Hide on detail pages: /projects/xyz OR /products/xyz
+    const isDetailPage = /^\/(projects|products)\/.+/.test(pathname || '');
+
     return (
         <div className="flex h-screen w-screen max-w-[100vw] overflow-hidden bg-background relative">
             <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />
             <main
                 className={cn(
-                    "flex-1 transition-[margin] duration-300 ease-in-out h-full overflow-hidden pb-24 md:pb-8 relative max-w-full", // added bottom padding for mobile nav
+                    "flex-1 transition-[margin] duration-300 ease-in-out h-full overflow-hidden relative max-w-full",
+                    // Add bottom padding ONLY if nav is visible
+                    !isDetailPage ? "pb-24 md:pb-8" : "pb-0 md:pb-8",
                     isCollapsed ? "md:ml-20" : "md:ml-64",
                     "ml-0" // Reset margin on mobile
                 )}
             >
                 {children}
             </main>
-            <MobileNav />
+            {!isDetailPage && <MobileNav />}
         </div>
     );
 }
