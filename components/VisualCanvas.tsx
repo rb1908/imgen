@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Sparkles, Plus, Check, Loader2, Wand2, Image as ImageIcon, Stars, ChevronDown, Palette, Upload, ArrowLeft, Paperclip, X } from 'lucide-react';
+import { Sparkles, Plus, Check, Loader2, Wand2, Image as ImageIcon, Stars, ChevronDown, Palette, Upload, ArrowLeft, Paperclip, X, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { SelectTemplatesDialog } from './SelectTemplatesDialog';
 import { GenerationGrid } from './GenerationGrid';
 import { Template } from '@prisma/client';
@@ -43,6 +43,7 @@ interface VisualCanvasProps {
     initialStudioOpen?: boolean;
     initialViewMode?: 'gallery' | 'editor';
     onClose?: () => void;
+    onRemoveFromProduct?: (url: string) => Promise<void>;
 }
 
 type ViewMode = 'gallery' | 'editor';
@@ -58,7 +59,8 @@ export function VisualCanvas({
     isGenerating,
     initialStudioOpen = false,
     initialViewMode = 'gallery',
-    onClose
+    onClose,
+    onRemoveFromProduct
 }: VisualCanvasProps) {
     // View State
     const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
@@ -425,9 +427,62 @@ export function VisualCanvas({
                         <div className="text-zinc-400">No image selected</div>
                     )}
 
-                    {/* Floating Add to Listing */}
-                    {!isSaved && activeImage && (
-                        <div className="absolute top-6 right-6 z-10">
+                    {/* Navigation Arrows */}
+                    {productImages.length > 1 && isSaved && (
+                        <>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    const currentIndex = productImages.indexOf(activeImage);
+                                    if (currentIndex > 0) onActiveImageChange(productImages[currentIndex - 1]);
+                                }}
+                                disabled={productImages.indexOf(activeImage) <= 0}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/50 hover:bg-white shadow-sm z-10 disabled:opacity-0"
+                            >
+                                <ChevronLeft className="w-6 h-6" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    const currentIndex = productImages.indexOf(activeImage);
+                                    if (currentIndex < productImages.length - 1) onActiveImageChange(productImages[currentIndex + 1]);
+                                }}
+                                disabled={productImages.indexOf(activeImage) >= productImages.length - 1}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/50 hover:bg-white shadow-sm z-10 disabled:opacity-0"
+                            >
+                                <ChevronRight className="w-6 h-6" />
+                            </Button>
+                        </>
+                    )}
+
+                    {/* Floating Actions */}
+                    <div className="absolute top-6 right-6 z-10 flex gap-2">
+                        {isSaved && onRemoveFromProduct && (
+                            <Button
+                                onClick={async () => {
+                                    if (confirm("Remove this image from listing?")) {
+                                        await onRemoveFromProduct(activeImage);
+                                        // Auto-navigate after delete if possible
+                                        const currentIndex = productImages.indexOf(activeImage);
+                                        if (currentIndex > 0) onActiveImageChange(productImages[currentIndex - 1]);
+                                        else if (productImages.length > 1) onActiveImageChange(productImages[1]); // Next one becomes 0
+                                        else onActiveImageChange(""); // No images left
+                                    }
+                                }}
+                                variant="destructive"
+                                size="sm"
+                                className="rounded-full shadow-lg px-4 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+                            >
+                                <Trash2 className="w-4 h-4 mr-1.5" />
+                                Remove
+                            </Button>
+                        )}
+
+                        {!isSaved && activeImage && (
                             <Button
                                 onClick={() => onAddToProduct(activeImage)}
                                 className="bg-white hover:bg-zinc-50 text-black shadow-lg border border-zinc-200 rounded-full px-4"
@@ -436,8 +491,8 @@ export function VisualCanvas({
                                 <Plus className="w-4 h-4 mr-1.5" />
                                 Add to Listing
                             </Button>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
 

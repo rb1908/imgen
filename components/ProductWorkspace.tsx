@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { VisualCanvas } from './VisualCanvas';
 import { ListingEditor } from './ListingEditor';
 import { generateVariations } from '@/app/actions/generate';
-import { addProductImages } from '@/app/actions/product_actions';
+import { addProductImages, removeProductImage } from '@/app/actions/product_actions';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -69,6 +69,28 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
             }
         } catch (e) {
             toast.error("Error updating product");
+        }
+    };
+
+    const handleRemoveImage = async (url: string) => {
+        try {
+            toast.loading("Removing image...");
+            const res = await removeProductImage(product.id, url);
+            if (res.success && res.product) {
+                const updatedProduct = res.product;
+                toast.dismiss();
+                toast.success("Image removed");
+                setProduct(updatedProduct);
+
+                // If the active image was removed, we need to handle it.
+                // VisualCanvas will try to navigate, but we need to ensure local activeImage state is valid if needed.
+                // Actually VisualCanvas logic derived navigation.
+                // If VisualCanvas unmounts or activeImage is no longer in product.images, it might be fine or switch to generic view.
+            } else {
+                toast.error("Failed to remove image");
+            }
+        } catch (e) {
+            toast.error("Error removing image");
         }
     };
 
@@ -134,6 +156,7 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
                                 initialStudioOpen={true}
                                 initialViewMode={startViewMode}
                                 onClose={() => setIsStudioOpen(false)}
+                                onRemoveFromProduct={handleRemoveImage}
                             />
                         </div>
                     </motion.div>

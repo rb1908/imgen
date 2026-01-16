@@ -71,6 +71,30 @@ export async function addProductImage(productId: string, imageUrl: string) {
     }
 }
 
+export async function removeProductImage(productId: string, imageUrl: string) {
+    try {
+        const product = await prisma.product.findUnique({ where: { id: productId } });
+        if (!product) throw new Error("Product not found");
+
+        const images = product.images || [];
+        const newImages = images.filter(img => img !== imageUrl);
+
+        const updatedProduct = await prisma.product.update({
+            where: { id: productId },
+            data: {
+                images: newImages
+            }
+        });
+
+        revalidatePath('/products');
+        revalidatePath(`/products/${productId}`);
+        return { success: true, product: updatedProduct };
+    } catch (e) {
+        console.error("Failed to remove product image:", e);
+        return { success: false, error: "Failed to remove image" };
+    }
+}
+
 export async function addProductImages(productId: string, imageUrls: string[]) {
     try {
         const product = await prisma.product.findUnique({ where: { id: productId } });
