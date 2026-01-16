@@ -80,10 +80,16 @@ export function SearchModal({ value = "", onChange, placeholder = "Search..." }:
                         </Button>
 
                         <input
-                            className="flex-1 bg-transparent text-lg outline-none placeholder:text-muted-foreground/70 min-w-0"
+                            className="flex-1 bg-transparent text-lg outline-none placeholder:text-muted-foreground/70 min-w-0 text-foreground font-medium"
                             placeholder={placeholder}
                             value={internalValue}
                             onChange={handleChange}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    setOpen(false);
+                                    onChange(internalValue);
+                                }
+                            }}
                             autoFocus
                         />
 
@@ -158,11 +164,18 @@ export function SearchModal({ value = "", onChange, placeholder = "Search..." }:
                         </div>
                     )}
 
-                    {/* Search Results Placeholder (optional feedback while typing) */}
+                    {/* Active Search Actions (Improved Feedback) */}
                     {internalValue && (
-                        <div className="text-center py-20 text-muted-foreground">
-                            <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                            <p>Searching for <span className="text-foreground font-medium">"{internalValue}"</span>...</p>
+                        <div className="flex flex-col items-center justify-center py-10 space-y-4">
+                            <Button
+                                size="lg"
+                                className="w-full max-w-sm rounded-full h-12 text-base shadow-lg"
+                                onClick={() => setOpen(false)}
+                            >
+                                <Search className="w-4 h-4 mr-2" />
+                                See results for "{internalValue}"
+                            </Button>
+                            <p className="text-sm text-muted-foreground">Press Enter to view results</p>
                         </div>
                     )}
 
