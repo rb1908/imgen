@@ -306,61 +306,181 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         <div className="hidden md:block w-px h-6 bg-border mx-2" />
                         <ProductSelector projectId={project.id} initialDefaultProductId={project.defaultProductId} />
                     </div>
-                </div>
-            </div>
 
-            {/* Main Content - Unified Grid */}
-            <div className="flex-1 min-h-0 px-4 pb-32 lg:pb-8 relative overflow-y-auto">
-                {/* Generation Grid (Desktop & Mobile Unified) */}
-                <div className="max-w-[1800px] mx-auto">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-semibold flex items-center gap-2">
-                            <Sparkles className="w-5 h-5 text-primary" />
-                            Results
-                        </h2>
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">{generations.length} images</span>
-                            {generations.length > 0 && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                        if (isSelectionMode) {
-                                            setIsSelectionMode(false);
-                                            setSelectedGenerationIds([]);
-                                        } else {
-                                            setIsSelectionMode(true);
-                                        }
-                                    }}
-                                >
-                                    {isSelectionMode ? 'Cancel' : 'Select Multiple'}
+                    <div className="ml-auto flex items-center gap-2">
+                        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                            <SheetTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-9 w-9">
+                                    <Menu className="w-5 h-5" />
                                 </Button>
-                            )}
-                        </div>
-                    </div>
+                            </SheetTrigger>
+                            <SheetContent side="right" className="w-full sm:w-[400px] p-0 flex flex-col z-[100]">
+                                <SheetHeader className="px-6 py-4 border-b">
+                                    <SheetTitle>Studio</SheetTitle>
+                                    <SheetDescription>
+                                        Create new variations or edit templates.
+                                    </SheetDescription>
+                                </SheetHeader>
 
-                    <GenerationGrid
-                        images={generations.map(g => ({
-                            id: g.id,
-                            url: g.imageUrl,
-                            templateId: g.templateId || 'custom',
-                            originalImage: g.promptUsed || 'Custom Generation',
-                            prompt: g.promptUsed || customPrompt || 'Custom Generation',
-                            createdAt: g.createdAt
-                        }))}
-                        isGenerating={generationStatus === 'generating'}
-                        selectionMode={isSelectionMode}
-                        selectedIds={selectedGenerationIds}
-                        onToggle={toggleGenerationSelection}
-                        referenceImageUrl={project.originalImageUrl}
-                        referenceName={project.name || 'project'}
-                        defaultProductId={project.defaultProductId}
-                        pendingImages={pendingGenerations}
-                    />
+                                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                                    {/* Mode Selection */}
+                                    <div className="grid grid-cols-2 gap-2 p-1 bg-muted/50 rounded-lg">
+                                        <button
+                                            onClick={() => setMode('template')}
+                                            className={cn(
+                                                "px-3 py-2 text-sm font-medium rounded-md transition-all",
+                                                mode === 'template' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                                            )}
+                                        >
+                                            Templates
+                                        </button>
+                                        <button
+                                            onClick={() => setMode('custom')}
+                                            className={cn(
+                                                "px-3 py-2 text-sm font-medium rounded-md transition-all",
+                                                mode === 'custom' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                                            )}
+                                        >
+                                            Custom
+                                        </button>
+                                    </div>
+
+                                    {mode === 'template' ? (
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <Label>Select Templates</Label>
+                                                <Button variant="ghost" size="sm" onClick={() => setIsTemplatePickerOpen(true)} className="h-7 text-xs">
+                                                    Manage
+                                                </Button>
+                                            </div>
+
+                                            {sortedTemplates.length === 0 ? (
+                                                <div className="text-center p-8 border border-dashed rounded-lg text-muted-foreground text-sm">
+                                                    No templates found. <br />
+                                                    <Button variant="link" onClick={() => setIsTemplatePickerOpen(true)} className="p-0 h-auto">Create one?</Button>
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {sortedTemplates.map(t => (
+                                                        <div
+                                                            key={t.id}
+                                                            onClick={() => toggleTemplate(t.id)}
+                                                            className={cn(
+                                                                "cursor-pointer p-3 border rounded-lg text-sm text-center transition-all hover:bg-accent",
+                                                                selectedTemplateIds.includes(t.id) ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border bg-card"
+                                                            )}
+                                                        >
+                                                            <div className="font-medium truncate">{t.name}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            <Label>Custom Prompt</Label>
+                                            <textarea
+                                                className="w-full min-h-[120px] p-3 rounded-lg border bg-transparent text-sm resize-none focus:ring-2 focus:ring-primary/20 outline-none"
+                                                placeholder="Describe what you want to generate..."
+                                                value={customPrompt}
+                                                onChange={(e) => setCustomPrompt(e.target.value)}
+                                            />
+                                            <div className="flex justify-end">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-indigo-400 hover:text-indigo-500 hover:bg-indigo-500/10 gap-2"
+                                                    onClick={() => toast.info("Enhance coming soon!")}
+                                                >
+                                                    <Sparkles className="w-4 h-4" /> Enhance
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="p-6 border-t bg-muted/20">
+                                    <Button
+                                        size="lg"
+                                        className="w-full h-12 text-base shadow-lg"
+                                        onClick={() => {
+                                            handleGenerate();
+                                            setIsSheetOpen(false);
+                                        }}
+                                        disabled={generationStatus === 'generating' || (mode === 'template' && selectedTemplateIds.length === 0) || (mode === 'custom' && !customPrompt.trim())}
+                                    >
+                                        {generationStatus === 'generating' ? (
+                                            <>
+                                                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                                Generating...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Wand2 className="w-5 h-5 mr-2" />
+                                                Generate
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                            </SheetContent>
+                        </Sheet>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            {/* Main Content - Unified Grid */ }
+    <div className="flex-1 min-h-0 px-4 pb-32 lg:pb-8 relative overflow-y-auto">
+        {/* Generation Grid (Desktop & Mobile Unified) */}
+        <div className="max-w-[1800px] mx-auto">
+            <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    Results
+                </h2>
+                <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">{generations.length} images</span>
+                    {generations.length > 0 && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                                if (isSelectionMode) {
+                                    setIsSelectionMode(false);
+                                    setSelectedGenerationIds([]);
+                                } else {
+                                    setIsSelectionMode(true);
+                                }
+                            }}
+                        >
+                            {isSelectionMode ? 'Cancel' : 'Select Multiple'}
+                        </Button>
+                    )}
                 </div>
             </div>
 
-            {/* Chat-like Bottom Bar */}
+            <GenerationGrid
+                images={generations.map(g => ({
+                    id: g.id,
+                    url: g.imageUrl,
+                    templateId: g.templateId || 'custom',
+                    originalImage: g.promptUsed || 'Custom Generation',
+                    prompt: g.promptUsed || customPrompt || 'Custom Generation',
+                    createdAt: g.createdAt
+                }))}
+                isGenerating={generationStatus === 'generating'}
+                selectionMode={isSelectionMode}
+                selectedIds={selectedGenerationIds}
+                onToggle={toggleGenerationSelection}
+                referenceImageUrl={project.originalImageUrl}
+                referenceName={project.name || 'project'}
+                defaultProductId={project.defaultProductId}
+                pendingImages={pendingGenerations}
+            />
+        </div>
+    </div>
+
+    {/* Chat-like Bottom Bar */ }
             <div className="flex-none p-4 bg-background/80 backdrop-blur-lg border-t z-50 pb-8 md:pb-4">
                 <div className="max-w-3xl mx-auto flex items-end gap-2">
                     {/* Template Picker Toggle */}
@@ -453,6 +573,6 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
             />
 
 
-        </div>
+        </div >
     );
 }
