@@ -478,32 +478,33 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         />
                     </div>
                 </div>
+            </div>
 
 
 
 
-                <TemplateDialog
-                    open={!!editingTemplate}
-                    onOpenChange={(open) => !open && setEditingTemplate(null)}
-                    template={editingTemplate || undefined}
-                />
+            <TemplateDialog
+                open={!!editingTemplate}
+                onOpenChange={(open) => !open && setEditingTemplate(null)}
+                template={editingTemplate || undefined}
+            />
 
-                <SelectTemplatesDialog
-                    open={isTemplatePickerOpen}
-                    onOpenChange={setIsTemplatePickerOpen}
-                    templates={sortedTemplates}
-                    selectedIds={selectedTemplateIds}
-                    onToggle={toggleTemplate}
-                    onSelectAll={handleSelectAllTemplatesToggle}
-                    onEdit={setEditingTemplate}
-                    onDelete={handleDeleteTemplate}
-                    mode={mode}
-                    onModeChange={setMode}
-                    customPrompt={customPrompt}
-                    onCustomPromptChange={setCustomPrompt}
-                />
+            <SelectTemplatesDialog
+                open={isTemplatePickerOpen}
+                onOpenChange={setIsTemplatePickerOpen}
+                templates={sortedTemplates}
+                selectedIds={selectedTemplateIds}
+                onToggle={toggleTemplate}
+                onSelectAll={handleSelectAllTemplatesToggle}
+                onEdit={setEditingTemplate}
+                onDelete={handleDeleteTemplate}
+                mode={mode}
+                onModeChange={setMode}
+                customPrompt={customPrompt}
+                onCustomPromptChange={setCustomPrompt}
+            />
 
 
-            </div >
-            );
+        </div >
+    );
 }
