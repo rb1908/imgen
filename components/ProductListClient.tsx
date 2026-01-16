@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { PageHeader } from '@/components/PageHeader';
+import { PageScaffold } from '@/components/PageScaffold';
 import { Product } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,20 +43,21 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
     const filtered = products.filter(p => p.title.toLowerCase().includes(search.toLowerCase()));
 
     return (
-        <div className="h-full flex flex-col">
-            {/* Toolbar */}
-            <div className="p-4 flex gap-4 items-center bg-muted/20 border-b">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search products..."
-                        className="pl-8 bg-background"
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                    />
-                </div>
-                <div className="ml-auto flex items-center gap-2">
-                    <div className="flex items-center p-0.5 bg-muted/50 rounded-lg border mr-2">
+    return (
+        <PageScaffold>
+            <PageHeader title="Products">
+                <div className="flex items-center gap-2">
+                    <div className="relative w-40 md:w-64">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search..."
+                            className="pl-8 bg-background h-9"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="flex items-center p-0.5 bg-muted/50 rounded-lg border">
                         <button
                             onClick={() => setViewMode('grid')}
                             className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
@@ -71,20 +74,22 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                         </button>
                     </div>
 
-                    <Button variant="secondary" size="sm" onClick={() => setIsCreateOpen(true)} className="mr-2">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create
-                    </Button>
+                    <div className="flex items-center gap-2 ml-2">
+                        <Button variant="secondary" size="sm" onClick={() => setIsCreateOpen(true)} className="h-9">
+                            <Plus className="w-4 h-4 md:mr-2" />
+                            <span className="hidden md:inline">Create</span>
+                        </Button>
 
-                    <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
-                        <RefreshCw className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
-                        Sync from Shopify
-                    </Button>
+                        <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing} className="h-9">
+                            <RefreshCw className={`w-4 h-4 md:mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+                            <span className="hidden md:inline">Sync</span>
+                        </Button>
+                    </div>
                 </div>
-            </div>
+            </PageHeader>
 
             {/* List */}
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="space-y-6">
                 {viewMode === 'grid' ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
                         {filtered.map(product => (
@@ -174,6 +179,6 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
             </div>
 
             <CreateProductDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
-        </div>
+        </PageScaffold>
     );
 }
