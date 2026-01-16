@@ -68,7 +68,7 @@ export function SearchModal({ value = "", onChange, placeholder = "Search..." }:
                 </DialogHeader>
 
                 {/* Header / Search Bar Area */}
-                <div className="p-4 border-b sticky top-0 bg-background z-10">
+                <div className="p-4 pt-14 md:pt-4 border-b sticky top-0 bg-background z-10">
                     <div className="flex items-center gap-3 bg-muted/30 p-2 rounded-2xl border transition-all focus-within:bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50">
                         <Button
                             variant="ghost"
