@@ -21,10 +21,8 @@ export function MobileNav() {
         return pathname.startsWith(href);
     };
 
-    // Hide on detail pages: /projects/xyz OR /products/xyz
-    const isDetailPage = /^\/(projects|products)\/.+/.test(pathname);
+    // Logic moved to LayoutShell parent
 
-    if (isDetailPage) return null;
 
     return (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] md:hidden">
