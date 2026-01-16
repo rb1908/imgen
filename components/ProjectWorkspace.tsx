@@ -1,35 +1,52 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { Project, Template, Generation } from '@prisma/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { GenerationGrid } from '@/components/GenerationGrid';
 import { generateVariations } from '@/app/actions/generate';
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import Image from 'next/image';
-import { Loader2, Palette, Sparkles, Wand2, ChevronDown } from 'lucide-react';
+import { deleteGenerations } from '@/app/actions/generations';
+import { toast } from 'sonner';
+import { Loader2, Sparkles, Wand2, ArrowLeft, RefreshCcw, CheckCircle2, ChevronDown, ChevronUp, Palette, X, Trash2, Download, CheckSquare, Square, ShoppingBag, Menu, Plus } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from "@/components/ui/drawer"
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { GeneratedImage } from '@/components/GeneratedImage';
-import { SelectTemplatesDialog } from '@/components/SelectTemplatesDialog';
-import { AnimatePresence, motion } from 'framer-motion';
-
-// Types
-import { Project, Template, Generation } from '@/lib/types';
+import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
+import { TemplateItem } from './TemplateItem';
+import { TemplateDialog } from './TemplateDialog';
+import { SelectTemplatesDialog } from './SelectTemplatesDialog';
+import { deleteTemplate } from '@/app/actions/templates';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
+import { ProductSelector } from './ProductSelector';
 
 interface ProjectWorkspaceProps {
-    project: Project;
+    project: Project & { generations: Generation[] };
     templates: Template[];
-    generations: Generation[];
 }
 
-export default function ProjectWorkspace({ project, templates, generations: initialGenerations }: ProjectWorkspaceProps) {
-    const [generations, setGenerations] = useState<Generation[]>(initialGenerations);
-
-    // Prompt Selection State
+export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) {
     const [selectedTemplateIds, setSelectedTemplateIds] = useState<string[]>([]);
-    const [customPrompt, setCustomPrompt] = useState("");
+    const [customPrompt, setCustomPrompt] = useState('');
     const [generationStatus, setGenerationStatus] = useState<'idle' | 'generating'>('idle');
-
-    // UI State
-    const [showSidebar, setShowSidebar] = useState(true);
+    const [statusMessage, setStatusMessage] = useState('');
+    const [generations, setGenerations] = useState<Generation[]>(project.generations);
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(true); // Default expanded
     const leftPanelRef = useRef<HTMLDivElement>(null);
 
     // Generation Selection State
@@ -37,12 +54,17 @@ export default function ProjectWorkspace({ project, templates, generations: init
     const [selectedGenerationIds, setSelectedGenerationIds] = useState<string[]>([]);
     const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
 
+    // State inferred from selectedTemplateIds
+    // const [mode, setMode] = useState<'template' | 'custom'>('template'); // Removed
+
+
     // Prompt Bar State
     const [isPromptOpen, setIsPromptOpen] = useState(false);
 
     // Mobile Layout Tab
     const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
     const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
 
     // Auto-open prompt if templates are selected
     useEffect(() => {
@@ -51,128 +73,310 @@ export default function ProjectWorkspace({ project, templates, generations: init
         }
     }, [selectedTemplateIds]);
 
-    const handleGenerate = async () => {
-        // Determine mode based on selection
-        // If templates are selected, use 'template' mode
-        // If no templates, but custom prompt exists, use 'custom' mode (implicit)
-        // If neither, do nothing.
-
-        let mode: 'template' | 'custom' = 'custom';
-        if (selectedTemplateIds.length > 0) {
-            mode = 'template';
-        } else if (!customPrompt.trim()) {
-            return; // Nothing to generate
-        }
-
-        setGenerationStatus('generating');
-        const loadingToast = toast.loading(mode === 'template'
-            ? `Generating with ${selectedTemplateIds.length} templates...`
-            : "Generating custom variations...");
-
-        try {
-            // Optimistic Update: Add placeholder generation (optional, skipping for now)
-
-            // Depending on mode, we pass different input to the server action
-            const input = mode === 'template' ? selectedTemplateIds : customPrompt;
-
-            // Call Server Action
-            const result = await generateVariations(project.id, mode, input);
-
-            if (result.success && result.data) {
-                // Add new generations to state
-                setGenerations(prev => [...result.data!, ...prev]);
-                toast.success(`Generated ${result.data.length} variations!`, { id: loadingToast });
-
-                // Clear inputs
-                if (mode === 'custom') {
-                    setCustomPrompt("");
-                } else {
-                    setSelectedTemplateIds([]);
-                }
-
-                // Close prompt sheet on success to show results?
-                // setIsPromptOpen(false); // Optional: keep open if user wants to iterate
-            } else {
-                toast.error(result.error || "Generation failed", { id: loadingToast });
-            }
-
-        } catch (error) {
-            console.error("Generation error:", error);
-            toast.error("Failed to generate variations", { id: loadingToast });
-        } finally {
-            setGenerationStatus('idle');
-        }
-    };
-
-    // ... (Bulk Selection Logic: handleClickGeneration, toggleSelectionMode, selectAll, etc. - keeping existing if any)
-    const toggleGenerationSelection = (id: string) => {
-        setSelectedGenerationIds(prev =>
-            prev.includes(id) ? prev.filter(gId => gId !== id) : [...prev, id]
+    const toggleTemplate = (id: string) => {
+        setSelectedTemplateIds(prev =>
+            prev.includes(id) ? prev.filter(tid => tid !== id) : [...prev, id]
         );
     };
 
+    const handleDeleteTemplate = async (id: string) => {
+        if (confirm('Are you sure you want to delete this template?')) {
+            await deleteTemplate(id);
+            toast.success('Template deleted');
+            setSelectedTemplateIds(prev => prev.filter(tid => tid !== id));
+        }
+    };
+
+    // Generation Selection Logic
+    const toggleGenerationSelection = (id: string) => {
+        setSelectedGenerationIds(prev =>
+            prev.includes(id) ? prev.filter(gid => gid !== id) : [...prev, id]
+        );
+    };
+
+    const handleSelectAllGenerations = () => {
+        if (selectedGenerationIds.length === generations.length) {
+            setSelectedGenerationIds([]);
+        } else {
+            setSelectedGenerationIds(generations.map(g => g.id));
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (!confirm(`Delete ${selectedGenerationIds.length} images?`)) return;
+
+        setIsBulkActionLoading(true);
+        const result = await deleteGenerations(selectedGenerationIds);
+
+        if (result.success) {
+            setGenerations(prev => prev.filter(g => !selectedGenerationIds.includes(g.id)));
+            setSelectedGenerationIds([]);
+            setIsSelectionMode(false);
+            toast.success("Images deleted");
+        } else {
+            toast.error("Failed to delete images");
+        }
+        setIsBulkActionLoading(false);
+    };
+
+    const handleBulkAddToProduct = async () => {
+        if (!project.defaultProductId) return;
+
+        setIsBulkActionLoading(true);
+        try {
+            const { addProductImages } = await import('@/app/actions/product_actions');
+            const selectedImages = generations
+                .filter(g => selectedGenerationIds.includes(g.id))
+                .map(g => g.imageUrl);
+
+            const res = await addProductImages(project.defaultProductId, selectedImages);
+
+            if (res.success) {
+                toast.success(`Added ${res.count ?? selectedImages.length} images to product`);
+                setIsSelectionMode(false);
+                setSelectedGenerationIds([]);
+            } else {
+                toast.error("Failed to add images to product");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("An error occurred");
+        } finally {
+            setIsBulkActionLoading(false);
+        }
+    };
+
+    const handleBulkDownload = async () => {
+        setIsBulkActionLoading(true);
+        try {
+            const zip = new JSZip();
+            const selectedGens = generations.filter(g => selectedGenerationIds.includes(g.id));
+
+            toast.info("Preparing download...");
+
+            const promises = selectedGens.map(async (gen, i) => {
+                try {
+                    const response = await fetch(gen.imageUrl);
+                    const blob = await response.blob();
+                    const ext = gen.imageUrl.split('.').pop()?.split('?')[0] || 'png';
+
+                    // New naming convention: REF_PROMPT_ID.ext
+                    const refName = (project.name || 'project').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+                    const cleanPrompt = (gen.promptUsed || customPrompt || 'generated').slice(0, 50).replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+                    const filename = `${refName}_${cleanPrompt}_${gen.id.slice(0, 4)}.${ext}`;
+
+                    zip.file(filename, blob);
+                } catch (e) {
+                    console.error("Failed to download image", gen.id, e);
+                }
+            });
+
+            await Promise.all(promises);
+
+            const content = await zip.generateAsync({ type: "blob" });
+            saveAs(content, `${(project.name || 'project').replace(/\s+/g, '-').toLowerCase()}-generations.zip`);
+
+            setIsSelectionMode(false);
+            setSelectedGenerationIds([]);
+            toast.success("Download started");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to create zip file");
+        } finally {
+            setIsBulkActionLoading(false);
+        }
+    };
+
+    // Sort templates: Stable sort (e.g. by name/date)
+    const sortedTemplates = useMemo(() => {
+        return templates;
+    }, [templates]);
+
+    const isAllTemplatesSelected = sortedTemplates.length > 0 && selectedTemplateIds.length === sortedTemplates.length;
+
+    const handleSelectAllTemplatesToggle = () => {
+        if (isAllTemplatesSelected) {
+            setSelectedTemplateIds([]);
+        } else {
+            setSelectedTemplateIds(sortedTemplates.map(t => t.id));
+        }
+    };
+
+    const handleScroll = () => {
+        if (leftPanelRef.current) {
+            const scrollTop = leftPanelRef.current.scrollTop;
+            setIsScrolled(scrollTop > 20);
+        }
+    };
+
+    // State for pending generations
+    const [pendingGenerations, setPendingGenerations] = useState<{ id: string; prompt: string }[]>([]);
+
+    const handleGenerate = async () => {
+        const isTemplateMode = selectedTemplateIds.length > 0;
+
+        if (isTemplateMode && selectedTemplateIds.length === 0) {
+            // Should not happen if inferred, but for safety
+            toast.error("Select at least one template");
+            return;
+        }
+        if (!isTemplateMode && !customPrompt.trim()) {
+            toast.error("Enter a prompt");
+            return;
+        }
+
+        setGenerationStatus('generating');
+
+        // 1. Identify tasks
+        let tasks: { id: string, type: 'template' | 'custom', value: string, promptDisplay: string }[] = [];
+
+        if (isTemplateMode) {
+            tasks = selectedTemplateIds.map(tid => {
+                const t = templates.find(temp => temp.id === tid);
+                return {
+                    id: `pending-${Math.random()}`, // Temporary ID
+                    type: 'template',
+                    value: tid,
+                    promptDisplay: t?.name || 'Template'
+                };
+            });
+        } else {
+            tasks = [{
+                id: `pending-${Math.random()}`,
+                type: 'custom',
+                value: customPrompt,
+                promptDisplay: customPrompt
+            }];
+        }
+
+        // 2. Set Pending State
+        setPendingGenerations(tasks.map(t => ({ id: t.id, prompt: t.promptDisplay })));
+        toast.info(`Started ${tasks.length} generation${tasks.length > 1 ? 's' : ''}...`);
+
+        // 3. Parallel Execution
+        // We trigger all, but independent callbacks update the UI
+        try {
+            await Promise.all(tasks.map(async (task) => {
+                try {
+                    // Call API for single item
+                    // Note: generateVariations accepts array or string. passing array of 1 ID or just custom string
+                    const input = task.type === 'template' ? [task.value] : task.value;
+
+                    const result = await generateVariations(project.id, isTemplateMode ? 'template' : 'custom', input);
+
+                    // Success: Remove pending, Add real
+                    setPendingGenerations(prev => prev.filter(p => p.id !== task.id));
+                    setGenerations(prev => [...(result as Generation[]), ...prev]);
+
+                } catch (err) {
+                    console.error("Single generation failed", err);
+                    toast.error(`Failed to generate: ${task.promptDisplay}`);
+                    // Remove pending even on error so it doesn't get stuck
+                    setPendingGenerations(prev => prev.filter(p => p.id !== task.id));
+                }
+            }));
+
+            if (!isTemplateMode) setCustomPrompt('');
+            toast.success("All generations finished!");
+
+        } catch (e) {
+            console.error("Batch error", e);
+        } finally {
+            setGenerationStatus('idle');
+            setPendingGenerations([]); // Cleanup safety
+        }
+    };
+
+
 
     return (
-        <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-black text-white relative">
-
-            {/* Main Canvas Area */}
-            <main className="flex-1 relative overflow-y-auto pb-48 md:pb-32 md:pl-72 w-full">
-                {/* ^ Added padding bottom to account for prompt bar, and left padding for fixed sidebar */}
-
-                <div className="max-w-7xl mx-auto p-4 md:p-8">
-
-                    {/* Empty State */}
-                    {generations.length === 0 && (
-                        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
-                            <div className="w-24 h-24 rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center justify-center relative overflow-hidden group">
-                                <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <Sparkles className="w-10 h-10 text-zinc-600 group-hover:text-indigo-400 transition-colors" />
-                            </div>
-                            <div className="max-w-md">
-                                <h3 className="text-xl font-medium text-white mb-2">Start Designing</h3>
-                                <p className="text-zinc-400 leading-relaxed">
-                                    Select a template or describe what you want to see.
-                                    AI will generate high-fidelity variations for your project.
-                                </p>
-                            </div>
-                            <Button
-                                variant="outline"
-                                className="rounded-full border-white/10 hover:bg-white/5"
-                                onClick={() => setIsTemplatePickerOpen(true)}
+        <div className="h-full flex flex-col gap-6 relative">
+            {/* Header */}
+            <div className="flex-none flex items-center gap-4 px-4 border-b h-14 transition-all">
+                <Link href="/" className="p-2 hover:bg-accent rounded-full text-muted-foreground transition-colors">
+                    <ArrowLeft className="w-5 h-5" />
+                </Link>
+                <div className="flex items-center gap-4 overflow-hidden">
+                    <AnimatePresence>
+                        {isScrolled && (
+                            <motion.div
+                                initial={{ opacity: 0, x: -20, width: 0 }}
+                                animate={{ opacity: 1, x: 0, width: 40 }}
+                                exit={{ opacity: 0, x: -20, width: 0 }}
+                                className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0"
                             >
-                                <Palette className="w-4 h-4 mr-2" />
-                                Browse Templates
-                            </Button>
-                        </div>
-                    )}
-
-                    {/* Generations Grid */}
-                    {generations.length > 0 && (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                            {generations.map((gen) => (
-                                <GeneratedImage
-                                    key={gen.id}
-                                    generation={gen}
-                                    priority={false}
-                                    onSelect={() => toggleGenerationSelection(gen.id)}
-                                    isSelected={selectedGenerationIds.includes(gen.id)}
-                                    isSelectionMode={isSelectionMode}
+                                <Image
+                                    src={project.originalImageUrl}
+                                    alt="Mini Thumbnail"
+                                    fill
+                                    className="object-cover"
                                 />
-                            ))}
-                        </div>
-                    )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <div className="min-w-0 flex items-center gap-4">
+                        <h1 className="text-lg font-bold tracking-tight truncate">{project.name || 'Untitled Project'}</h1>
+                        <div className="hidden md:block w-px h-6 bg-border mx-2" />
+                        <ProductSelector projectId={project.id} initialDefaultProductId={project.defaultProductId} />
+                    </div>
+
                 </div>
-            </main>
+            </div>
 
 
-            {/* Dialogs */}
-            <SelectTemplatesDialog
-                open={isTemplatePickerOpen}
-                onOpenChange={setIsTemplatePickerOpen}
-                templates={templates}
-                selectedTemplateIds={selectedTemplateIds}
-                onSelectionChange={setSelectedTemplateIds}
-            />
+
+
+            {/* Main Content - Unified Grid */}
+            <div className="flex-1 min-h-0 px-4 pb-32 relative overflow-y-auto">
+                {/* Generation Grid (Desktop & Mobile Unified) */}
+                <div className="max-w-[1800px] mx-auto">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold flex items-center gap-2">
+                            <Sparkles className="w-5 h-5 text-primary" />
+                            Results
+                        </h2>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">{generations.length} images</span>
+                            {generations.length > 0 && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        if (isSelectionMode) {
+                                            setIsSelectionMode(false);
+                                            setSelectedGenerationIds([]);
+                                        } else {
+                                            setIsSelectionMode(true);
+                                        }
+                                    }}
+                                >
+                                    {isSelectionMode ? 'Cancel' : 'Select Multiple'}
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+
+                    <GenerationGrid
+                        images={generations.map(g => ({
+                            id: g.id,
+                            url: g.imageUrl,
+                            templateId: g.templateId || 'custom',
+                            originalImage: g.promptUsed || 'Custom Generation',
+                            prompt: g.promptUsed || customPrompt || 'Custom Generation',
+                            createdAt: g.createdAt
+                        }))}
+                        isGenerating={generationStatus === 'generating'}
+                        selectionMode={isSelectionMode}
+                        selectedIds={selectedGenerationIds}
+                        onToggle={toggleGenerationSelection}
+                        referenceImageUrl={project.originalImageUrl}
+                        referenceName={project.name || 'project'}
+                        defaultProductId={project.defaultProductId}
+                        pendingImages={pendingGenerations}
+                    />
+                </div >
+            </div >
 
 
             {/* Collapsible Prompt Bar */}
@@ -312,6 +516,27 @@ export default function ProjectWorkspace({ project, templates, generations: init
                 )}
             </AnimatePresence>
 
-        </div>
+
+
+
+            <TemplateDialog
+                open={!!editingTemplate}
+                onOpenChange={(open) => !open && setEditingTemplate(null)}
+                template={editingTemplate || undefined}
+            />
+
+            <SelectTemplatesDialog
+                open={isTemplatePickerOpen}
+                onOpenChange={setIsTemplatePickerOpen}
+                templates={sortedTemplates}
+                selectedIds={selectedTemplateIds}
+                onToggle={toggleTemplate}
+                onSelectAll={handleSelectAllTemplatesToggle}
+                onEdit={setEditingTemplate}
+                onDelete={handleDeleteTemplate}
+            />
+
+
+        </div >
     );
 }
