@@ -370,7 +370,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
 
             {/* Fixed Bottom Sheet Prompt Bar */}
-            <div className="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-white/10 z-[100] md:pl-72 transition-all">
+            <div className="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-white/10 z-[100] md:pl-72 transition-all rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
                 <div className="max-w-3xl mx-auto w-full p-4 flex items-end gap-3">
 
                     {/* Input Area */}
