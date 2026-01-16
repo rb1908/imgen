@@ -414,9 +414,9 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
 
             {/* Main Content - Unified Grid */}
-            < div className="flex-1 min-h-0 px-4 pb-32 lg:pb-8 relative overflow-y-auto" >
+            <div className="flex-1 min-h-0 px-4 pb-32 lg:pb-8 relative overflow-y-auto">
                 {/* Generation Grid (Desktop & Mobile Unified) */}
-                < div className="max-w-[1800px] mx-auto" >
+                <div className="max-w-[1800px] mx-auto">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-semibold flex items-center gap-2">
                             <Sparkles className="w-5 h-5 text-primary" />
