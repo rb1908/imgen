@@ -224,7 +224,7 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                 ) : (
                     <>
                         {viewMode === 'grid' ? (
-                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 pb-24 md:pb-0">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 pb-20 md:pb-0">
                                 {projects.map((project) => (
                                     <Link href={`/project/${project.id}`} key={project.id} className="group relative block rounded-xl border bg-card text-card-foreground shadow transition-all hover:shadow-md hover:border-primary/50 overflow-hidden">
                                         {/* Preview Grid */}
