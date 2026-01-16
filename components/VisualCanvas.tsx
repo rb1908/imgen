@@ -421,7 +421,13 @@ export function VisualCanvas({
                     templates={templates}
                     selectedIds={selectedTemplateIds}
                     onToggle={(id) => setSelectedTemplateIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
-                    onSelectAll={() => { }}
+                    onSelectAll={() => {
+                        if (selectedTemplateIds.length === templates.length) {
+                            setSelectedTemplateIds([]);
+                        } else {
+                            setSelectedTemplateIds(templates.map(t => t.id));
+                        }
+                    }}
                     onEdit={() => { }}
                     onDelete={() => { }}
                     forceDrawer={true}

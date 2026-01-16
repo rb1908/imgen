@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db';
 import { ProductWorkspace } from '@/components/ProductWorkspace';
 import { notFound } from 'next/navigation';
 import { getOrCreateProjectForProduct } from '@/app/actions/projects';
+import { getTemplates } from '@/app/actions/templates';
 
 export default async function ProductDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -9,7 +10,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
     // 1. Fetch Product and Templates in parallel
     const [product, templates] = await Promise.all([
         prisma.product.findUnique({ where: { id } }),
-        prisma.template.findMany({ orderBy: { updatedAt: 'desc' } })
+        getTemplates()
     ]);
 
     if (!product) {
