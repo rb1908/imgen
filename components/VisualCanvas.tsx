@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Sparkles, Plus, Check, Loader2, Wand2, Image as ImageIcon, Stars, ChevronDown, Palette } from 'lucide-react';
+import { Sparkles, Plus, Check, Loader2, Wand2, Image as ImageIcon, Stars, ChevronDown, Palette, Upload, ArrowLeft } from 'lucide-react';
 import { SelectTemplatesDialog } from './SelectTemplatesDialog';
 import { Template } from '@prisma/client';
 import { enhancePrompt } from '@/app/actions/enhance';
@@ -21,6 +21,7 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from "@/components/ui/drawer";
+import { ImageUploader } from './ImageUploader';
 
 interface VisualCanvasProps {
     activeImage: string;
@@ -33,6 +34,8 @@ interface VisualCanvasProps {
     isGenerating: boolean;
 }
 
+type ViewMode = 'gallery' | 'editor';
+
 export function VisualCanvas({
     activeImage,
     onActiveImageChange,
@@ -43,11 +46,14 @@ export function VisualCanvas({
     templates,
     isGenerating
 }: VisualCanvasProps) {
+    // View State
+    const [viewMode, setViewMode] = useState<ViewMode>('gallery');
+    const [isSelectingReference, setIsSelectingReference] = useState(false);
+
     const [customPrompt, setCustomPrompt] = useState('');
     const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
     const [selectedTemplateIds, setSelectedTemplateIds] = useState<string[]>([]);
     const [isEnhancing, setIsEnhancing] = useState(false);
-    const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
     // Prompt Bar State
     const [isPromptOpen, setIsPromptOpen] = useState(false);
@@ -61,6 +67,22 @@ export function VisualCanvas({
             setIsPromptOpen(true);
         }
     }, [selectedTemplateIds]);
+
+    // Handle Image Click in Gallery
+    const handleImageClick = (url: string) => {
+        onActiveImageChange(url);
+
+        if (isSelectingReference) {
+            // User selected the reference for AI generation
+            setIsSelectingReference(false);
+            setViewMode('editor');
+            setIsPromptOpen(true); // Open prompt immediately
+            toast.success("Reference selected! Describe your changes.");
+        } else {
+            // Normal view
+            setViewMode('editor');
+        }
+    };
 
     const handleEnhance = async () => {
         if (!customPrompt.trim()) return;
@@ -90,19 +112,155 @@ export function VisualCanvas({
         setIsPromptOpen(false); // Collapse on generate
     };
 
+    // Combine images and generations for the gallery
+    const allImages = [
+        ...productImages.map(url => ({ url, type: 'product' as const })),
+        ...generations.map(g => ({ url: g.url, type: 'generation' as const, id: g.id }))
+    ];
+
+    if (viewMode === 'gallery') {
+        return (
+            <div className="relative h-full w-full bg-zinc-950 flex flex-col p-6 text-white overflow-y-auto">
+                <div className="max-w-7xl mx-auto w-full">
+
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 className="text-2xl font-bold tracking-tight">Studio Gallery</h2>
+                            <p className="text-zinc-400 mt-1">Select an image to edit or start a new generation.</p>
+                        </div>
+                        {isSelectingReference && (
+                            <div className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-4 py-2 rounded-full animate-pulse font-medium text-sm flex items-center gap-2">
+                                <Sparkles className="w-4 h-4" />
+                                Select a reference image
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+
+                        {/* "Add New" Action Card */}
+                        <div className="aspect-[3/4] rounded-xl border border-dashed border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 transition-colors flex flex-col items-center justify-center p-4 gap-4 group relative overflow-hidden">
+                            <div className="text-center space-y-1 z-10">
+                                <span className="font-medium text-zinc-200">Add New</span>
+                                <p className="text-xs text-zinc-500">Upload or Generate</p>
+                            </div>
+
+                            <div className="flex items-center gap-3 z-10">
+                                {/* Upload Action */}
+                                <div className="relative">
+                                    {/* Using a label to trigger file input handled elsewhere or just a mock for now. 
+                                        Ideally this routes to onAddToProduct logic but that takes a URL.
+                                        For now, let's assume we use ImageUploader in a dialog if requested?
+                                        User asked for "Show two icons".
+                                    */}
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-10 w-10 rounded-full bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:text-white transition-all"
+                                        onClick={() => {
+                                            toast.info("Upload feature coming soon");
+                                            // Trigger upload logic
+                                        }}
+                                        title="Upload Image"
+                                    >
+                                        <Upload className="w-5 h-5" />
+                                    </Button>
+                                </div>
+
+                                {/* AI Generate Action */}
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className={cn(
+                                        "h-10 w-10 rounded-full border-zinc-700 hover:text-white transition-all",
+                                        isSelectingReference
+                                            ? "bg-indigo-500 text-white border-indigo-500 hover:bg-indigo-600"
+                                            : "bg-zinc-800 hover:bg-indigo-500/20 hover:border-indigo-500/50 hover:text-indigo-400"
+                                    )}
+                                    onClick={() => {
+                                        setIsSelectingReference(!isSelectingReference);
+                                        if (!isSelectingReference) {
+                                            toast.info("Select an image to use as reference");
+                                        } else {
+                                            toast.dismiss();
+                                        }
+                                    }}
+                                    title="Generate with AI"
+                                >
+                                    <Sparkles className="w-5 h-5" />
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* Image Items */}
+                        {allImages.map((img, idx) => (
+                            <div
+                                key={`${img.type}-${idx}`}
+                                onClick={() => handleImageClick(img.url)}
+                                className={cn(
+                                    "aspect-[3/4] rounded-xl relative overflow-hidden cursor-pointer group bg-zinc-900 border transition-all duration-200",
+                                    isSelectingReference
+                                        ? "hover:ring-4 ring-indigo-500/40 border-indigo-500/50 hover:scale-[1.02]"
+                                        : "border-transparent hover:border-zinc-700 hover:shadow-xl"
+                                )}
+                            >
+                                <Image
+                                    src={img.url}
+                                    alt="Gallery Item"
+                                    fill
+                                    className={cn(
+                                        "object-cover transition-transform duration-500",
+                                        !isSelectingReference && "group-hover:scale-105"
+                                    )}
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                                {img.type === 'product' && (
+                                    <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-medium text-white/90">
+                                        Product
+                                    </div>
+                                )}
+                                {img.type === 'generation' && (
+                                    <div className="absolute top-2 left-2 bg-indigo-500/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-medium text-white">
+                                        AI Generated
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // EDITOR VIEWER (The "Hero" View)
     return (
         <div className="relative h-full w-full bg-zinc-950 flex flex-col overflow-hidden text-white">
 
+            {/* Back to Gallery */}
+            <div className="absolute top-6 left-6 z-20">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setViewMode('gallery')}
+                    className="text-white/70 hover:text-white hover:bg-white/10 gap-2 pl-2 rounded-full"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Gallery
+                </Button>
+            </div>
+
             {/* 1. Hero Canvas - Full Bleed */}
             <div className="absolute inset-0 flex items-center justify-center bg-zinc-900/50">
-                {/* Background pattern or subtle texture could go here */}
                 <div className="relative w-full h-full flex items-center justify-center pb-20 p-4">
                     {activeImage ? (
                         <Image
                             src={activeImage}
                             alt="Hero"
                             fill
-                            className="object-contain" // Contain ensures entire image is visible.
+                            className="object-contain"
                             priority
                         />
                     ) : (
@@ -124,46 +282,6 @@ export function VisualCanvas({
                     )}
                 </div>
             </div>
-
-            {/* Gallery Drawer (Kept separate for now, triggered via Prompt Bar or maybe a separate button?) 
-                Let's add a separate floating button for Gallery at Top Left or similar.
-            */}
-            <div className="absolute top-6 left-6 z-10">
-                <Drawer open={isGalleryOpen} onOpenChange={setIsGalleryOpen}>
-                    <DrawerTrigger asChild>
-                        <Button
-                            variant="outline"
-                            className="bg-black/50 border-white/10 text-white hover:bg-black/80 backdrop-blur-md rounded-full"
-                        >
-                            <ImageIcon className="w-4 h-4 mr-2" />
-                            Gallery
-                        </Button>
-                    </DrawerTrigger>
-                    <DrawerContent className="bg-zinc-900 border-zinc-800 text-white">
-                        <div className="mx-auto w-full max-w-sm">
-                            <DrawerHeader>
-                                <DrawerTitle>Gallery</DrawerTitle>
-                                <DrawerDescription className="text-zinc-400">All product images and generations.</DrawerDescription>
-                            </DrawerHeader>
-                            <div className="p-4 flex flex-wrap gap-2 justify-center max-h-[60vh] overflow-y-auto">
-                                {/* Unified Gallery Grid */}
-                                {productImages.map((img, i) => (
-                                    <div key={`p-${i}`} onClick={() => { onActiveImageChange(img); setIsGalleryOpen(false); }} className={cn("relative w-24 h-32 rounded-lg overflow-hidden border-2 cursor-pointer transition-all", activeImage === img ? "border-indigo-500 ring-2 ring-indigo-500/20" : "border-transparent opacity-70 hover:opacity-100")}>
-                                        <Image src={img} alt="Product" fill className="object-cover" />
-                                        <div className="absolute top-1 left-1 p-0.5 bg-black/50 rounded-full"><Check className="w-3 h-3 text-white" /></div>
-                                    </div>
-                                ))}
-                                {generations.map((gen) => (
-                                    <div key={gen.id} onClick={() => { onActiveImageChange(gen.url); setIsGalleryOpen(false); }} className={cn("relative w-24 h-32 rounded-lg overflow-hidden border-2 cursor-pointer transition-all", activeImage === gen.url ? "border-indigo-500 ring-2 ring-indigo-500/20" : "border-transparent opacity-70 hover:opacity-100")}>
-                                        <Image src={gen.url} alt="Gen" fill className="object-cover" />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </DrawerContent>
-                </Drawer>
-            </div>
-
 
             {/* Collapsible Prompt Bar */}
             <AnimatePresence>
