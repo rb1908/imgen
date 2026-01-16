@@ -69,7 +69,7 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
     };
 
     return (
-        <div className="h-screendvh flex flex-col bg-background overflow-hidden overscroll-none touch-pan-y">
+        <div className="h-[100dvh] flex flex-col bg-background overflow-hidden overscroll-none touch-pan-y">
             {/* Minimal Header */}
             <header className="flex-none h-14 border-b flex items-center px-4 justify-between bg-card z-10 w-full overflow-hidden">
                 <div className="flex items-center gap-4">
