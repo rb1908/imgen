@@ -6,22 +6,18 @@ import { getOrCreateProjectForProduct } from '@/app/actions/projects';
 export default async function ProductDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
 
-    // 1. Fetch Product
-    const product = await prisma.product.findUnique({
-        where: { id }
-    });
+    // 1. Fetch Product and Templates in parallel
+    const [product, templates] = await Promise.all([
+        prisma.product.findUnique({ where: { id } }),
+        prisma.template.findMany({ orderBy: { updatedAt: 'desc' } })
+    ]);
 
     if (!product) {
         notFound();
     }
 
-    // 2. Fetch/Create Project
+    // 2. Fetch/Create Project (Dependent on Product)
     const project = await getOrCreateProjectForProduct(product);
-
-    // 3. Fetch Templates
-    const templates = await prisma.template.findMany({
-        orderBy: { updatedAt: 'desc' }
-    });
 
     return (
         <ProductWorkspace
