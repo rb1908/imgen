@@ -75,6 +75,8 @@ export function VisualCanvas({
     // Prompt Bar State (For AI Studio)
     const [isPromptOpen, setIsPromptOpen] = useState(false);
 
+
+
     // Listing Images (Product Images)
     const listingImages = productImages.map(url => ({ url, type: 'product' as const }));
 
