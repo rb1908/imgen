@@ -21,6 +21,10 @@ export function MobileNav() {
         return pathname.startsWith(href);
     };
 
+    const isProjectPage = pathname.startsWith('/projects/') && pathname.split('/').length > 2;
+
+    if (isProjectPage) return null;
+
     return (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] md:hidden">
             <nav className="flex items-center gap-1 p-1.5 rounded-full bg-black/90 backdrop-blur-xl border border-white/10 shadow-2xl">

@@ -358,126 +358,76 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 </div>
             </div>
 
-            {/* Floating Action Bar (Mobile Only - Desktop has inline buttons if needed, or keep generic) */}
-            <AnimatePresence>
-                {!isSelectionMode ? (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 20 }}
-                        className="fixed bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 w-full justify-center px-4 pointer-events-none"
+            {/* Chat-like Bottom Bar */}
+            <div className="flex-none p-4 bg-background/80 backdrop-blur-lg border-t z-50 pb-8 md:pb-4">
+                <div className="max-w-3xl mx-auto flex items-end gap-2">
+                    {/* Template Picker Toggle */}
+                    <Button
+                        variant={selectedTemplateIds.length > 0 ? "default" : "outline"}
+                        size="icon"
+                        className="h-12 w-12 rounded-full flex-shrink-0"
+                        onClick={() => setIsTemplatePickerOpen(true)}
+                        title="Select Template"
                     >
-                        {/* 1. Palette Button (Triggers Dialog) */}
+                        {selectedTemplateIds.length > 0 ? (
+                            <div className="font-bold text-xs">{selectedTemplateIds.length}</div>
+                        ) : (
+                            <Palette className="w-5 h-5" />
+                        )}
+                    </Button>
+
+                    {/* Chat Input Container */}
+                    <div className="flex-1 bg-muted/50 rounded-3xl border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary px-4 py-3 flex items-center gap-2 min-h-[48px]">
+                        <textarea
+                            className="bg-transparent border-none outline-none text-sm w-full placeholder:text-muted-foreground resize-none max-h-32 py-1"
+                            placeholder={mode === 'template' ? "Add context to your template..." : "Describe what you want to generate..."}
+                            rows={1}
+                            value={customPrompt}
+                            onChange={(e) => {
+                                setCustomPrompt(e.target.value);
+                                // Auto-grow could be added here
+                                e.target.style.height = 'auto';
+                                e.target.style.height = e.target.scrollHeight + 'px';
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleGenerate();
+                                }
+                            }}
+                        />
+
+                        {/* Enhance Button */}
                         <Button
                             size="icon"
-                            className="pointer-events-auto rounded-full shadow-xl bg-background text-foreground border h-12 w-12 hover:bg-accent shrink-0 relative"
-                            onClick={() => setIsTemplatePickerOpen(true)}
+                            variant="ghost"
+                            className="h-8 w-8 text-indigo-400 hover:text-indigo-500 hover:bg-indigo-500/10 rounded-full"
+                            title="Enhance Prompt"
+                            onClick={() => toast.info("Enhance coming soon!")}
                         >
-                            <Palette className="w-5 h-5" />
-                            {selectedTemplateIds.length > 0 && mode === 'template' && (
-                                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground border border-background">
-                                    {selectedTemplateIds.length}
-                                </span>
-                            )}
-                            {mode === 'custom' && customPrompt && (
-                                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-[10px] text-white border border-background">
-                                    !
-                                </span>
-                            )}
+                            <Sparkles className="w-4 h-4" />
                         </Button>
+                    </div>
 
-                        {/* 2. Generate Button */}
-                        <Button
-                            size="lg"
-                            className={cn(
-                                "pointer-events-auto rounded-full shadow-2xl transition-all duration-300 relative overflow-hidden h-12 bg-primary text-primary-foreground hover:scale-105 active:scale-95",
-                                generationStatus === 'generating' ? "w-48 px-6" : "w-auto min-w-[140px] px-8"
-                            )}
-                            disabled={generationStatus === 'generating' || (mode === 'template' && selectedTemplateIds.length === 0) || (mode === 'custom' && !customPrompt.trim())}
-                            onClick={handleGenerate}
-                        >
-                            {generationStatus === 'generating' ? (
-                                <div className="flex items-center gap-2 justify-center">
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                    <span className="text-sm font-medium animate-pulse">Creating...</span>
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-2 justify-center">
-                                    <Wand2 className="w-4 h-4" />
-                                    <span className="text-base font-semibold">
-                                        Generate
-                                    </span>
-                                </div>
-                            )}
-                        </Button>
-                    </motion.div>
-                ) : (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 20 }}
-                        className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 w-auto max-w-[90vw] bg-foreground text-background rounded-full px-4 py-2 shadow-2xl border border-border/20"
+                    {/* Send / Generate Button */}
+                    <Button
+                        size="icon"
+                        className={cn(
+                            "h-12 w-12 rounded-full flex-shrink-0 transition-all",
+                            generationStatus === 'generating' ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground hover:scale-105 active:scale-95 shadow-md"
+                        )}
+                        onClick={handleGenerate}
+                        disabled={generationStatus === 'generating' || (mode === 'template' && selectedTemplateIds.length === 0 && !customPrompt) || (mode === 'custom' && !customPrompt.trim())}
                     >
-                        <div className="flex items-center gap-2 mr-2 border-r border-background/20 pr-4">
-                            <Checkbox
-                                id="select-all-gens"
-                                className="border-background/50 data-[state=checked]:bg-background data-[state=checked]:text-foreground"
-                                checked={selectedGenerationIds.length === generations.length && generations.length > 0}
-                                onCheckedChange={handleSelectAllGenerations}
-                            />
-                            <span className="text-sm font-medium whitespace-nowrap">
-                                {selectedGenerationIds.length} Selected
-                            </span>
-                        </div>
+                        {generationStatus === 'generating' ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                            <Wand2 className="w-5 h-5" />
+                        )}
+                    </Button>
+                </div>
+            </div>
 
-                        <div className="flex items-center gap-1">
-                            <Button
-                                size="icon"
-                                variant="ghost"
-                                className="hover:bg-background/20 text-background h-9 w-9"
-                                onClick={handleBulkDownload}
-                                disabled={selectedGenerationIds.length === 0 || isBulkActionLoading}
-                            >
-                                {isBulkActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                            </Button>
-
-                            {project.defaultProductId && (
-                                <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    className="hover:bg-background/20 text-background h-9 w-9"
-                                    onClick={handleBulkAddToProduct}
-                                    disabled={selectedGenerationIds.length === 0 || isBulkActionLoading}
-                                    title="Add to Product"
-                                >
-                                    <ShoppingBag className="w-4 h-4" />
-                                </Button>
-                            )}
-
-                            <Button
-                                size="icon"
-                                variant="ghost"
-                                className="hover:bg-red-500/20 hover:text-red-400 text-background h-9 w-9"
-                                onClick={handleBulkDelete}
-                                disabled={selectedGenerationIds.length === 0 || isBulkActionLoading}
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </Button>
-                            <Button
-                                size="icon"
-                                variant="ghost"
-                                className="hover:bg-background/20 text-background h-9 w-9 ml-1"
-                                onClick={() => {
-                                    setIsSelectionMode(false);
-                                    setSelectedGenerationIds([]);
-                                }}
-                            >
-                                <X className="w-4 h-4" />
-                            </Button>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
 
             <TemplateDialog
                 open={!!editingTemplate}
