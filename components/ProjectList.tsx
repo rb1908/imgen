@@ -171,7 +171,7 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
     };
 
     return (
-        <div className="max-w-6xl mx-auto space-y-6 py-8 px-4 h-full overflow-y-auto w-full">
+        <div className="max-w-6xl mx-auto space-y-6 py-8 px-4 h-full overflow-y-auto w-full overscroll-contain touch-pan-y">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Projects</h1>
