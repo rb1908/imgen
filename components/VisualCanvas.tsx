@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sparkles, Plus, Check, Loader2, Wand2, Image as ImageIcon, Stars, ChevronDown, Palette, Upload, ArrowLeft, Paperclip, X } from 'lucide-react';
 import { SelectTemplatesDialog } from './SelectTemplatesDialog';
+import { GenerationGrid } from './GenerationGrid';
 import { Template } from '@prisma/client';
 import { enhancePrompt } from '@/app/actions/enhance';
 import { toast } from 'sonner';
@@ -59,8 +60,8 @@ export function VisualCanvas({
 
     // AI Studio State
     // AI Studio State
+    // AI Studio State
     const [isAIStudioOpen, setIsAIStudioOpen] = useState(initialStudioOpen); // Controls the AI Studio View
-    const [isPromptOpen, setIsPromptOpen] = useState(false); // Collapsible Prompt Bar State
 
     const [customPrompt, setCustomPrompt] = useState('');
     const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
@@ -72,7 +73,7 @@ export function VisualCanvas({
     const [isReferencePickerOpen, setIsReferencePickerOpen] = useState(false);
 
     // Prompt Bar State (For AI Studio)
-    const [isPromptOpen, setIsPromptOpen] = useState(true); // Always open in AI Studio basically
+    const [isPromptOpen, setIsPromptOpen] = useState(false);
 
     // Listing Images (Product Images)
     const listingImages = productImages.map(url => ({ url, type: 'product' as const }));
@@ -176,149 +177,172 @@ export function VisualCanvas({
                         </div>
                     </div>
 
-                    {/* Generations Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {/* Generation Grid */}
+                    <GenerationGrid
+                        images={allGenerations.map(g => ({
+                            id: g.id,
+                            url: g.url,
+                            templateId: 'custom',
+                            originalImage: 'Generated Image',
+                            prompt: 'Generated Image',
+                            createdAt: new Date(), // We might not have date here, defaulting
+                            referenceName: 'Studio'
+                        }))}
+                        isGenerating={isGenerating}
+                        referenceImageUrl={referenceImageUrl || undefined}
+                        referenceName="Studio Reference"
+                    />
+                </div>
 
-                        {/* Reference Card (if selected) */}
-                        {referenceImageUrl && (
-                            <div className="aspect-[3/4] rounded-xl relative overflow-hidden bg-zinc-100 border-2 border-indigo-500 shadow-sm">
-                                <Image
-                                    src={referenceImageUrl}
-                                    alt="Reference"
-                                    fill
-                                    className="object-cover opacity-80"
-                                />
-                                <div className="absolute top-2 left-2 bg-indigo-600 px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-sm">
-                                    REFERENCE
-                                </div>
-                                <button
-                                    onClick={() => setReferenceImageUrl(null)}
-                                    className="absolute top-2 right-2 p-1.5 bg-black/20 hover:bg-red-500 rounded-full text-white backdrop-blur-sm transition-colors"
-                                >
-                                    <X className="w-3 h-3" />
-                                </button>
-                            </div>
-                        )}
-
-                        {allGenerations.length === 0 && !referenceImageUrl && (
-                            <div className="col-span-full py-20 text-center text-zinc-400">
-                                <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                                <p>No generations yet. Start creating!</p>
-                            </div>
-                        )}
-                        {allGenerations.map((gen, idx) => (
-                            <div
-                                key={`studio-gen-${gen.id}`}
-                                onClick={() => handleImageClick(gen.url)}
-                                className="aspect-[3/4] rounded-xl relative overflow-hidden cursor-pointer group bg-zinc-100 border border-zinc-200 hover:shadow-md transition-all"
+                {/* Collapsible Prompt Bar (Replicated from ProjectWorkspace) */}
+                <AnimatePresence>
+                    {!isPromptOpen ? (
+                        /* Closed State: Floating Action Bubble */
+                        <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0, opacity: 0 }}
+                            className="fixed bottom-6 right-6 z-[100] md:right-10"
+                        >
+                            <Button
+                                size="icon"
+                                className={cn(
+                                    "h-14 w-14 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.4)] bg-white text-black hover:scale-110 transition-transform duration-200 hover:bg-zinc-100",
+                                    isGenerating && "animate-pulse ring-4 ring-indigo-500/20"
+                                )}
+                                onClick={() => {
+                                    setIsPromptOpen(true);
+                                }}
                             >
-                                <Image
-                                    src={gen.url}
-                                    alt="Generation"
-                                    fill
-                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                />
-                                <div className="absolute top-2 left-2 bg-indigo-500/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-medium text-white shadow-sm">
-                                    AI
+                                {isGenerating ? (
+                                    <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+                                ) : (
+                                    <Sparkles className="w-6 h-6 fill-black" />
+                                )}
+                            </Button>
+                        </motion.div>
+                    ) : (
+                        /* Open State: Fixed Bottom Sheet */
+                        <motion.div
+                            initial={{ y: "100%" }}
+                            animate={{ y: 0 }}
+                            exit={{ y: "100%" }}
+                            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                            className="fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-200 z-[100] md:pl-72 rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
+                        >
+                            <div className="max-w-3xl mx-auto w-full p-4 pb-4 flex flex-col gap-3 relative">
+
+                                {/* Close Handler (Hit Area & Icon) */}
+                                <div className="absolute top-2 right-4 z-10">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 rounded-full text-zinc-500 hover:text-white hover:bg-white/10"
+                                        onClick={() => setIsPromptOpen(false)}
+                                    >
+                                        <ChevronDown className="w-5 h-5" />
+                                    </Button>
                                 </div>
-                                {/* Add to Listing Button */}
-                                <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+
+                                <div className="w-full relative mt-2">
+                                    <textarea
+                                        className="w-full bg-transparent border-none outline-none text-[18px] text-zinc-900 placeholder:text-zinc-400 resize-none py-2 px-1 leading-relaxed font-normal min-h-[80px]"
+                                        placeholder="What do you want to create?"
+                                        rows={3}
+                                        value={customPrompt}
+                                        autoFocus
+                                        onChange={(e) => setCustomPrompt(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                e.preventDefault();
+                                                handleGenerateClick();
+                                            }
+                                        }}
+                                    />
+                                </div>
+
+                                {/* Reference Image Preview in Bar */}
+                                {referenceImageUrl && (
+                                    <div className="flex items-center gap-2 mb-2 px-1">
+                                        <div className="relative h-12 w-12 rounded-lg overflow-hidden border border-zinc-200">
+                                            <Image src={referenceImageUrl} alt="Ref" fill className="object-cover" />
+                                            <button
+                                                onClick={() => setReferenceImageUrl(null)}
+                                                className="absolute top-0 right-0 bg-black/50 hover:bg-red-500 text-white p-0.5 rounded-bl"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                        <span className="text-xs text-zinc-500">Reference Image Selected</span>
+                                    </div>
+                                )}
+
+
+                                {/* Actions Row (Bottom Right) */}
+                                <div className="flex items-center justify-end gap-3 pr-1">
+
+                                    {/* Upload Reference Button */}
+                                    <div className="relative">
+                                        <Input
+                                            type="file"
+                                            id="studio-ref-upload-bar"
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={(e) => {
+                                                if (e.target.files?.[0]) handleUploadReference(e.target.files[0]);
+                                            }}
+                                        />
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className={cn(
+                                                "h-10 w-10 rounded-full hover:bg-zinc-100 transition-all",
+                                                referenceImageUrl ? "text-indigo-600 bg-indigo-50" : "text-zinc-400 hover:text-black"
+                                            )}
+                                            onClick={() => document.getElementById('studio-ref-upload-bar')?.click()}
+                                            title="Upload Reference"
+                                        >
+                                            <Upload className="w-5 h-5" />
+                                        </Button>
+                                    </div>
+
+                                    {/* Template Palette Icon */}
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => setIsTemplatePickerOpen(true)}
+                                        className={cn(
+                                            "h-10 w-10 rounded-full hover:bg-zinc-100 transition-all",
+                                            selectedTemplateIds.length > 0 ? "text-indigo-600 bg-indigo-50" : "text-zinc-400 hover:text-black" // Simplify template selection vis
+                                        )}
+                                        title="Select Templates"
+                                    >
+                                        <Palette className="w-5 h-5" />
+                                    </Button>
+
+                                    {/* Generate Button (Run) */}
                                     <Button
                                         size="icon"
-                                        className="h-8 w-8 rounded-full bg-white text-black hover:bg-zinc-100 shadow-md"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onAddToProduct(gen.url);
-                                            // toast.success("Added to listing");
-                                        }}
-                                        title="Add to Listing"
+                                        className={cn(
+                                            "h-10 w-10 rounded-full flex-shrink-0 transition-all shadow-sm",
+                                            isGenerating
+                                                ? "bg-zinc-100 text-zinc-400 animate-pulse"
+                                                : "bg-black text-white hover:bg-zinc-800 hover:scale-105 active:scale-95"
+                                        )}
+                                        onClick={handleGenerateClick}
+                                        disabled={isGenerating || (!customPrompt.trim() && !referenceImageUrl)}
                                     >
-                                        <Plus className="w-4 h-4" />
+                                        {isGenerating ? (
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                        ) : (
+                                            <Sparkles className="w-5 h-5 fill-white" />
+                                        )}
                                     </Button>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* FIXED PROMPT BAR FOR AI STUDIO */}
-                <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    className="fixed bottom-6 left-4 right-4 md:left-[280px] md:right-10 z-[50]"
-                >
-                    <div className="max-w-3xl mx-auto w-full bg-white border border-zinc-200 rounded-[2rem] shadow-2xl p-2 pl-4 flex items-center gap-2 relative">
-
-                        {/* Attachment / Reference */}
-                        <div className="flex-shrink-0">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className={cn(
-                                    "rounded-full h-10 w-10 text-zinc-500 hover:text-indigo-600 hover:bg-indigo-50 overflow-hidden relative",
-                                    referenceImageUrl && "bg-indigo-50 text-indigo-600 ring-2 ring-indigo-100"
-                                )}
-                            // onClick={() => setIsReferencePickerOpen(true)}
-                            >
-                                {referenceImageUrl ? (
-                                    <div className="relative w-full h-full group" onClick={() => setIsReferencePickerOpen(true)}>
-                                        <Image src={referenceImageUrl} alt="Ref" fill className="object-cover opacity-80 group-hover:opacity-50 transition-opacity" />
-                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                            <ImageIcon className="w-4 h-4" />
-                                        </div>
-                                        {/* Clear Reference Button overlaid? Or just click to change. */}
-                                    </div>
-                                ) : (
-                                    <Paperclip className="w-5 h-5" onClick={() => setIsReferencePickerOpen(true)} />
-                                )}
-                            </Button>
-                            {referenceImageUrl && (
-                                <button
-                                    onClick={() => setReferenceImageUrl(null)}
-                                    className="absolute -top-1 -left-1 bg-zinc-200 hover:bg-red-500 hover:text-white rounded-full p-0.5 shadow-sm z-20"
-                                >
-                                    <X className="w-3 h-3" />
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Input */}
-                        <textarea
-                            className="flex-1 bg-transparent border-none outline-none text-[16px] text-zinc-900 placeholder:text-zinc-400 resize-none py-3 leading-tight max-h-[100px]"
-                            placeholder="Describe your generated image..."
-                            rows={1}
-                            value={customPrompt}
-                            onChange={(e) => setCustomPrompt(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleGenerateClick();
-                                }
-                            }}
-                        />
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-2 pr-1">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setIsTemplatePickerOpen(true)}
-                                className="text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full h-10 w-10"
-                            >
-                                <Palette className="w-5 h-5" />
-                            </Button>
-
-                            <Button
-                                size="icon"
-                                className="h-10 w-10 rounded-full bg-black text-white hover:bg-zinc-800 shadow-sm"
-                                onClick={handleGenerateClick}
-                                disabled={isGenerating || (!customPrompt.trim() && !selectedTemplateIds.length)}
-                            >
-                                {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5 fill-white" />}
-                            </Button>
-                        </div>
-                    </div>
-                </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Reference Picker Drawer/Dialog */}
                 <Drawer open={isReferencePickerOpen} onOpenChange={setIsReferencePickerOpen}>
