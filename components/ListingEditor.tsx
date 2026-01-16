@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { updateProduct } from '@/app/actions/product_actions';
 import { updateShopifyProduct } from '@/app/actions/shopify';
-import { updateShopifyProduct } from '@/app/actions/shopify';
 import { Loader2, X, ChevronRight, LayoutGrid, Tag, DollarSign, Type, Sparkles, Plus, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
