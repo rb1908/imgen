@@ -169,15 +169,37 @@ export function VisualCanvas({
                         >
                             <ArrowLeft className="w-5 h-5" />
                         </Button>
-                        <div>
-                            <h2 className="text-2xl font-bold tracking-tight">AI Studio</h2>
-                            <p className="text-zinc-500">Create and manage your generated variations.</p>
+                        <div className="flex-1 flex items-center justify-between">
+                            <h2 className="text-xl font-bold tracking-tight">Results</h2>
+                            <span className="text-zinc-500 text-sm">{allGenerations.length} images</span>
                         </div>
                     </div>
 
                     {/* Generations Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                        {allGenerations.length === 0 && (
+
+                        {/* Reference Card (if selected) */}
+                        {referenceImageUrl && (
+                            <div className="aspect-[3/4] rounded-xl relative overflow-hidden bg-zinc-100 border-2 border-indigo-500 shadow-sm">
+                                <Image
+                                    src={referenceImageUrl}
+                                    alt="Reference"
+                                    fill
+                                    className="object-cover opacity-80"
+                                />
+                                <div className="absolute top-2 left-2 bg-indigo-600 px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-sm">
+                                    REFERENCE
+                                </div>
+                                <button
+                                    onClick={() => setReferenceImageUrl(null)}
+                                    className="absolute top-2 right-2 p-1.5 bg-black/20 hover:bg-red-500 rounded-full text-white backdrop-blur-sm transition-colors"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </div>
+                        )}
+
+                        {allGenerations.length === 0 && !referenceImageUrl && (
                             <div className="col-span-full py-20 text-center text-zinc-400">
                                 <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-50" />
                                 <p>No generations yet. Start creating!</p>
