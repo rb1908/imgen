@@ -56,24 +56,7 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                         />
                     </div>
 
-                    <div className="flex items-center p-0.5 bg-muted/50 rounded-lg border">
-                        <button
-                            onClick={() => setViewMode('grid')}
-                            className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                            title="Grid View"
-                        >
-                            <LayoutGrid className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => setViewMode('list')}
-                            className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                            title="List View"
-                        >
-                            <List className="w-4 h-4" />
-                        </button>
-                    </div>
-
-                    <div className="flex items-center gap-2 ml-2">
+                    <div className="flex items-center gap-2 ml-auto">
                         <Button variant="secondary" size="sm" onClick={() => setIsCreateOpen(true)} className="h-9">
                             <Plus className="w-4 h-4 md:mr-2" />
                             <span className="hidden md:inline">Create</span>
@@ -89,6 +72,27 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
 
             {/* List */}
             <div className="space-y-6 p-4 md:p-8">
+                {/* View Options Toolbar (Scrolls away) */}
+                <div className="flex items-center justify-end gap-2 text-muted-foreground">
+                    <span className="text-xs font-medium uppercase tracking-wider opacity-70 mr-auto">
+                        {filtered.length} Product{filtered.length !== 1 ? 's' : ''}
+                    </span>
+                    <button
+                        onClick={() => setViewMode('grid')}
+                        className={`p-2 rounded-md transition-all hover:bg-accent ${viewMode === 'grid' ? 'text-foreground bg-accent/50' : 'text-muted-foreground'}`}
+                        title="Grid View"
+                    >
+                        <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button
+                        onClick={() => setViewMode('list')}
+                        className={`p-2 rounded-md transition-all hover:bg-accent ${viewMode === 'list' ? 'text-foreground bg-accent/50' : 'text-muted-foreground'}`}
+                        title="List View"
+                    >
+                        <List className="w-4 h-4" />
+                    </button>
+                </div>
+
                 {viewMode === 'grid' ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
                         {filtered.map(product => (
