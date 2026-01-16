@@ -370,20 +370,19 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
 
             {/* Fixed Bottom Sheet Prompt Bar */}
+            {/* Fixed Bottom Sheet Prompt Bar */}
             <div className="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-white/10 z-[100] md:pl-72 transition-all rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-                <div className="max-w-3xl mx-auto w-full p-4 flex items-end gap-3">
+                <div className="max-w-3xl mx-auto w-full p-6 pb-8 flex flex-col gap-4">
 
-                    {/* Input Area */}
-                    <div className="flex-1 min-h-[48px] py-1">
+                    {/* Input Area (Full Width) */}
+                    <div className="w-full relative">
                         <textarea
-                            className="w-full bg-transparent border-none outline-none text-[16px] text-zinc-100 placeholder:text-zinc-500 resize-none max-h-32 py-2 px-0 leading-relaxed font-normal"
+                            className="w-full bg-transparent border-none outline-none text-[18px] text-zinc-100 placeholder:text-zinc-500 resize-none py-2 px-1 leading-relaxed font-normal min-h-[80px]"
                             placeholder={selectedTemplateIds.length > 0 ? "Add context..." : "What do you want to write?"}
-                            rows={1}
+                            rows={selectedTemplateIds.length > 0 || customPrompt.length > 0 ? 3 : 2}
                             value={customPrompt}
                             onChange={(e) => {
                                 setCustomPrompt(e.target.value);
-                                e.target.style.height = 'auto';
-                                e.target.style.height = e.target.scrollHeight + 'px';
                             }}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -394,8 +393,8 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         />
                     </div>
 
-                    {/* Right Actions */}
-                    <div className="flex items-center gap-2 pb-1">
+                    {/* Actions Row (Bottom Right) */}
+                    <div className="flex items-center justify-end gap-3">
 
                         {/* Enhance Button */}
                         {customPrompt.length > 0 && (
