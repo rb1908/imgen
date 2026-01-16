@@ -1,21 +1,23 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Product } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { updateProduct } from '@/app/actions/product_actions';
 import { updateShopifyProduct } from '@/app/actions/shopify';
-import {
-    Loader2, ArrowRight, X, Plus,
-    Tag, DollarSign, Type, FileText,
-    Bold, Italic, List, AlignLeft
-} from 'lucide-react';
+import { Loader2, X, ChevronRight, LayoutGrid, Tag, DollarSign, Type } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 interface ListingEditorProps {
     product: Product;
@@ -28,10 +30,10 @@ export function ListingEditor({ product, onUpdate }: ListingEditorProps) {
         description: product.description || '',
         price: product.price || '',
         tags: product.tags || '',
+        status: 'active' // Adding a mock status field for the Ecomiq look
     });
 
     const [isPushing, setIsPushing] = useState(false);
-    const [titleFocused, setTitleFocused] = useState(false);
 
     // Derived state for tags array
     const [tagInput, setTagInput] = useState('');
@@ -39,12 +41,13 @@ export function ListingEditor({ product, onUpdate }: ListingEditorProps) {
 
     // Update local state if prop changes
     useEffect(() => {
-        setFormData({
+        setFormData(prev => ({
+            ...prev,
             title: product.title,
             description: product.description || '',
             price: product.price || '',
             tags: product.tags || '',
-        });
+        }));
     }, [product]);
 
     const handlePush = async () => {
@@ -89,138 +92,125 @@ export function ListingEditor({ product, onUpdate }: ListingEditorProps) {
     };
 
     return (
-        <div className="h-full flex flex-col bg-muted/10 border-l relative">
-            <div className="flex-1 overflow-y-auto scrollbar-hide">
-                <div className="p-6 space-y-6 max-w-lg mx-auto w-full">
+        <div className="h-full flex flex-col bg-white border-l border-gray-100">
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                <div className="p-6 space-y-8">
 
-                    {/* Header: Title */}
-                    <div className={cn(
-                        "group relative rounded-xl border bg-card shadow-sm transition-all duration-300 overflow-hidden",
-                        titleFocused ? "ring-2 ring-primary/20 border-primary" : "border-border/50 hover:border-border"
-                    )}>
-                        <div className="absolute top-3 left-3 text-muted-foreground"><Type className="w-4 h-4" /></div>
-                        <Input
-                            value={formData.title}
-                            onChange={e => setFormData({ ...formData, title: e.target.value })}
-                            onFocus={() => setTitleFocused(true)}
-                            onBlur={() => setTitleFocused(false)}
-                            className="font-semibold text-lg border-0 focus-visible:ring-0 pl-10 h-auto py-3 bg-transparent"
-                            placeholder="Product Title"
-                        />
+                    {/* Header Section */}
+                    <div>
+                        <h2 className="text-lg font-semibold text-gray-900">Product Organization</h2>
+                        <p className="text-sm text-gray-500">Manage listing details and visibility.</p>
                     </div>
 
-                    {/* Pricing Card */}
-                    <Card className="shadow-none border-border/60">
-                        <CardContent className="p-4 grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                    <DollarSign className="w-3.5 h-3.5" /> Price
-                                </Label>
-                                <div className="relative group">
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 font-medium text-muted-foreground group-focus-within:text-foreground transition-colors">$</div>
+                    {/* Section: Main Info */}
+                    <div className="space-y-4">
+                        <div className="space-y-1.5">
+                            <Label className="text-sm font-medium text-gray-700">Product Title</Label>
+                            <Input
+                                value={formData.title}
+                                onChange={e => setFormData({ ...formData, title: e.target.value })}
+                                className="bg-gray-50/50 border-gray-200 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-black/5 transition-all h-10"
+                                placeholder="Short Sleeve T-Shirt"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-sm font-medium text-gray-700">Price</Label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
                                     <Input
                                         value={formData.price}
                                         onChange={e => setFormData({ ...formData, price: e.target.value })}
-                                        className="pl-7 font-mono font-medium border-border/50 bg-muted/5 focus-visible:bg-background transition-colors"
+                                        className="pl-7 bg-gray-50/50 border-gray-200 focus-visible:bg-white focus-visible:ring-black/5 h-10"
                                         placeholder="0.00"
                                     />
                                 </div>
                             </div>
-                            {/* Placeholder for future SKU or Stock */}
-                            <div className="space-y-2 opacity-50 pointer-events-none grayscale">
-                                <Label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                    Compare At
-                                </Label>
-                                <div className="relative">
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 font-medium text-muted-foreground">$</div>
-                                    <Input placeholder="0.00" className="pl-7 border-border/50 bg-muted/5" disabled />
-                                </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-sm font-medium text-gray-700">Status</Label>
+                                <Select defaultValue="active">
+                                    <SelectTrigger className="bg-gray-50/50 border-gray-200 h-10">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-green-500" />
+                                            <SelectValue placeholder="Status" />
+                                        </div>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="active">Active</SelectItem>
+                                        <SelectItem value="draft">Draft</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </div>
 
-                    {/* Metadata Card (Tags) */}
-                    <Card className="shadow-none border-border/60">
-                        <CardHeader className="p-4 pb-2">
-                            <Label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                <Tag className="w-3.5 h-3.5" /> Tags
-                            </Label>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                            <div className="min-h-[50px] p-2 rounded-lg border border-input/40 bg-muted/5 flex flex-wrap gap-2 focus-within:ring-1 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all">
-                                {tagsArray.map((tag, i) => (
-                                    <Badge key={i} variant="outline" className="px-2 py-0.5 h-7 font-normal text-sm gap-1 bg-background hover:bg-muted transition-colors pr-1">
-                                        {tag}
-                                        <button onClick={() => removeTag(i)} className="rounded-full hover:bg-destructive hover:text-destructive-foreground p-0.5 transition-colors"><X className="w-3 h-3" /></button>
-                                    </Badge>
-                                ))}
+                    {/* Section: Category/Organization */}
+                    <div className="space-y-4">
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <Label className="text-sm font-medium text-gray-700">Tags</Label>
+                            </div>
+
+                            <div className="p-3 bg-white rounded-xl border border-gray-200 shadow-sm min-h-[100px] flex flex-col gap-2">
+                                <div className="flex flex-wrap gap-2">
+                                    {tagsArray.map((tag, i) => (
+                                        <Badge key={i} variant="secondary" className="px-2.5 py-1 text-xs font-normal bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200/50 gap-1 rounded-md transition-colors">
+                                            {tag}
+                                            <button onClick={() => removeTag(i)} className="text-gray-400 hover:text-red-500 transition-colors"><X className="w-3 h-3" /></button>
+                                        </Badge>
+                                    ))}
+                                </div>
                                 <input
                                     value={tagInput}
                                     onChange={(e) => setTagInput(e.target.value)}
                                     onKeyDown={handleTagKeyDown}
-                                    className="flex-1 bg-transparent border-0 outline-none text-sm placeholder:text-muted-foreground/40 min-w-[80px] h-7"
-                                    placeholder={tagsArray.length === 0 ? "Add a tag..." : ""}
+                                    className="flex-1 bg-transparent border-0 outline-none text-sm placeholder:text-gray-400 h-7"
+                                    placeholder={tagsArray.length === 0 ? "Add tags..." : "Type and press Enter"}
                                 />
                             </div>
-                            <p className="text-[10px] text-muted-foreground mt-2 ml-1">
-                                Press <kbd className="font-mono bg-muted px-1 rounded border">Enter</kbd> to add.
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    {/* Description Card with "Rich Text" Toolbar */}
-                    <Card className="shadow-none border-border/60 overflow-hidden flex flex-col h-[400px]">
-                        <div className="px-4 py-3 border-b bg-muted/10 flex items-center justify-between">
-                            <Label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                <FileText className="w-3.5 h-3.5" /> Description
-                            </Label>
-                            {/* Fake Toolbar */}
-                            <div className="flex items-center gap-1">
-                                <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground"><Bold className="w-3 h-3" /></Button>
-                                <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground"><Italic className="w-3 h-3" /></Button>
-                                <div className="w-px h-3 bg-border mx-1" />
-                                <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground"><List className="w-3 h-3" /></Button>
-                                <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground"><AlignLeft className="w-3 h-3" /></Button>
-                            </div>
                         </div>
-                        <div className="flex-1">
-                            <Textarea
-                                value={formData.description}
-                                onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                className="h-full w-full resize-none border-0 rounded-none bg-card p-4 text-sm leading-relaxed focus-visible:ring-0 placeholder:text-muted-foreground/30 font-sans"
-                                placeholder="Describe your product details, materials, and care instructions..."
-                            />
-                        </div>
-                    </Card>
 
+                        {/* Mock Category Selection - Visual Only */}
+                        <div className="space-y-1.5 opacity-60 hover:opacity-100 transition-opacity">
+                            <Label className="text-sm font-medium text-gray-700">Vendor</Label>
+                            <Select disabled>
+                                <SelectTrigger className="bg-gray-50/50 border-gray-200 h-10">
+                                    <SelectValue placeholder="Select Vendor (Shopify)" />
+                                </SelectTrigger>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* Section: Description */}
+                    <div className="space-y-1.5 h-full">
+                        <Label className="text-sm font-medium text-gray-700">Description</Label>
+                        <Textarea
+                            value={formData.description}
+                            onChange={e => setFormData({ ...formData, description: e.target.value })}
+                            className="min-h-[200px] w-full resize-none border-gray-200 bg-gray-50/30 p-4 text-sm leading-relaxed focus-visible:bg-white focus-visible:ring-black/5 rounded-xl transition-all"
+                            placeholder="Write a product description..."
+                        />
+                    </div>
                 </div>
             </div>
 
-            {/* Bottom Action Bar - Sticky */}
-            <div className="p-4 border-t bg-background/80 backdrop-blur-xl sticky bottom-0 z-10 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
-                <div className="flex flex-col gap-3 max-w-lg mx-auto">
-                    <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground px-1">
-                        <span className="flex items-center gap-2">
-                            <span className={cn("inline-block w-1.5 h-1.5 rounded-full", isPushing ? "bg-amber-400 animate-pulse" : "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]")} />
-                            {product.updatedAt ? `Synced ${new Date(product.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Not synced'}
-                        </span>
-                        <span>Shopify Ready</span>
-                    </div>
-                    <Button
-                        className="w-full h-11 text-sm font-semibold tracking-wide shadow-md transition-all active:scale-[0.98] bg-primary hover:bg-primary/90 text-primary-foreground"
-                        onClick={handlePush}
-                        disabled={isPushing}
-                    >
-                        {isPushing ? (
-                            <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Publishing...
-                            </>
-                        ) : (
-                            "Publish Changes"
-                        )}
-                    </Button>
-                </div>
+            {/* Bottom Action Bar */}
+            <div className="p-6 border-t border-gray-100 bg-white">
+                <Button
+                    className="w-full h-12 text-sm font-semibold tracking-wide shadow-lg shadow-orange-500/20 bg-[#FF6B35] hover:bg-[#F55F2A] text-white rounded-xl transition-all active:scale-[0.98]"
+                    onClick={handlePush}
+                    disabled={isPushing}
+                >
+                    {isPushing ? (
+                        <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Syncing...
+                        </>
+                    ) : (
+                        "Save to Shopify"
+                    )}
+                </Button>
             </div>
         </div>
     );
