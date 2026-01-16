@@ -228,11 +228,21 @@
     @apply border-border outline-ring/50;
   }
 
-  html {
-    @apply overflow-x-hidden scroll-smooth touch-pan-y;
+  html,
+  body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden !important;
+    /* Strict lock */
+    position: fixed;
+    /* Prevents iOS rubber banding on body */
+    touch-action: pan-y;
+    /* Allow vertical scroll in children */
   }
 
   body {
-    @apply bg-background text-foreground overflow-x-hidden overscroll-none touch-pan-y;
+    @apply bg-background text-foreground;
   }
 }
