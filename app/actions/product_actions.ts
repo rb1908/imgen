@@ -39,6 +39,7 @@ export async function updateProduct(id: string, data: { title: string; descripti
             }
         });
         revalidatePath('/products');
+        revalidatePath(`/products/${id}`);
         return { success: true };
     } catch (e) {
         console.error("Failed to update product:", e);
@@ -62,6 +63,7 @@ export async function addProductImage(productId: string, imageUrl: string) {
             });
         }
         revalidatePath('/products');
+        revalidatePath(`/products/${productId}`);
         return { success: true };
     } catch (e) {
         console.error("Failed to add product image:", e);
@@ -91,6 +93,7 @@ export async function addProductImages(productId: string, imageUrls: string[]) {
         const updatedProduct = await prisma.product.findUnique({ where: { id: productId } });
 
         revalidatePath('/products');
+        revalidatePath(`/products/${productId}`);
         return { success: true, count: newImages.length, product: updatedProduct };
     } catch (e) {
         console.error("Failed to add product images:", e);

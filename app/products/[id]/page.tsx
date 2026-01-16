@@ -4,7 +4,6 @@ import { notFound } from 'next/navigation';
 import { getOrCreateProjectForProduct } from '@/app/actions/projects';
 import { getTemplates } from '@/app/actions/templates';
 
-export const dynamic = 'force-dynamic';
 
 export default async function ProductDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
