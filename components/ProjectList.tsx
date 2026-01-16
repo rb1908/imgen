@@ -177,24 +177,6 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
             <PageHeader
                 title="Projects"
             >
-                {/* View Toggle */}
-                <div className="flex items-center p-0.5 bg-muted/50 rounded-lg border">
-                    <button
-                        onClick={() => setViewMode('grid')}
-                        className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                        title="Grid View"
-                    >
-                        <LayoutGrid className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                        onClick={() => setViewMode('list')}
-                        className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                        title="List View"
-                    >
-                        <List className="w-3.5 h-3.5" />
-                    </button>
-                </div>
-
                 <div className="relative">
                     <Button size="sm" className="gap-2 shadow-sm" disabled={isUploading}>
                         {isUploading ? <Plus className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
@@ -212,6 +194,27 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
             </PageHeader>
 
             <div className="space-y-6 p-4 md:p-8">
+                {/* View Options Toolbar (Scrolls away) */}
+                <div className="flex items-center justify-end gap-2 text-muted-foreground">
+                    <span className="text-xs font-medium uppercase tracking-wider opacity-70 mr-auto">
+                        {projects.length} Project{projects.length !== 1 ? 's' : ''}
+                    </span>
+                    <button
+                        onClick={() => setViewMode('grid')}
+                        className={`p-2 rounded-md transition-all hover:bg-accent ${viewMode === 'grid' ? 'text-foreground bg-accent/50' : 'text-muted-foreground'}`}
+                        title="Grid View"
+                    >
+                        <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button
+                        onClick={() => setViewMode('list')}
+                        className={`p-2 rounded-md transition-all hover:bg-accent ${viewMode === 'list' ? 'text-foreground bg-accent/50' : 'text-muted-foreground'}`}
+                        title="List View"
+                    >
+                        <List className="w-4 h-4" />
+                    </button>
+                </div>
+
                 {projects.length === 0 ? (
                     <div className="text-center py-20 border-2 border-dashed rounded-xl bg-muted/30">
                         <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
