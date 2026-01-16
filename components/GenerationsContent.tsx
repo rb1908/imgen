@@ -1,29 +1,33 @@
+import { PageScaffold } from '@/components/PageScaffold';
 import { getAllGenerations } from '@/app/actions/generations';
 import { GenerationGrid } from '@/components/GenerationGrid';
+import { PageScaffold } from '@/components/PageScaffold';
 
 export async function GenerationsContent({ query }: { query?: string }) {
     const generations = await getAllGenerations(100, query);
 
     return (
-        <div className="min-h-[500px]">
-            {generations.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-                    <p>No results found matching "{query}".</p>
-                </div>
-            ) : (
-                <GenerationGrid
-                    images={generations.map(g => ({
-                        id: g.id,
-                        url: g.imageUrl,
-                        templateId: g.templateId || 'custom',
-                        originalImage: g.promptUsed || 'Custom Generation',
-                        prompt: g.promptUsed || 'Custom Generation',
-                        createdAt: g.createdAt,
-                        referenceName: g.project?.name || 'Project'
-                    }))}
-                    isGenerating={false}
-                />
-            )}
-        </div>
+        <PageScaffold>
+            <div className="min-h-[500px]">
+                {generations.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+                        <p>No results found matching "{query}".</p>
+                    </div>
+                ) : (
+                    <GenerationGrid
+                        images={generations.map(g => ({
+                            id: g.id,
+                            url: g.imageUrl,
+                            templateId: g.templateId || 'custom',
+                            originalImage: g.promptUsed || 'Custom Generation',
+                            prompt: g.promptUsed || 'Custom Generation',
+                            createdAt: g.createdAt,
+                            referenceName: g.project?.name || 'Project'
+                        }))}
+                        isGenerating={false}
+                    />
+                )}
+            </div>
+        </PageScaffold>
     );
 }

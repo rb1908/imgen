@@ -1,8 +1,10 @@
+import { PageScaffold } from '@/components/PageScaffold';
 // Force Vercel Rebuild - Timestamp: verify_upload_fix
 'use client';
 
 import { useState, useEffect } from 'react';
 import { Project, Generation } from '@prisma/client';
+import { PageScaffold } from '@/components/PageScaffold';
 import { createProject, deleteProject, updateProject, getSignedUploadUrl, getPublicUrl } from '@/app/actions/projects';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, FolderOpen, Image as ImageIcon, LayoutGrid, List, Pencil, MoreVertical } from 'lucide-react';
@@ -171,176 +173,174 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
     };
 
     return (
-        <div className="h-full w-full overflow-hidden flex flex-col">
-            {/* Scrollable Area */}
-            <div className="flex-1 w-full overflow-y-auto overscroll-contain touch-pan-y p-4 md:p-8 space-y-6">
-                <div className="max-w-6xl mx-auto w-full space-y-6">
-                    <div className="flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur z-10 py-2 -my-2 md:static md:bg-transparent md:p-0 md:m-0">
-                        <div>
-                            <h1 className="text-2xl font-bold tracking-tight">Projects</h1>
-                            <p className="text-muted-foreground text-sm">Your images & product sets</p>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            {/* View Toggle */}
-                            <div className="flex items-center p-0.5 bg-muted/50 rounded-lg border">
-                                <button
-                                    onClick={() => setViewMode('grid')}
-                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                                    title="Grid View"
-                                >
-                                    <LayoutGrid className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                                    title="List View"
-                                >
-                                    <List className="w-3.5 h-3.5" />
-                                </button>
-                            </div>
-
-                            <div className="relative">
-                                <Button size="sm" className="gap-2 shadow-sm" disabled={isUploading}>
-                                    {isUploading ? <Plus className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                                    <span>{isUploading ? "Creating..." : "New"}</span>
-                                </Button>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    multiple
-                                    className="absolute inset-0 opacity-0 cursor-pointer"
-                                    onChange={handleFileUpload}
-                                    disabled={isUploading}
-                                />
-                            </div>
-                        </div>
+    return (
+        <PageScaffold>
+            <div className="space-y-6">
+                <div className="flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur z-10 py-2 -my-2 md:static md:bg-transparent md:p-0 md:m-0">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight">Projects</h1>
+                        <p className="text-muted-foreground text-sm">Your images & product sets</p>
                     </div>
 
-                    {projects.length === 0 ? (
-                        <div className="text-center py-20 border-2 border-dashed rounded-xl bg-muted/30">
-                            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                                <FolderOpen className="w-8 h-8 text-muted-foreground" />
-                            </div>
-                            <h3 className="text-lg font-semibold">No Projects Yet</h3>
-                            <p className="text-muted-foreground max-w-sm mx-auto mt-2">Upload an image to start a new generation project.</p>
+                    <div className="flex items-center gap-3">
+                        {/* View Toggle */}
+                        <div className="flex items-center p-0.5 bg-muted/50 rounded-lg border">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                title="Grid View"
+                            >
+                                <LayoutGrid className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                title="List View"
+                            >
+                                <List className="w-3.5 h-3.5" />
+                            </button>
                         </div>
-                    ) : (
-                        <>
-                            {viewMode === 'grid' ? (
-                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 pb-24 md:pb-0">
-                                    {projects.map((project) => (
-                                        <Link href={`/project/${project.id}`} key={project.id} className="group relative block rounded-xl border bg-card text-card-foreground shadow transition-all hover:shadow-md hover:border-primary/50 overflow-hidden">
-                                            {/* Preview Grid */}
-                                            <div className="aspect-video w-full bg-muted relative grid grid-cols-2 gap-[1px] bg-white/10">
-                                                <div className={`relative ${project.generations.length > 0 ? 'col-span-1' : 'col-span-2'} h-full`}>
+
+                        <div className="relative">
+                            <Button size="sm" className="gap-2 shadow-sm" disabled={isUploading}>
+                                {isUploading ? <Plus className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                                <span>{isUploading ? "Creating..." : "New"}</span>
+                            </Button>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                onChange={handleFileUpload}
+                                disabled={isUploading}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {projects.length === 0 ? (
+                    <div className="text-center py-20 border-2 border-dashed rounded-xl bg-muted/30">
+                        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                            <FolderOpen className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-lg font-semibold">No Projects Yet</h3>
+                        <p className="text-muted-foreground max-w-sm mx-auto mt-2">Upload an image to start a new generation project.</p>
+                    </div>
+                ) : (
+                    <>
+                        {viewMode === 'grid' ? (
+                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 pb-24 md:pb-0">
+                                {projects.map((project) => (
+                                    <Link href={`/project/${project.id}`} key={project.id} className="group relative block rounded-xl border bg-card text-card-foreground shadow transition-all hover:shadow-md hover:border-primary/50 overflow-hidden">
+                                        {/* Preview Grid */}
+                                        <div className="aspect-video w-full bg-muted relative grid grid-cols-2 gap-[1px] bg-white/10">
+                                            <div className={`relative ${project.generations.length > 0 ? 'col-span-1' : 'col-span-2'} h-full`}>
+                                                <Image
+                                                    src={project.originalImageUrl}
+                                                    alt="Original"
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            </div>
+
+                                            {project.generations.length > 0 && (
+                                                <div className="relative h-full bg-muted/50 border-l border-white/10">
                                                     <Image
-                                                        src={project.originalImageUrl}
-                                                        alt="Original"
+                                                        src={project.generations[0].imageUrl}
+                                                        alt="Gen 1"
                                                         fill
                                                         className="object-cover"
                                                     />
+                                                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+                                                    {project._count.generations > 1 && (
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white font-bold text-lg">
+                                                            +{project._count.generations - 1}
+                                                        </div>
+                                                    )}
                                                 </div>
+                                            )}
+                                        </div>
 
-                                                {project.generations.length > 0 && (
-                                                    <div className="relative h-full bg-muted/50 border-l border-white/10">
+                                        <div className="p-3 md:p-4 flex items-center justify-between gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <h3 className="font-semibold line-clamp-1 text-sm md:text-base">{project.name}</h3>
+                                                <p className="text-[10px] md:text-xs text-muted-foreground truncate">
+                                                    {project._count.generations} images
+                                                </p>
+                                            </div>
+
+                                            <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-muted-foreground hover:text-foreground">
+                                                            <MoreVertical className="w-4 h-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={(e) => startRenaming(project, e as any)}>
+                                                            <Pencil className="w-4 h-4 mr-2" />
+                                                            Rename
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={(e) => handleDelete(project.id, e as any)} className="text-destructive focus:text-destructive">
+                                                            <Trash2 className="w-4 h-4 mr-2" />
+                                                            Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="rounded-xl border shadow-sm overflow-hidden bg-card pb-24 md:pb-0">
+                                <table className="w-full text-sm">
+                                    <thead className="bg-muted/40 text-muted-foreground font-medium border-b">
+                                        <tr>
+                                            <th className="py-2 px-4 w-[60px] text-left">Preview</th>
+                                            <th className="py-2 px-4 text-left">Name</th>
+                                            <th className="py-2 px-4 hidden sm:table-cell text-left">Created</th>
+                                            <th className="py-2 px-4 text-right">Count</th>
+                                            <th className="py-2 px-4 w-[100px]"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y">
+                                        {projects.map((project) => (
+                                            <tr
+                                                key={project.id}
+                                                className="group hover:bg-muted/50 transition-colors cursor-pointer"
+                                                onClick={() => router.push(`/project/${project.id}`)}
+                                            >
+                                                {/* Table Content (Same as before) */}
+                                                <td className="p-2 pl-4">
+                                                    <div className="w-8 h-8 relative rounded-md overflow-hidden bg-muted border">
                                                         <Image
-                                                            src={project.generations[0].imageUrl}
-                                                            alt="Gen 1"
+                                                            src={project.originalImageUrl}
+                                                            alt="Thumbnail"
                                                             fill
                                                             className="object-cover"
                                                         />
-                                                        <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
-                                                        {project._count.generations > 1 && (
-                                                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white font-bold text-lg">
-                                                                +{project._count.generations - 1}
-                                                            </div>
-                                                        )}
                                                     </div>
-                                                )}
-                                            </div>
-
-                                            <div className="p-3 md:p-4 flex items-center justify-between gap-2">
-                                                <div className="min-w-0 flex-1">
-                                                    <h3 className="font-semibold line-clamp-1 text-sm md:text-base">{project.name}</h3>
-                                                    <p className="text-[10px] md:text-xs text-muted-foreground truncate">
-                                                        {project._count.generations} images
-                                                    </p>
-                                                </div>
-
-                                                <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-muted-foreground hover:text-foreground">
-                                                                <MoreVertical className="w-4 h-4" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem onClick={(e) => startRenaming(project, e as any)}>
-                                                                <Pencil className="w-4 h-4 mr-2" />
-                                                                Rename
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={(e) => handleDelete(project.id, e as any)} className="text-destructive focus:text-destructive">
-                                                                <Trash2 className="w-4 h-4 mr-2" />
-                                                                Delete
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="rounded-xl border shadow-sm overflow-hidden bg-card pb-24 md:pb-0">
-                                    <table className="w-full text-sm">
-                                        <thead className="bg-muted/40 text-muted-foreground font-medium border-b">
-                                            <tr>
-                                                <th className="py-2 px-4 w-[60px] text-left">Preview</th>
-                                                <th className="py-2 px-4 text-left">Name</th>
-                                                <th className="py-2 px-4 hidden sm:table-cell text-left">Created</th>
-                                                <th className="py-2 px-4 text-right">Count</th>
-                                                <th className="py-2 px-4 w-[100px]"></th>
+                                                </td>
+                                                <td className="p-2 px-4 font-medium">{project.name}</td>
+                                                <td className="p-2 px-4 text-muted-foreground hidden sm:table-cell">
+                                                    {new Date(project.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                                </td>
+                                                <td className="p-2 px-4 text-right font-medium tabular-nums text-muted-foreground">{project._count.generations}</td>
+                                                <td className="p-2 pr-4 text-right">
+                                                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={(e) => startRenaming(project, e)}><Pencil className="w-4 h-4" /></Button>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={(e) => handleDelete(project.id, e)}><Trash2 className="w-4 h-4" /></Button>
+                                                    </div>
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody className="divide-y">
-                                            {projects.map((project) => (
-                                                <tr
-                                                    key={project.id}
-                                                    className="group hover:bg-muted/50 transition-colors cursor-pointer"
-                                                    onClick={() => router.push(`/project/${project.id}`)}
-                                                >
-                                                    {/* Table Content (Same as before) */}
-                                                    <td className="p-2 pl-4">
-                                                        <div className="w-8 h-8 relative rounded-md overflow-hidden bg-muted border">
-                                                            <Image
-                                                                src={project.originalImageUrl}
-                                                                alt="Thumbnail"
-                                                                fill
-                                                                className="object-cover"
-                                                            />
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-2 px-4 font-medium">{project.name}</td>
-                                                    <td className="p-2 px-4 text-muted-foreground hidden sm:table-cell">
-                                                        {new Date(project.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                                                    </td>
-                                                    <td className="p-2 px-4 text-right font-medium tabular-nums text-muted-foreground">{project._count.generations}</td>
-                                                    <td className="p-2 pr-4 text-right">
-                                                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={(e) => startRenaming(project, e)}><Pencil className="w-4 h-4" /></Button>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={(e) => handleDelete(project.id, e)}><Trash2 className="w-4 h-4" /></Button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
 
             <Dialog open={!!renamingProject} onOpenChange={(open) => !open && setRenamingProject(null)}>
@@ -401,6 +401,6 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                     </div>
                 </div>
             )}
-        </div>
+        </PageScaffold>
     );
 }
