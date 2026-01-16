@@ -33,6 +33,7 @@ import { deleteTemplate } from '@/app/actions/templates';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { ProductSelector } from './ProductSelector';
+import { PromptBar } from './PromptBar';
 
 interface ProjectWorkspaceProps {
     project: Project & { generations: Generation[] };
@@ -53,10 +54,6 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [selectedGenerationIds, setSelectedGenerationIds] = useState<string[]>([]);
     const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
-
-    // State inferred from selectedTemplateIds
-    // const [mode, setMode] = useState<'template' | 'custom'>('template'); // Removed
-
 
     // Prompt Bar State
     const [isPromptOpen, setIsPromptOpen] = useState(false);
@@ -382,167 +379,17 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
 
             {/* Collapsible Prompt Bar */}
-            <AnimatePresence>
-                {!isPromptOpen ? (
-                    /* Closed State: Floating Action Bubble */
-                    <motion.div
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0, opacity: 0 }}
-                        className="fixed bottom-6 right-6 z-[100] md:right-10"
-                    >
-                        <Button
-                            size="icon"
-                            className={cn(
-                                "h-14 w-14 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.4)] bg-white text-black hover:scale-110 transition-transform duration-200 hover:bg-zinc-100",
-                                generationStatus === 'generating' && "animate-pulse ring-4 ring-indigo-500/20"
-                            )}
-                            onClick={() => {
-                                setIsPromptOpen(true);
-                            }}
-                        >
-                            {generationStatus === 'generating' ? (
-                                <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-                            ) : (
-                                <Sparkles className="w-6 h-6 fill-black" />
-                            )}
-                        </Button>
-                    </motion.div>
-                ) : (
-                    /* Open State: Fixed Bottom Sheet */
-                    <motion.div
-                        initial={{ y: "100%" }}
-                        animate={{ y: 0 }}
-                        exit={{ y: "100%" }}
-                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-200 z-[100] md:pl-72 rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
-                    >
-                        <div className="max-w-3xl mx-auto w-full p-4 pb-4 flex flex-col gap-3 relative">
-
-                            {/* Close Handler (Hit Area & Icon) */}
-                            <div className="absolute top-2 right-4 z-10">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 rounded-full text-zinc-500 hover:text-white hover:bg-white/10"
-                                    onClick={() => setIsPromptOpen(false)}
-                                >
-                                    <ChevronDown className="w-5 h-5" />
-                                </Button>
-                            </div>
-
-                            <div className="w-full relative mt-2">
-                                <textarea
-                                    className="w-full bg-transparent border-none outline-none text-[18px] text-zinc-900 placeholder:text-zinc-400 resize-none py-2 px-1 leading-relaxed font-normal min-h-[80px]"
-                                    placeholder={selectedTemplateIds.length > 0 ? "Add context..." : "What do you want to write?"}
-                                    rows={selectedTemplateIds.length > 0 || customPrompt.length > 0 ? 3 : 2}
-                                    value={customPrompt}
-                                    autoFocus
-                                    onChange={(e) => {
-                                        setCustomPrompt(e.target.value);
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' && !e.shiftKey) {
-                                            e.preventDefault();
-                                            handleGenerate();
-                                        }
-                                    }}
-                                />
-                            </div>
-
-                            {/* Actions Row (Bottom Right) */}
-                            <div className="flex items-center justify-end gap-3 pr-1">
-
-                                {/* Enhance Button */}
-                                {customPrompt.length > 0 && (
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-10 w-10 rounded-full text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 transition-all animate-in fade-in zoom-in duration-200"
-                                        onClick={async () => {
-                                            if (customPrompt.length < 3) return;
-                                            const loadingId = toast.loading("Enhancing...");
-                                            try {
-                                                const { enhancePrompt } = await import('@/app/actions/enhance');
-                                                const { enhancedPrompt, error } = await enhancePrompt(customPrompt);
-                                                if (error) {
-                                                    toast.error(error, { id: loadingId });
-                                                } else {
-                                                    setCustomPrompt(enhancedPrompt);
-                                                    toast.success("Enhanced!", { id: loadingId });
-                                                }
-                                            } catch (e) {
-                                                toast.error("Failed", { id: loadingId });
-                                            }
-                                        }}
-                                        title="Enhance"
-                                    >
-                                        <Wand2 className="w-5 h-5" />
-                                    </Button>
-                                )}
-
-                                {/* Template Palette Icon */}
-                                {/* Template Palette - Expanded Pill when selected */}
-                                <div className={cn("transition-all duration-300 ease-in-out", selectedTemplateIds.length > 0 ? "w-auto" : "w-10")}>
-                                    <Button
-                                        variant="ghost"
-                                        size={selectedTemplateIds.length > 0 ? "default" : "icon"}
-                                        onClick={() => setIsTemplatePickerOpen(true)}
-                                        className={cn(
-                                            "rounded-full transition-all duration-300",
-                                            selectedTemplateIds.length > 0
-                                                ? "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 pr-2 pl-3"
-                                                : "h-10 w-10 text-zinc-400 hover:text-black hover:bg-zinc-100"
-                                        )}
-                                        title="Select Templates"
-                                    >
-                                        <Palette className={cn("w-5 h-5", selectedTemplateIds.length > 0 && "mr-2")} />
-
-                                        {selectedTemplateIds.length > 0 && (
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-sm font-medium">{selectedTemplateIds.length}</span>
-                                                <div
-                                                    role="button"
-                                                    tabIndex={0}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setSelectedTemplateIds([]);
-                                                    }}
-                                                    className="h-5 w-5 rounded-full bg-indigo-200 hover:bg-indigo-300 flex items-center justify-center ml-1 transition-colors"
-                                                >
-                                                    <X className="w-3 h-3 text-indigo-700" />
-                                                </div>
-                                            </div>
-                                        )}
-                                    </Button>
-                                </div>
-
-                                {/* Generate Button (Run) */}
-                                <Button
-                                    size="icon"
-                                    className={cn(
-                                        "h-10 w-10 rounded-full flex-shrink-0 transition-all shadow-sm",
-                                        generationStatus === 'generating'
-                                            ? "bg-zinc-100 text-zinc-400 animate-pulse"
-                                            : "bg-black text-white hover:bg-zinc-800 hover:scale-105 active:scale-95"
-                                    )}
-                                    onClick={handleGenerate}
-                                    disabled={generationStatus === 'generating' || (!selectedTemplateIds.length && !customPrompt.trim())}
-                                >
-                                    {generationStatus === 'generating' ? (
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                    ) : (
-                                        <Sparkles className="w-5 h-5 fill-white" />
-                                    )}
-                                </Button>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-
-
+            <PromptBar
+                isOpen={isPromptOpen}
+                onOpenChange={setIsPromptOpen}
+                prompt={customPrompt}
+                onPromptChange={setCustomPrompt}
+                onGenerate={handleGenerate}
+                isGenerating={generationStatus === 'generating'}
+                selectedTemplateCount={selectedTemplateIds.length}
+                onOpenTemplatePicker={() => setIsTemplatePickerOpen(true)}
+                onClearTemplates={() => setSelectedTemplateIds([])}
+            />
 
             <TemplateDialog
                 open={!!editingTemplate}
