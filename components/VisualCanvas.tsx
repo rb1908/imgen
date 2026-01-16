@@ -60,6 +60,7 @@ export function VisualCanvas({
     // AI Studio State
     // AI Studio State
     const [isAIStudioOpen, setIsAIStudioOpen] = useState(initialStudioOpen); // Controls the AI Studio View
+    const [isPromptOpen, setIsPromptOpen] = useState(false); // Collapsible Prompt Bar State
 
     const [customPrompt, setCustomPrompt] = useState('');
     const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
