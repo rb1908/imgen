@@ -60,7 +60,7 @@ function CollapsibleSection({ title, children, defaultOpen = true }: Collapsible
 interface ListingEditorProps {
     product: Product;
     onUpdate?: (updates: Partial<Product>) => void;
-    onOpenStudio: () => void;
+    onOpenStudio: (imageUrl?: string) => void;
 }
 
 export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditorProps) {
@@ -143,9 +143,13 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
                                 <div className="flex flex-wrap gap-3">
                                     {/* Product Images */}
                                     {product.images.map((img, i) => (
-                                        <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 group">
+                                        <button
+                                            key={i}
+                                            onClick={() => onOpenStudio(img)}
+                                            className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 group hover:ring-2 hover:ring-indigo-500 transition-all cursor-pointer"
+                                        >
                                             <Image src={img} alt="" fill className="object-cover" />
-                                        </div>
+                                        </button>
                                     ))}
 
                                     {/* Upload Placeholder */}
@@ -155,7 +159,7 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
 
                                     {/* AI Studio Trigger */}
                                     <button
-                                        onClick={onOpenStudio}
+                                        onClick={() => onOpenStudio()}
                                         className="w-20 h-20 rounded-lg bg-indigo-50 border border-indigo-100 flex flex-col items-center justify-center gap-1 hover:bg-indigo-100 transition-colors text-indigo-600 group"
                                     >
                                         <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" />

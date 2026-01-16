@@ -91,7 +91,10 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
             <div className="flex-1 flex flex-col relative w-full overflow-hidden bg-white">
                 <ListingEditor
                     product={product}
-                    onOpenStudio={() => setIsStudioOpen(true)}
+                    onOpenStudio={(url) => {
+                        if (url) setActiveImage(url);
+                        setIsStudioOpen(true);
+                    }}
                 />
             </div>
 
