@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { PageScaffold } from '@/components/PageScaffold';
+import { SearchModal } from '@/components/SearchModal';
 import { Product } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,15 +47,11 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
         <PageScaffold>
             <PageHeader title="Products">
                 <div className="flex items-center gap-2">
-                    <div className="relative w-40 md:w-64">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search..."
-                            className="pl-8 bg-background h-9"
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                        />
-                    </div>
+                    <SearchModal
+                        value={search}
+                        onChange={setSearch}
+                        placeholder="Search products..."
+                    />
 
                     <div className="flex items-center gap-2 ml-auto">
                         <Button variant="secondary" size="sm" onClick={() => setIsCreateOpen(true)} className="h-9">

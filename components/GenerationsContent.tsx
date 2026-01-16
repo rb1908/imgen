@@ -1,4 +1,4 @@
-import { SearchInput } from '@/components/SearchInput';
+import { GenerationsSearch } from '@/components/GenerationsSearch';
 import { PageHeader } from '@/components/PageHeader';
 import { PageScaffold } from '@/components/PageScaffold';
 import { getAllGenerations } from '@/app/actions/generations';
@@ -12,8 +12,8 @@ export async function GenerationsContent({ query }: { query?: string }) {
             <PageHeader
                 title="Gallery"
             >
-                <div className="w-64 max-w-[200px] md:max-w-xs">
-                    <SearchInput placeholder="Search looks..." />
+                <div>
+                    <GenerationsSearch />
                 </div>
             </PageHeader>
             <div className="min-h-[500px] p-4 md:p-8">
