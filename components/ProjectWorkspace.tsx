@@ -482,23 +482,40 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                                 )}
 
                                 {/* Template Palette Icon */}
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setIsTemplatePickerOpen(true)}
-                                    className={cn(
-                                        "h-10 w-10 rounded-full hover:bg-zinc-100 transition-all",
-                                        selectedTemplateIds.length > 0 ? "text-indigo-600 bg-indigo-50" : "text-zinc-400 hover:text-black"
-                                    )}
-                                    title="Select Templates"
-                                >
-                                    <Palette className="w-5 h-5" />
-                                    {selectedTemplateIds.length > 0 && (
-                                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-500 text-[10px] text-white">
-                                            {selectedTemplateIds.length}
-                                        </span>
-                                    )}
-                                </Button>
+                                {/* Template Palette - Expanded Pill when selected */}
+                                <div className={cn("transition-all duration-300 ease-in-out", selectedTemplateIds.length > 0 ? "w-auto" : "w-10")}>
+                                    <Button
+                                        variant="ghost"
+                                        size={selectedTemplateIds.length > 0 ? "default" : "icon"}
+                                        onClick={() => setIsTemplatePickerOpen(true)}
+                                        className={cn(
+                                            "rounded-full transition-all duration-300",
+                                            selectedTemplateIds.length > 0
+                                                ? "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 pr-2 pl-3"
+                                                : "h-10 w-10 text-zinc-400 hover:text-black hover:bg-zinc-100"
+                                        )}
+                                        title="Select Templates"
+                                    >
+                                        <Palette className={cn("w-5 h-5", selectedTemplateIds.length > 0 && "mr-2")} />
+
+                                        {selectedTemplateIds.length > 0 && (
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm font-medium">{selectedTemplateIds.length}</span>
+                                                <div
+                                                    role="button"
+                                                    tabIndex={0}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedTemplateIds([]);
+                                                    }}
+                                                    className="h-5 w-5 rounded-full bg-indigo-200 hover:bg-indigo-300 flex items-center justify-center ml-1 transition-colors"
+                                                >
+                                                    <X className="w-3 h-3 text-indigo-700" />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </Button>
+                                </div>
 
                                 {/* Generate Button (Run) */}
                                 <Button
