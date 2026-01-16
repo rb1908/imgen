@@ -370,16 +370,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 <div className="max-w-3xl mx-auto pointer-events-auto">
                     <div className="bg-muted/80 backdrop-blur-xl border shadow-2xl rounded-[2rem] p-2 pl-3 flex items-end gap-2 transition-all focus-within:bg-background focus-within:ring-1 focus-within:ring-primary/20">
 
-                        {/* Plus / Add Context */}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-10 w-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground shrink-0 mb-0.5"
-                            onClick={() => setIsTemplatePickerOpen(true)}
-                            title="Select Template"
-                        >
-                            <Plus className="w-5 h-5" />
-                        </Button>
+
 
                         {/* Input Area */}
                         <div className="flex-1 min-h-[44px] py-3">
