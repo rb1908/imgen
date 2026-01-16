@@ -26,14 +26,14 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const router = useRouter();
 
+    const [lastSynced, setLastSynced] = useState<string | null>(null);
+
     const handleSync = async () => {
         setIsSyncing(true);
         const res = await syncShopifyProducts();
         if (res.success) {
             toast.success(`Synced ${res.count} products`);
-            // Refresh would be ideal, but for now we might need to rely on revalidatePath
-            // Or trigger a manual fetch if server action returns data. 
-            // Since revalidatePath works on server components, simple router.refresh() works.
+            setLastSynced(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
             window.location.reload();
         } else {
             toast.error("Sync failed");
@@ -54,14 +54,9 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                     />
 
                     <div className="flex items-center gap-2 ml-auto">
-                        <Button variant="secondary" size="sm" onClick={() => setIsCreateOpen(true)} className="h-9">
+                        <Button variant="default" size="sm" onClick={() => setIsCreateOpen(true)} className="h-9 shadow-sm">
                             <Plus className="w-4 h-4 md:mr-2" />
-                            <span className="hidden md:inline">Create</span>
-                        </Button>
-
-                        <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing} className="h-9">
-                            <RefreshCw className={`w-4 h-4 md:mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
-                            <span className="hidden md:inline">Sync</span>
+                            <span className="hidden md:inline">Create Product</span>
                         </Button>
                     </div>
                 </div>
@@ -71,9 +66,28 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
             <div className="space-y-6 p-4 md:p-8">
                 {/* View Options Toolbar (Scrolls away) */}
                 <div className="flex items-center justify-end gap-2 text-muted-foreground">
-                    <span className="text-xs font-medium uppercase tracking-wider opacity-70 mr-auto">
-                        {filtered.length} Product{filtered.length !== 1 ? 's' : ''}
-                    </span>
+                    <div className="mr-auto flex items-center gap-4">
+                        <span className="text-xs font-medium uppercase tracking-wider opacity-70">
+                            {filtered.length} Product{filtered.length !== 1 ? 's' : ''}
+                        </span>
+                        {lastSynced && (
+                            <span className="text-[10px] bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full border border-green-500/20 animate-in fade-in">
+                                Synced {lastSynced}
+                            </span>
+                        )}
+                    </div>
+
+                    <button
+                        onClick={handleSync}
+                        disabled={isSyncing}
+                        className={`p-2 rounded-md transition-all hover:bg-accent text-muted-foreground hover:text-foreground ${isSyncing ? 'animate-pulse' : ''}`}
+                        title="Sync with Shopify"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                    </button>
+
+                    <div className="w-[1px] h-4 bg-border mx-1" />
+
                     <button
                         onClick={() => setViewMode('grid')}
                         className={`p-2 rounded-md transition-all hover:bg-accent ${viewMode === 'grid' ? 'text-foreground bg-accent/50' : 'text-muted-foreground'}`}
@@ -132,7 +146,7 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                     <div className="border rounded-lg overflow-hidden">
                         <table className="w-full text-sm text-left">
                             <thead className="bg-muted/50 text-muted-foreground font-medium border-b">
-                                <tr>
+                                <tr className="divide-x divide-border/50">
                                     <th className="py-3 px-4 w-[60px]">Image</th>
                                     <th className="py-3 px-4">Title</th>
                                     <th className="py-3 px-4">Status</th>
