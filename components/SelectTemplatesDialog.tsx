@@ -35,7 +35,7 @@ import { Loader2, Wand2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-interface SelectTemplatesDialogProps {
+export interface SelectTemplatesDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     templates: Template[];
@@ -44,10 +44,6 @@ interface SelectTemplatesDialogProps {
     onSelectAll: () => void;
     onEdit: (template: Template) => void;
     onDelete: (id: string) => void;
-    mode: 'template' | 'custom';
-    onModeChange: (mode: 'template' | 'custom') => void;
-    customPrompt: string;
-    onCustomPromptChange: (prompt: string) => void;
 }
 
 export function SelectTemplatesDialog({
@@ -58,113 +54,46 @@ export function SelectTemplatesDialog({
     onToggle,
     onSelectAll,
     onEdit,
-    onDelete,
-    mode,
-    onModeChange,
-    customPrompt,
-    onCustomPromptChange
+    onDelete
 }: SelectTemplatesDialogProps) {
     const isDesktop = useMediaQuery("(min-width: 768px)");
     const isAllSelected = templates.length > 0 && selectedIds.length === templates.length;
 
-    const [isEnhancing, setIsEnhancing] = useState(false);
-
-    const handleEnhance = async () => {
-        if (!customPrompt || customPrompt.length < 3) {
-            toast.error("Enter a basic prompt first");
-            return;
-        }
-
-        setIsEnhancing(true);
-        try {
-            const { enhancedPrompt, error } = await enhancePrompt(customPrompt);
-            if (error) {
-                toast.error(error);
-            } else {
-                onCustomPromptChange(enhancedPrompt);
-                toast.success("Prompt enhanced!");
-            }
-        } catch (e) {
-            toast.error("Failed to enhance prompt");
-        } finally {
-            setIsEnhancing(false);
-        }
-    };
-
     const Content = (
-        <Tabs value={mode} onValueChange={(v) => onModeChange(v as 'template' | 'custom')} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="template">Templates</TabsTrigger>
-                <TabsTrigger value="custom">Custom Prompt</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="template" className="space-y-4">
-                <div className="flex items-center justify-between px-1">
-                    <span className="text-sm text-muted-foreground">
-                        {selectedIds.length} selected
-                    </span>
-                    <div className="flex items-center space-x-2">
-                        <Checkbox
-                            id="select-all-dialog"
-                            checked={isAllSelected}
-                            onCheckedChange={onSelectAll}
-                        />
-                        <Label htmlFor="select-all-dialog" className="text-xs font-medium cursor-pointer">
-                            Select All
-                        </Label>
-                    </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto px-1">
-                    {templates.map(t => (
-                        <TemplateItem
-                            key={t.id}
-                            template={t}
-                            isSelected={selectedIds.includes(t.id)}
-                            onToggle={() => onToggle(t.id)}
-                            onEdit={onEdit}
-                            onDelete={onDelete}
-                            variant="grid"
-                        />
-                    ))}
-                </div>
-            </TabsContent>
-
-            <TabsContent value="custom" className="space-y-4">
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                        <Label>Custom Prompt</Label>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 text-xs text-primary gap-1.5 hover:bg-primary/10 hover:text-primary pr-2"
-                            onClick={handleEnhance}
-                            disabled={isEnhancing || !customPrompt}
-                            title="Enhance with AI"
-                        >
-                            {isEnhancing ? (
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                            ) : (
-                                <Wand2 className="w-3 h-3" />
-                            )}
-                            {isEnhancing ? 'Enhancing...' : 'Enhance Prompt'}
-                        </Button>
-                    </div>
-                    <Textarea
-                        placeholder="Describe the variation you want to generate (e.g., 'Modern rustic living room')..."
-                        className="min-h-[150px] resize-none text-base md:text-sm"
-                        value={customPrompt}
-                        onChange={(e) => onCustomPromptChange(e.target.value)}
+        <div className="w-full space-y-4">
+            <div className="flex items-center justify-between px-1">
+                <span className="text-sm text-muted-foreground">
+                    {selectedIds.length} selected
+                </span>
+                <div className="flex items-center space-x-2">
+                    <Checkbox
+                        id="select-all-dialog"
+                        checked={isAllSelected}
+                        onCheckedChange={onSelectAll}
                     />
-                    <p className="text-xs text-muted-foreground">
-                        Your prompt will be sent to the creative agent along with the reference image.
-                    </p>
+                    <Label htmlFor="select-all-dialog" className="text-xs font-medium cursor-pointer">
+                        Select All
+                    </Label>
                 </div>
-            </TabsContent>
-        </Tabs>
+            </div>
+            <div className="grid grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto px-1">
+                {templates.map(t => (
+                    <TemplateItem
+                        key={t.id}
+                        template={t}
+                        isSelected={selectedIds.includes(t.id)}
+                        onToggle={() => onToggle(t.id)}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                        variant="grid"
+                    />
+                ))}
+            </div>
+        </div>
     );
 
-    const title = mode === 'template' ? 'Select Templates' : 'Custom Prompt';
-    const description = mode === 'template' ? 'Choose styles to generate variations for.' : 'Enter a custom prompt for your generation.';
+    const title = 'Select Templates';
+    const description = 'Choose styles to generate variations for.';
 
     if (isDesktop) {
         return (
