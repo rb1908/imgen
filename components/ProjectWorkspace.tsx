@@ -397,6 +397,34 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                     {/* Right Actions */}
                     <div className="flex items-center gap-2 pb-1">
 
+                        {/* Enhance Button */}
+                        {customPrompt.length > 0 && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 rounded-full text-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-300 transition-all animate-in fade-in zoom-in duration-200"
+                                onClick={async () => {
+                                    if (customPrompt.length < 3) return;
+                                    const loadingId = toast.loading("Enhancing...");
+                                    try {
+                                        const { enhancePrompt } = await import('@/app/actions/enhance');
+                                        const { enhancedPrompt, error } = await enhancePrompt(customPrompt);
+                                        if (error) {
+                                            toast.error(error, { id: loadingId });
+                                        } else {
+                                            setCustomPrompt(enhancedPrompt);
+                                            toast.success("Enhanced!", { id: loadingId });
+                                        }
+                                    } catch (e) {
+                                        toast.error("Failed", { id: loadingId });
+                                    }
+                                }}
+                                title="Enhance"
+                            >
+                                <Wand2 className="w-5 h-5" />
+                            </Button>
+                        )}
+
                         {/* Template Palette Icon */}
                         <Button
                             variant="ghost"
