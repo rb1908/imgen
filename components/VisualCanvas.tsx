@@ -415,6 +415,17 @@ export function VisualCanvas({
                     </DrawerContent>
                 </Drawer>
 
+                <SelectTemplatesDialog
+                    open={isTemplatePickerOpen}
+                    onOpenChange={setIsTemplatePickerOpen}
+                    templates={templates}
+                    selectedIds={selectedTemplateIds}
+                    onToggle={(id) => setSelectedTemplateIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
+                    onSelectAll={() => { }}
+                    onEdit={() => { }}
+                    onDelete={() => { }}
+                />
+
             </div>
         );
     }
