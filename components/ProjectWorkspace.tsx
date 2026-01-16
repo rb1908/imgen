@@ -366,7 +366,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
 
             {/* Gemini-Style Floating Prompt Bar */}
-            <div className="absolute bottom-0 left-0 w-full px-4 pb-6 pt-12 bg-gradient-to-t from-background via-background/80 to-transparent z-50 pointer-events-none">
+            <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 pt-12 bg-gradient-to-t from-background via-background/80 to-transparent z-[100] pointer-events-none md:pl-72">
                 <div className="max-w-3xl mx-auto pointer-events-auto">
                     <div className="bg-muted/80 backdrop-blur-xl border shadow-2xl rounded-[2rem] p-2 pl-3 flex items-end gap-2 transition-all focus-within:bg-background focus-within:ring-1 focus-within:ring-primary/20">
 
@@ -374,7 +374,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="h-10 w-10 rounded-full text-muted-foreground hover:bg-background/50 hover:text-foreground shrink-0 mb-0.5"
+                            className="h-10 w-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground shrink-0 mb-0.5"
                             onClick={() => setIsTemplatePickerOpen(true)}
                             title="Select Template"
                         >
@@ -404,25 +404,19 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
                         {/* Right Actions */}
                         <div className="flex items-center gap-1 pb-0.5">
-                            {/* Templates Pill (Like 'Fast' in Gemini) */}
+                            {/* Templates Pill */}
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setIsTemplatePickerOpen(true)}
                                 className={cn(
-                                    "h-9 rounded-full bg-background/30 hover:bg-background/60 text-xs font-medium px-3 transition-colors mr-1",
-                                    selectedTemplateIds.length > 0 ? "text-primary bg-primary/10 hover:bg-primary/20" : "text-muted-foreground hover:text-foreground"
+                                    "h-9 rounded-full bg-transparent border border-transparent hover:border-border text-xs font-medium px-3 transition-all mr-1",
+                                    selectedTemplateIds.length > 0 ? "text-primary bg-primary/10 border-primary/20" : "text-muted-foreground"
                                 )}
                             >
                                 <Palette className="w-3.5 h-3.5 mr-1.5" />
-                                {selectedTemplateIds.length > 0 ? `${selectedTemplateIds.length} Selected` : 'Templates'}
+                                {selectedTemplateIds.length > 0 ? `${selectedTemplateIds.length}` : 'Templates'}
                             </Button>
-
-                            {/* Mic (Visual Placeholder) 
-                            <Button size="icon" variant="ghost" className="h-10 w-10 rounded-full text-muted-foreground">
-                                <Mic className="w-5 h-5" />
-                            </Button>
-                            */}
 
                             {/* Generate Button */}
                             <Button
