@@ -270,24 +270,25 @@ export function VisualCanvas({
                                 </div>
 
                                 {/* Reference Image Preview in Bar */}
-                                {referenceImageUrl && (
-                                    <div className="flex items-center gap-2 mb-2 px-1">
-                                        <div className="relative h-12 w-12 rounded-lg overflow-hidden border border-zinc-200">
-                                            <Image src={referenceImageUrl} alt="Ref" fill className="object-cover" />
-                                            <button
-                                                onClick={() => setReferenceImageUrl(null)}
-                                                className="absolute top-0 right-0 bg-black/50 hover:bg-red-500 text-white p-0.5 rounded-bl"
-                                            >
-                                                <X className="w-3 h-3" />
-                                            </button>
-                                        </div>
-                                        <span className="text-xs text-zinc-500">Reference Image Selected</span>
-                                    </div>
-                                )}
+
+
 
 
                                 {/* Actions Row (Bottom Right) */}
                                 <div className="flex items-center justify-end gap-3 pr-1">
+
+                                    {/* Reference Image Preview */}
+                                    {referenceImageUrl && (
+                                        <div className="relative h-10 w-10 rounded-lg overflow-hidden border border-zinc-200 shadow-sm group">
+                                            <Image src={referenceImageUrl} alt="Ref" fill className="object-cover" />
+                                            <button
+                                                onClick={() => setReferenceImageUrl(null)}
+                                                className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    )}
 
                                     {/* Upload Reference Button */}
                                     <div className="relative">
