@@ -160,7 +160,7 @@ export async function generateVariations(
         }
         if (flat.length > 0) {
             revalidatePath('/generations');
-            revalidateTag(`project-${projectId}`);
+            revalidateTag(`project-${projectId}`, {});
         }
         return flat;
 

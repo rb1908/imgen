@@ -46,7 +46,7 @@ export async function createTemplate(formData: FormData) {
             data: validatedData,
         });
 
-        revalidateTag('templates');
+        revalidateTag('templates', {});
         revalidatePath('/', 'layout');
 
         return { success: true, template };
@@ -73,7 +73,7 @@ export async function updateTemplate(id: string, formData: FormData) {
             data: validatedData,
         });
 
-        revalidateTag('templates');
+        revalidateTag('templates', {});
         revalidatePath('/', 'layout');
 
         return { success: true, template };
@@ -89,7 +89,7 @@ export async function deleteTemplate(id: string) {
             where: { id },
         });
 
-        revalidateTag('templates');
+        revalidateTag('templates', {});
         revalidatePath('/', 'layout');
         return { success: true };
     } catch (error) {

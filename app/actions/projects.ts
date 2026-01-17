@@ -106,7 +106,7 @@ export async function updateProjectMetadata(id: string, data: { description?: st
             where: { id },
             data
         });
-        revalidateTag(`project-${id}`);
+        revalidateTag(`project-${id}`, {});
         revalidatePath(`/project/${id}`); // Keep path revalidation for client router cache
         revalidatePath('/projects');
         return { success: true };
@@ -132,7 +132,7 @@ export const getProject = async (id: string) => {
 
 export async function deleteProject(id: string) {
     await prisma.project.delete({ where: { id } });
-    revalidateTag(`project-${id}`);
+    revalidateTag(`project-${id}`, {});
     revalidatePath('/projects');
     revalidatePath('/');
 }
@@ -147,7 +147,7 @@ export async function updateProject(id: string, name: string) {
         data: { name: name.trim() }
     });
 
-    revalidateTag(`project-${id}`);
+    revalidateTag(`project-${id}`, {});
     revalidatePath('/projects');
     revalidatePath('/');
     return project;
@@ -159,7 +159,7 @@ export async function setProjectDefaultProduct(id: string, productId: string | n
             where: { id },
             data: { defaultProductId: productId }
         });
-        revalidateTag(`project-${id}`);
+        revalidateTag(`project-${id}`, {});
         revalidatePath(`/project/${id}`);
         revalidatePath('/projects');
         return { success: true };
