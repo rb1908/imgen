@@ -378,6 +378,74 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
             </div >
 
 
+            {/* Bulk Selection Action Bar */}
+            <AnimatePresence>
+                {isSelectionMode && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 p-2 bg-zinc-900/90 backdrop-blur-md text-white rounded-full shadow-xl border border-white/10"
+                    >
+                        <div className="pl-4 pr-2 text-sm font-medium whitespace-nowrap">
+                            {selectedGenerationIds.length} Selected
+                        </div>
+
+                        <div className="h-4 w-px bg-white/20 mx-1" />
+
+                        {project.defaultProductId && (
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={handleBulkAddToProduct}
+                                disabled={selectedGenerationIds.length === 0 || isBulkActionLoading}
+                                className="h-8 rounded-full hover:bg-white/10 text-white"
+                                title="Add to Product"
+                            >
+                                <ShoppingBag className="w-4 h-4 mr-2" />
+                                Add
+                            </Button>
+                        )}
+
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={handleBulkDownload}
+                            disabled={selectedGenerationIds.length === 0 || isBulkActionLoading}
+                            className="h-8 rounded-full hover:bg-white/10 text-white"
+                            title="Download ZIP"
+                        >
+                            <Download className="w-4 h-4" />
+                        </Button>
+
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={handleBulkDelete}
+                            disabled={selectedGenerationIds.length === 0 || isBulkActionLoading}
+                            className="h-8 rounded-full hover:bg-red-500/20 text-red-300 hover:text-red-200"
+                            title="Delete"
+                        >
+                            {isBulkActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                        </Button>
+
+                        <div className="h-4 w-px bg-white/20 mx-1" />
+
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => {
+                                setIsSelectionMode(false);
+                                setSelectedGenerationIds([]);
+                            }}
+                            className="h-8 w-8 rounded-full hover:bg-white/10 text-white/70 hover:text-white"
+                        >
+                            <X className="w-4 h-4" />
+                        </Button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Collapsible Prompt Bar */}
             <PromptBar
                 isOpen={isPromptOpen}
