@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sparkles, Plus, Check, Loader2, Wand2, Image as ImageIcon, Stars, ChevronDown, Palette, Upload, ArrowLeft, Paperclip, X, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { AIIcon } from './icons/AIIcon';
 import { SelectTemplatesDialog } from './SelectTemplatesDialog';
 import { GenerationGrid } from './GenerationGrid';
 import { Template } from '@prisma/client';
@@ -348,7 +349,7 @@ export function VisualCanvas({
                             onClick={() => setIsAIStudioOpen(true)}
                             className="rounded-full bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200 pl-4 pr-5 py-6 gap-2"
                         >
-                            <Sparkles className="w-5 h-5 fill-white/20" />
+                            <AIIcon className="w-5 h-5" />
                             <span className="font-medium text-base">AI Studio</span>
                         </Button>
                     </div>

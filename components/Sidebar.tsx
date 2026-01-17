@@ -1,13 +1,14 @@
 "use client";
 
 import { LayoutDashboard, Image as ImageIcon, Settings, PlusCircle, Sparkles, ChevronLeft, ChevronRight, Palette, ShoppingBag } from 'lucide-react';
+import { AIIcon } from './icons/AIIcon';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const sidebarItems = [
     { icon: LayoutDashboard, label: 'Projects', href: '/projects' },
-    { icon: Sparkles, label: 'Generations', href: '/generations' },
+    { icon: AIIcon, label: 'Generations', href: '/generations' },
     { icon: ShoppingBag, label: 'Products', href: '/products' },
     { icon: Settings, label: 'Settings', href: '/settings' },
 ];
@@ -27,14 +28,14 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
                 {!isCollapsed && (
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                            <Sparkles className="w-5 h-5 text-primary-foreground" />
+                            <AIIcon className="w-5 h-5 text-primary-foreground" />
                         </div>
                         <span className="font-bold text-lg tracking-tight">ImageForge</span>
                     </div>
                 )}
                 {isCollapsed && (
                     <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center mb-2">
-                        <Sparkles className="w-5 h-5 text-primary-foreground" />
+                        <AIIcon className="w-5 h-5 text-primary-foreground" />
                     </div>
                 )}
             </div>

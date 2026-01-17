@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { updateProduct } from '@/app/actions/product_actions';
 import { updateShopifyProduct } from '@/app/actions/shopify';
 import { Loader2, X, ChevronRight, LayoutGrid, Tag, DollarSign, Type, Sparkles, Plus, Image as ImageIcon, ChevronDown } from 'lucide-react';
+import { AIIcon } from './icons/AIIcon';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -162,7 +163,7 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
                                         onClick={() => onOpenStudio()}
                                         className="w-20 h-20 rounded-lg bg-indigo-50 border border-indigo-100 flex flex-col items-center justify-center gap-1 hover:bg-indigo-100 transition-colors text-indigo-600 group"
                                     >
-                                        <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                        <AIIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
                                         <span className="text-[10px] font-medium">Studio</span>
                                     </button>
                                 </div>

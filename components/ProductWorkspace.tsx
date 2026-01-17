@@ -12,6 +12,7 @@ import { addProductImages, removeProductImage } from '@/app/actions/product_acti
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AIIcon } from './icons/AIIcon';
 
 interface ProductWorkspaceProps {
     product: Product;

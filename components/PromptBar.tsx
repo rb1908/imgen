@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Loader2, Sparkles, ChevronDown, Wand2, Palette, X } from 'lucide-react';
+import { AIIcon } from './icons/AIIcon';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -75,7 +76,7 @@ export function PromptBar({
                         {isGenerating ? (
                             <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
                         ) : (
-                            <Sparkles className="w-6 h-6 fill-black" />
+                            <AIIcon className="w-6 h-6" />
                         )}
                     </Button>
                 </motion.div>
@@ -192,7 +193,7 @@ export function PromptBar({
                                 {isGenerating ? (
                                     <Loader2 className="w-5 h-5 animate-spin" />
                                 ) : (
-                                    <Sparkles className="w-5 h-5 fill-white" />
+                                    <AIIcon className="w-5 h-5" />
                                 )}
                             </Button>
                         </div>
