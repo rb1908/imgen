@@ -60,42 +60,31 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                         </Button>
                     </div>
                 </div>
-
-                {/* Active Search Filter Banner */}
-                {search && (
-                    <div className="flex items-center gap-2 mt-2">
-                        <Badge variant="secondary" className="px-3 py-1.5 h-8 text-sm font-normal bg-gray-100/80 text-gray-600 gap-2 border shadow-sm">
-                            <span>Searching for: </span>
-                            <span className="font-semibold text-gray-900">"{search}"</span>
-                            <button
-                                onClick={() => setSearch('')}
-                                className="ml-1 hover:bg-gray-200 rounded-full p-0.5 transition-colors"
-                            >
-                                <X className="w-3.5 h-3.5" />
-                            </button>
-                        </Badge>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setSearch('')}
-                            className="h-8 text-xs text-muted-foreground hover:text-foreground"
-                        >
-                            Clear
-                        </Button>
-                    </div>
-                )}
             </PageHeader>
 
-            {/* List */}
-            <div className="space-y-6 p-4 md:p-8">
-                {/* View Options Toolbar (Scrolls away) */}
                 <div className="flex items-center justify-end gap-2 text-muted-foreground">
-                    <div className="mr-auto flex items-center gap-4">
-                        <span className="text-xs font-medium uppercase tracking-wider opacity-70">
-                            {filtered.length} Product{filtered.length !== 1 ? 's' : ''}
-                        </span>
-                        {lastSynced && (
-                            <span className="text-[10px] bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full border border-green-500/20 animate-in fade-in">
+                    <div className="mr-auto flex items-center gap-2">
+                        {search ? (
+                            <div className="flex items-center gap-1.5 bg-secondary px-2 py-1 rounded-md animate-in fade-in slide-in-from-left-2">
+                                <span className="text-xs font-semibold text-foreground">
+                                    {filtered.length} for "{search}"
+                                </span>
+                                <button
+                                    onClick={() => setSearch('')}
+                                    className="p-0.5 hover:bg-background rounded-full transition-colors text-muted-foreground hover:text-foreground"
+                                    title="Clear search"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </div>
+                        ) : (
+                            <span className="text-xs font-medium uppercase tracking-wider opacity-70">
+                                {filtered.length} Product{filtered.length !== 1 ? 's' : ''}
+                            </span>
+                        )}
+
+                        {lastSynced && !search && (
+                            <span className="hidden sm:inline-block text-[10px] bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full border border-green-500/20 animate-in fade-in">
                                 Synced {lastSynced}
                             </span>
                         )}
@@ -221,6 +210,6 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
             </div>
 
             <CreateProductDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
-        </PageScaffold>
+        </PageScaffold >
     );
 }
