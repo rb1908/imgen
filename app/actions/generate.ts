@@ -3,7 +3,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { prisma } from '@/lib/db';
 import { uploadImageToStorage } from '@/lib/supabase';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || '';
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -160,6 +160,7 @@ export async function generateVariations(
         }
         if (flat.length > 0) {
             revalidatePath('/generations');
+            revalidateTag(`project-${projectId}`);
         }
         return flat;
 

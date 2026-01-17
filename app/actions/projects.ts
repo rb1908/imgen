@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { Project } from '@prisma/client';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 import { uploadImageToStorage } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
 
@@ -99,13 +99,15 @@ export async function getProjects() {
     }
 }
 
+
 export async function updateProjectMetadata(id: string, data: { description?: string; tags?: string; price?: string }) {
     try {
         await prisma.project.update({
             where: { id },
             data
         });
-        revalidatePath(`/project/${id}`);
+        revalidateTag(`project-${id}`);
+        revalidatePath(`/project/${id}`); // Keep path revalidation for client router cache
         revalidatePath('/projects');
         return { success: true };
     } catch (e) {
@@ -114,15 +116,23 @@ export async function updateProjectMetadata(id: string, data: { description?: st
     }
 }
 
-export async function getProject(id: string) {
-    return await prisma.project.findUnique({
-        where: { id },
-        include: { generations: { orderBy: { createdAt: 'desc' } } }
-    });
-}
+// Cached getProject
+export const getProject = async (id: string) => {
+    return await unstable_cache(
+        async () => {
+            return await prisma.project.findUnique({
+                where: { id },
+                include: { generations: { orderBy: { createdAt: 'desc' } } }
+            });
+        },
+        [`project-${id}`],
+        { tags: [`project-${id}`] }
+    )();
+};
 
 export async function deleteProject(id: string) {
     await prisma.project.delete({ where: { id } });
+    revalidateTag(`project-${id}`);
     revalidatePath('/projects');
     revalidatePath('/');
 }
@@ -137,6 +147,7 @@ export async function updateProject(id: string, name: string) {
         data: { name: name.trim() }
     });
 
+    revalidateTag(`project-${id}`);
     revalidatePath('/projects');
     revalidatePath('/');
     return project;
@@ -148,6 +159,7 @@ export async function setProjectDefaultProduct(id: string, productId: string | n
             where: { id },
             data: { defaultProductId: productId }
         });
+        revalidateTag(`project-${id}`);
         revalidatePath(`/project/${id}`);
         revalidatePath('/projects');
         return { success: true };

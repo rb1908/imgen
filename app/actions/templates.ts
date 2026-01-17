@@ -1,9 +1,8 @@
 'use server';
 
 import { prisma } from '@/lib/db';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 import { z } from 'zod';
-
 const CreateTemplateSchema = z.object({
     name: z.string().min(1, 'Name is required'),
     prompt: z.string().min(10, 'Prompt must be at least 10 characters'),
@@ -12,18 +11,24 @@ const CreateTemplateSchema = z.object({
     category: z.string().default('custom'),
 });
 
-export async function getTemplates() {
-    return await prisma.template.findMany({
-        orderBy: { createdAt: 'desc' },
-        include: {
-            generations: {
-                take: 1,
+export const getTemplates = async () => {
+    return await unstable_cache(
+        async () => {
+            return await prisma.template.findMany({
                 orderBy: { createdAt: 'desc' },
-                select: { imageUrl: true }
-            }
-        }
-    });
-}
+                include: {
+                    generations: {
+                        take: 1,
+                        orderBy: { createdAt: 'desc' },
+                        select: { imageUrl: true }
+                    }
+                }
+            });
+        },
+        ['templates-list'],
+        { tags: ['templates'] }
+    )();
+};
 
 export async function createTemplate(formData: FormData) {
     try {
@@ -41,6 +46,7 @@ export async function createTemplate(formData: FormData) {
             data: validatedData,
         });
 
+        revalidateTag('templates');
         revalidatePath('/', 'layout');
 
         return { success: true, template };
@@ -67,6 +73,7 @@ export async function updateTemplate(id: string, formData: FormData) {
             data: validatedData,
         });
 
+        revalidateTag('templates');
         revalidatePath('/', 'layout');
 
         return { success: true, template };
@@ -82,6 +89,7 @@ export async function deleteTemplate(id: string) {
             where: { id },
         });
 
+        revalidateTag('templates');
         revalidatePath('/', 'layout');
         return { success: true };
     } catch (error) {
