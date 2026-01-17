@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 
 import { GeneratedImage } from '@/app/types';
-import { Loader2, Download, Maximize2, Plus, ChevronLeft, ChevronRight, X, ShoppingBag, MoreHorizontal } from 'lucide-react';
+import { Loader2, Download, Maximize2, Plus, ChevronLeft, ChevronRight, X, ShoppingBag, MoreHorizontal, Trash2 } from 'lucide-react';
+import { deleteGenerations } from '@/app/actions/generations';
+import { toast } from 'sonner';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { TemplateDialog } from './TemplateDialog';
@@ -105,6 +107,16 @@ export function GenerationGrid({
             link.download = filename;
             link.click();
         }
+    };
+
+    const handleDelete = async (id: string) => {
+        toast.promise(deleteGenerations([id]), {
+            loading: 'Deleting...',
+            success: 'Image deleted',
+            error: 'Failed to delete image'
+        });
+        // Optimistic update or wait for revalidation (revalidation is handled by server action)
+        if (expandedImage?.id === id) setExpandedImage(null);
     };
 
     // Keyboard Navigation
@@ -258,6 +270,18 @@ export function GenerationGrid({
                                             <Button
                                                 size="icon"
                                                 variant="secondary"
+                                                className="h-8 w-8 rounded-full bg-white/10 hover:bg-red-500/80 text-white border-none backdrop-blur-md transition-colors"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDelete(img.id);
+                                                }}
+                                                title="Delete"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                            <Button
+                                                size="icon"
+                                                variant="secondary"
                                                 className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -320,6 +344,16 @@ export function GenerationGrid({
                                                 }}>
                                                     <Download className="mr-2 h-4 w-4" />
                                                     <span>Download</span>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDelete(img.id);
+                                                    }}
+                                                    className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                                >
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    <span>Delete</span>
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -445,6 +479,13 @@ export function GenerationGrid({
                             >
                                 <Download className="w-4 h-4 mr-2" />
                                 Download
+                            </Button>
+                            <Button
+                                className="rounded-full bg-red-600/90 hover:bg-red-700 text-white shadow-lg ml-2"
+                                onClick={() => handleDelete(expandedImage.id)}
+                            >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
                             </Button>
                         </div>
                     </div>

@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { Generation } from '@prisma/client';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 export async function getAllGenerations(limit = 100, query = '') {
     try {
@@ -34,9 +34,14 @@ export async function getAllGenerations(limit = 100, query = '') {
         return [];
     }
 }
-
 export async function deleteGenerations(ids: string[]) {
     try {
+        // Fetch generations first to get projectIds for revalidation
+        const generationsToDelete = await prisma.generation.findMany({
+            where: { id: { in: ids } },
+            select: { projectId: true }
+        });
+
         await prisma.generation.deleteMany({
             where: {
                 id: {
@@ -44,7 +49,15 @@ export async function deleteGenerations(ids: string[]) {
                 }
             }
         });
+
         revalidatePath('/generations');
+
+        // Revalidate associated projects
+        const projectIds = new Set(generationsToDelete.map(g => g.projectId).filter(Boolean));
+        for (const pid of projectIds) {
+            revalidateTag(`project-${pid}`, {});
+        }
+
         return { success: true };
     } catch (error) {
         console.error("Failed to delete generations:", error);
