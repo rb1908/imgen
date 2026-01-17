@@ -9,6 +9,7 @@ import { Sparkles, Plus, Check, Loader2, Wand2, Image as ImageIcon, Stars, Chevr
 import { AIIcon } from './icons/AIIcon';
 import { SelectTemplatesDialog } from './SelectTemplatesDialog';
 import { GenerationGrid } from './GenerationGrid';
+import { ImageViewer } from './ImageViewer';
 import { Template } from '@prisma/client';
 import { enhancePrompt } from '@/app/actions/enhance';
 import { toast } from 'sonner';
@@ -42,12 +43,12 @@ interface VisualCanvasProps {
     templates: Template[];
     isGenerating: boolean;
     initialStudioOpen?: boolean;
-    initialViewMode?: 'gallery' | 'editor';
+    initialViewMode?: 'gallery' | 'viewer';
     onClose?: () => void;
     onRemoveFromProduct?: (url: string) => Promise<void>;
 }
 
-type ViewMode = 'gallery' | 'editor';
+type ViewMode = 'gallery' | 'viewer';
 
 export function VisualCanvas({
     activeImage,
@@ -112,7 +113,7 @@ export function VisualCanvas({
             // Or reuse Editor. Let's reuse Editor but with a "Back to AI Studio" button.
             // Currently Editor has "Back to Gallery".
         }
-        setViewMode('editor');
+        setViewMode('viewer');
     };
 
     const handleEnhance = async () => {
@@ -162,10 +163,15 @@ export function VisualCanvas({
         }
     };
 
-    // AI STUDIO VIEW
-    if (isAIStudioOpen && viewMode === 'gallery') {
+    // RENDER LOGIC
+    // 1. AI Studio (Full Screen override)
+    if (isAIStudioOpen) {
         return (
-            <div className="relative h-full w-full bg-white flex flex-col pt-6 pb-32 px-6 text-zinc-900 overflow-y-auto"> {/* pb-32 for prompt bar */}
+            <div className="relative h-full w-full bg-white flex flex-col pt-6 pb-32 px-6 text-zinc-900 overflow-y-auto">
+                {/* ... content redundant to copy here fully, better to modify previous if block or wrap this ... */}
+                {/* Wait, the previous code had 'if (isAIStudioOpen && viewMode === 'gallery')'.
+                     Now we removed 'editor'. So just 'if (isAIStudioOpen)'.
+                 */}
                 <div className="max-w-7xl mx-auto w-full space-y-8">
                     {/* Header */}
                     <div className="flex items-center gap-4">
@@ -186,7 +192,7 @@ export function VisualCanvas({
                         </div>
                     </div>
 
-                    {/* Generation Grid */}
+                    {/* Generation Grid (Handles its own viewing internally now via GenerationGrid's state) */}
                     <GenerationGrid
                         images={allGenerations.map(g => ({
                             id: g.id,
@@ -194,7 +200,7 @@ export function VisualCanvas({
                             templateId: 'custom',
                             originalImage: 'Generated Image',
                             prompt: 'Generated Image',
-                            createdAt: new Date(), // We might not have date here, defaulting
+                            createdAt: new Date(),
                             referenceName: 'Studio'
                         }))}
                         isGenerating={isGenerating}
@@ -204,7 +210,7 @@ export function VisualCanvas({
                     />
                 </div>
 
-                {/* Collapsible Prompt Bar (Replicated from ProjectWorkspace) */}
+                {/* Collapsible Prompt Bar */}
                 <PromptBar
                     isOpen={isPromptOpen}
                     onOpenChange={setIsPromptOpen}
@@ -216,7 +222,7 @@ export function VisualCanvas({
                     onOpenTemplatePicker={() => setIsTemplatePickerOpen(true)}
                     onClearTemplates={() => setSelectedTemplateIds([])}
                 >
-                    {/* Reference Image Preview */}
+                    {/* Reference UI - Keeping existing logic */}
                     {referenceImageUrl && (
                         <div className="relative h-10 w-10 rounded-lg overflow-hidden border border-zinc-200 shadow-sm group">
                             <Image src={referenceImageUrl} alt="Ref" fill className="object-cover" />
@@ -228,8 +234,6 @@ export function VisualCanvas({
                             </button>
                         </div>
                     )}
-
-                    {/* Upload Reference Button */}
                     <div className="relative">
                         <Input
                             type="file"
@@ -243,12 +247,8 @@ export function VisualCanvas({
                         <Button
                             variant="ghost"
                             size="icon"
-                            className={cn(
-                                "h-10 w-10 rounded-full hover:bg-zinc-100 transition-all",
-                                referenceImageUrl ? "text-indigo-600 bg-indigo-50" : "text-zinc-400 hover:text-black"
-                            )}
                             onClick={() => document.getElementById('studio-ref-upload-bar')?.click()}
-                            title="Upload Reference"
+                            className={cn("h-10 w-10 rounded-full hover:bg-zinc-100 transition-all", referenceImageUrl ? "text-indigo-600 bg-indigo-50" : "text-zinc-400 hover:text-black")}
                         >
                             <Upload className="w-5 h-5" />
                         </Button>
@@ -263,7 +263,6 @@ export function VisualCanvas({
                             <DrawerDescription>Upload a photo or choose from your listing.</DrawerDescription>
                         </DrawerHeader>
                         <div className="p-4 space-y-6">
-                            {/* Upload Area */}
                             <div>
                                 <h3 className="text-sm font-medium mb-2">Upload New</h3>
                                 <div className="h-32">
@@ -272,32 +271,15 @@ export function VisualCanvas({
                                             <Upload className="w-6 h-6 text-zinc-400 mb-2" />
                                             <p className="text-sm text-zinc-500">Click to upload image</p>
                                         </div>
-                                        <input
-                                            type="file"
-                                            className="hidden"
-                                            accept="image/*"
-                                            onChange={(e) => {
-                                                if (e.target.files?.[0]) handleUploadReference(e.target.files[0]);
-                                            }}
-                                        />
+                                        <input type="file" className="hidden" accept="image/*" onChange={(e) => { if (e.target.files?.[0]) handleUploadReference(e.target.files[0]); }} />
                                     </label>
                                 </div>
                             </div>
-
-                            {/* Listing Images */}
                             <div>
                                 <h3 className="text-sm font-medium mb-2">From Listing</h3>
                                 <div className="grid grid-cols-4 gap-2">
                                     {listingImages.slice(0, 8).map((img, i) => (
-                                        <div
-                                            key={i}
-                                            className="aspect-square relative rounded-lg overflow-hidden cursor-pointer hover:ring-2 ring-indigo-500"
-                                            onClick={() => {
-                                                setReferenceImageUrl(img.url);
-                                                setIsReferencePickerOpen(false);
-                                                toast.success("Reference selected");
-                                            }}
-                                        >
+                                        <div key={i} className="aspect-square relative rounded-lg overflow-hidden cursor-pointer hover:ring-2 ring-indigo-500" onClick={() => { setReferenceImageUrl(img.url); setIsReferencePickerOpen(false); toast.success("Reference selected"); }}>
                                             <Image src={img.url} alt="Listing" fill className="object-cover" />
                                         </div>
                                     ))}
@@ -305,9 +287,7 @@ export function VisualCanvas({
                             </div>
                         </div>
                         <DrawerFooter>
-                            <DrawerClose asChild>
-                                <Button variant="outline" className="w-full">Cancel</Button>
-                            </DrawerClose>
+                            <DrawerClose asChild><Button variant="outline" className="w-full">Cancel</Button></DrawerClose>
                         </DrawerFooter>
                     </DrawerContent>
                 </Drawer>
@@ -319,234 +299,74 @@ export function VisualCanvas({
                     selectedIds={selectedTemplateIds}
                     onToggle={(id) => setSelectedTemplateIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
                     onSelectAll={() => {
-                        if (selectedTemplateIds.length === templates.length) {
-                            setSelectedTemplateIds([]);
-                        } else {
-                            setSelectedTemplateIds(templates.map(t => t.id));
-                        }
+                        if (selectedTemplateIds.length === templates.length) setSelectedTemplateIds([]);
+                        else setSelectedTemplateIds(templates.map(t => t.id));
                     }}
                     onEdit={() => { }}
                     onDelete={() => { }}
                     forceDrawer={true}
                 />
-
             </div>
         );
     }
 
-    // LISTING GALLERY VIEW (Default)
-    if (viewMode === 'gallery') {
-        return (
-            <div className="relative h-full w-full bg-white flex flex-col p-6 text-zinc-900 overflow-y-auto">
-                <div className="max-w-7xl mx-auto w-full space-y-8">
-                    {/* Header */}
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h2 className="text-2xl font-bold tracking-tight">Listing Images</h2>
-                            <p className="text-zinc-500">Manage your product photos.</p>
-                        </div>
-                        <Button
-                            onClick={() => setIsAIStudioOpen(true)}
-                            className="rounded-full bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200 pl-4 pr-5 py-6 gap-2"
-                        >
-                            <AIIcon className="w-5 h-5" />
-                            <span className="font-medium text-base">AI Studio</span>
-                        </Button>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                        {/* Listing Images Grid */}
-                        {listingImages.map((img, idx) => (
-                            <div
-                                key={`prod-${idx}`}
-                                onClick={() => handleImageClick(img.url)}
-                                className="aspect-[3/4] rounded-xl relative overflow-hidden cursor-pointer group bg-zinc-100 border border-zinc-200 transition-all duration-200 shadow-sm hover:shadow-md hover:border-zinc-300"
-                            >
-                                <Image
-                                    src={img.url}
-                                    alt="Product Image"
-                                    fill
-                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                />
-                            </div>
-                        ))}
-                        {/* Empty State */}
-                        {listingImages.length === 0 && (
-                            <div className="col-span-full py-12 text-center border-2 border-dashed border-zinc-200 rounded-xl bg-zinc-50">
-                                <p className="text-zinc-500">No listing images yet.</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    // EDITOR VIEW (When an image is selected)
-    // Needs slight adjustment to handle "Back" logic:
-    // If we came from AI Studio -> Back should probably go to AI Studio? or just Close Editor?
-    // Let's stick to "Back to Gallery" for now, or intelligent back.
-    const handleBack = () => {
-        // If we opened this from AI Studio (isAIStudioOpen is true), we probably want to go back there?
-        // But the current logic clears only viewMode.
-        // If we want to support 'Back to Studio', we need to check isAIStudioOpen
-        if (isAIStudioOpen) {
-            setViewMode('gallery'); // Back to "AI Studio Gallery"
-        } else {
-            setViewMode('gallery'); // Back to "Listing Gallery"
-        }
-    };
-
+    // 2. Listing Gallery (Default View) + ImageViewer Overlay
     return (
-        <div className="relative h-full w-full bg-white flex flex-col overflow-hidden text-zinc-900">
-
-            {/* Back Button */}
-            <div className="absolute top-6 left-6 z-20">
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleBack}
-                    className="text-zinc-500 hover:text-black hover:bg-black/5 gap-2 pl-2 rounded-full"
-                >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to {isAIStudioOpen ? "Studio" : "Gallery"}
-                </Button>
-            </div>
-
-            {/* 1. Hero Canvas */}
-            <div className="absolute inset-0 flex items-center justify-center bg-zinc-50">
-                <div className="relative w-full h-full flex items-center justify-center pb-20 p-4">
-                    {activeImage ? (
-                        <Image
-                            src={activeImage}
-                            alt="Hero"
-                            fill
-                            className="object-contain" // removed mix-blend
-                            priority
-                        />
-                    ) : (
-                        <div className="text-zinc-400">No image selected</div>
-                    )}
-
-                    {/* Navigation Arrows */}
-                    {productImages.length > 1 && isSaved && (
-                        <>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    const currentIndex = productImages.indexOf(activeImage);
-                                    if (currentIndex > 0) onActiveImageChange(productImages[currentIndex - 1]);
-                                }}
-                                disabled={productImages.indexOf(activeImage) <= 0}
-                                className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/50 hover:bg-white shadow-sm z-10 disabled:opacity-0"
-                            >
-                                <ChevronLeft className="w-6 h-6" />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    const currentIndex = productImages.indexOf(activeImage);
-                                    if (currentIndex < productImages.length - 1) onActiveImageChange(productImages[currentIndex + 1]);
-                                }}
-                                disabled={productImages.indexOf(activeImage) >= productImages.length - 1}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/50 hover:bg-white shadow-sm z-10 disabled:opacity-0"
-                            >
-                                <ChevronRight className="w-6 h-6" />
-                            </Button>
-                        </>
-                    )}
-
-                    {/* Floating Actions */}
-                    <div className="absolute top-6 right-6 z-10 flex gap-2">
-                        {isSaved && onRemoveFromProduct && (
-                            <Button
-                                onClick={async () => {
-                                    if (confirm("Remove this image from listing?")) {
-                                        await onRemoveFromProduct(activeImage);
-                                        // Auto-navigate after delete if possible
-                                        const currentIndex = productImages.indexOf(activeImage);
-                                        if (currentIndex > 0) onActiveImageChange(productImages[currentIndex - 1]);
-                                        else if (productImages.length > 1) onActiveImageChange(productImages[1]); // Next one becomes 0
-                                        else onActiveImageChange(""); // No images left
-                                    }
-                                }}
-                                variant="destructive"
-                                size="sm"
-                                className="rounded-full shadow-lg px-4 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
-                            >
-                                <Trash2 className="w-4 h-4 mr-1.5" />
-                                Remove
-                            </Button>
-                        )}
-
-                        {!isSaved && activeImage && (
-                            <Button
-                                onClick={() => onAddToProduct(activeImage)}
-                                className="bg-white hover:bg-zinc-50 text-black shadow-lg border border-zinc-200 rounded-full px-4"
-                                size="sm"
-                            >
-                                <Plus className="w-4 h-4 mr-1.5" />
-                                Add to Listing
-                            </Button>
-                        )}
+        <div className="relative h-full w-full bg-white flex flex-col p-6 text-zinc-900 overflow-y-auto">
+            <div className="max-w-7xl mx-auto w-full space-y-8">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-2xl font-bold tracking-tight">Listing Images</h2>
+                        <p className="text-zinc-500">Manage your product photos.</p>
                     </div>
+                    <Button
+                        onClick={() => setIsAIStudioOpen(true)}
+                        className="rounded-full bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200 pl-4 pr-5 py-6 gap-2"
+                    >
+                        <AIIcon className="w-5 h-5" />
+                        <span className="font-medium text-base">AI Studio</span>
+                    </Button>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {/* Listing Images Grid */}
+                    {listingImages.map((img, idx) => (
+                        <div
+                            key={`prod-${idx}`}
+                            onClick={() => handleImageClick(img.url)}
+                            className="aspect-[3/4] rounded-xl relative overflow-hidden cursor-pointer group bg-zinc-100 border border-zinc-200 transition-all duration-200 shadow-sm hover:shadow-md hover:border-zinc-300"
+                        >
+                            <Image
+                                src={img.url}
+                                alt="Product Image"
+                                fill
+                                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                        </div>
+                    ))}
+                    {/* Empty State */}
+                    {listingImages.length === 0 && (
+                        <div className="col-span-full py-12 text-center border-2 border-dashed border-zinc-200 rounded-xl bg-zinc-50">
+                            <p className="text-zinc-500">No listing images yet.</p>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Collapsible Prompt Bar - Reusing logic or maybe we hide it if we are in AI Studio mode viewing an image? 
-               Wait, if we are viewing an image, we might want to edit it further.
-               Let's keep the prompt bar. It uses 'activeImage' as implied reference? 
-               In previous implementation, Editor Prompt Bar uses activeImage. 
-               We should keep that.
-            */}
-
-            <PromptBar
-                isOpen={isPromptOpen}
-                onOpenChange={setIsPromptOpen}
-                prompt={customPrompt}
-                onPromptChange={setCustomPrompt}
-                onGenerate={handleGenerateClick}
-                isGenerating={isGenerating}
-                selectedTemplateCount={selectedTemplateIds.length}
-                onOpenTemplatePicker={() => setIsTemplatePickerOpen(true)}
-                onClearTemplates={() => setSelectedTemplateIds([])}
-            >
-                {/* Reference Image Preview */}
-                {referenceImageUrl && (
-                    <div className="relative h-10 w-10 rounded-md overflow-hidden border border-zinc-200 group flex-shrink-0">
-                        <img
-                            src={referenceImageUrl}
-                            alt="Reference"
-                            className="w-full h-full object-cover"
-                        />
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setReferenceImageUrl(null);
-                            }}
-                            className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                            <X className="w-3 h-3 text-white" />
-                        </button>
-                    </div>
-                )}
-            </PromptBar>
-
-            <SelectTemplatesDialog
-                open={isTemplatePickerOpen}
-                onOpenChange={setIsTemplatePickerOpen}
-                templates={templates}
-                selectedIds={selectedTemplateIds}
-                onToggle={(id) => setSelectedTemplateIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
-                onSelectAll={() => { }}
-                onEdit={() => { }}
-                onDelete={() => { }}
-                forceDrawer={true}
+            {/* ImageViewer Overlay for Product Images */}
+            <ImageViewer
+                isOpen={viewMode === 'viewer'}
+                onClose={() => setViewMode('gallery')}
+                currentImage={activeImage}
+                images={productImages}
+                onNavigate={(url) => onActiveImageChange(url)}
+                onDelete={onRemoveFromProduct} // Use prop directly
+                canDelete={!!onRemoveFromProduct && isSaved}
+                isSaved={isSaved}
             />
         </div>
     );
 }
+
+// Helper removed, was inline

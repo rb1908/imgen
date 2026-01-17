@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { TemplateDialog } from './TemplateDialog';
+import { ImageViewer } from './ImageViewer';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -119,27 +120,9 @@ export function GenerationGrid({
         if (expandedImage?.id === id) setExpandedImage(null);
     };
 
-    // Keyboard Navigation
-    useEffect(() => {
-        if (!expandedImage) return;
+    // Keyboard Navigation handled by ImageViewer
 
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'ArrowLeft') {
-                const currentIndex = images.findIndex(img => img.id === expandedImage.id);
-                const prev = currentIndex > 0 ? images[currentIndex - 1] : images[images.length - 1];
-                setExpandedImage({ ...prev, referenceName: prev.referenceName || referenceName });
-            } else if (e.key === 'ArrowRight') {
-                const currentIndex = images.findIndex(img => img.id === expandedImage.id);
-                const next = currentIndex < images.length - 1 ? images[currentIndex + 1] : images[0];
-                setExpandedImage({ ...next, referenceName: next.referenceName || referenceName });
-            } else if (e.key === 'Escape') {
-                setExpandedImage(null);
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [expandedImage, images, referenceName]);
+    // Removed the isGenerating blocking return
 
     // Removed the isGenerating blocking return
 
@@ -372,125 +355,36 @@ export function GenerationGrid({
                 })}
             </div>
 
-            {/* Expand Modal */}
-            {expandedImage && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={() => setExpandedImage(null)}>
-
-                    {/* Navigation Buttons - Desktop (Fixed on sides) */}
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="fixed left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 w-12 h-12 rounded-full hidden md:flex transition-all"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            const currentIndex = images.findIndex(img => img.id === expandedImage.id);
-                            if (currentIndex > 0) {
-                                const prev = images[currentIndex - 1];
-                                setExpandedImage({ ...prev, referenceName: prev.referenceName || referenceName });
-                            } else {
-                                // Loop to last
-                                const last = images[images.length - 1];
-                                setExpandedImage({ ...last, referenceName: last.referenceName || referenceName });
-                            }
-                        }}
-                    >
-                        <ChevronLeft className="w-8 h-8" />
-                    </Button>
-
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="fixed right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white hover:bg-white/10 w-12 h-12 rounded-full hidden md:flex transition-all"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            const currentIndex = images.findIndex(img => img.id === expandedImage.id);
-                            if (currentIndex < images.length - 1) {
-                                const next = images[currentIndex + 1];
-                                setExpandedImage({ ...next, referenceName: next.referenceName || referenceName });
-                            } else {
-                                // Loop to first
-                                const first = images[0];
-                                setExpandedImage({ ...first, referenceName: first.referenceName || referenceName });
-                            }
-                        }}
-                    >
-                        <ChevronRight className="w-8 h-8" />
-                    </Button>
-
-                    <div className="relative max-w-5xl w-full h-full flex flex-col items-center justify-center" onClick={e => e.stopPropagation()}>
-
-                        <div className="relative w-full h-[80vh] md:h-[85vh]">
-                            <Image
-                                key={expandedImage.id} // Re-render on change for animation if needed
-                                src={expandedImage.url}
-                                alt="Expanded"
-                                fill
-                                className="object-contain animate-in zoom-in-95 duration-200"
-                                priority
-                            />
-                        </div>
-
-                        {/* Mobile Navigation (Bottom Bar style or overlay) */}
-                        <div className="flex md:hidden items-center gap-8 mt-4">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-white/70 hover:text-white"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    const currentIndex = images.findIndex(img => img.id === expandedImage.id);
-                                    const prev = currentIndex > 0 ? images[currentIndex - 1] : images[images.length - 1];
-                                    setExpandedImage({ ...prev, referenceName: prev.referenceName || referenceName });
-                                }}
-                            >
-                                <ChevronLeft className="w-8 h-8" />
-                            </Button>
-                            <span className="text-white/50 text-sm">
-                                {images.findIndex(img => img.id === expandedImage.id) + 1} / {images.length}
-                            </span>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-white/70 hover:text-white"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    const currentIndex = images.findIndex(img => img.id === expandedImage.id);
-                                    const next = currentIndex < images.length - 1 ? images[currentIndex + 1] : images[0];
-                                    setExpandedImage({ ...next, referenceName: next.referenceName || referenceName });
-                                }}
-                            >
-                                <ChevronRight className="w-8 h-8" />
-                            </Button>
-                        </div>
-
-                        <Button
-                            className="absolute top-0 right-0 md:top-4 md:right-4 rounded-full bg-black/50 hover:bg-black/70 text-white border-none z-50"
-                            size="icon"
-                            onClick={() => setExpandedImage(null)}
-                        >
-                            <span className="sr-only">Close</span>
-                            <X className="w-6 h-6" />
-                        </Button>
-
-                        <div className="absolute bottom-4 right-4 hidden md:flex">
-                            <Button
-                                className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
-                                onClick={() => handleDownload(expandedImage.url, expandedImage.id, expandedImage.prompt)}
-                            >
-                                <Download className="w-4 h-4 mr-2" />
-                                Download
-                            </Button>
-                            <Button
-                                className="rounded-full bg-red-600/90 hover:bg-red-700 text-white shadow-lg ml-2"
-                                onClick={() => handleDelete(expandedImage.id)}
-                            >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Expand Modal -> ImageViewer */}
+            <ImageViewer
+                isOpen={!!expandedImage}
+                onClose={() => setExpandedImage(null)}
+                currentImage={expandedImage?.url || ''}
+                images={images.map(img => img.url)}
+                onNavigate={(url) => {
+                    const img = images.find(i => i.url === url);
+                    if (img) setExpandedImage({ ...img, referenceName: img.referenceName || referenceName });
+                }}
+                onDelete={async (url) => {
+                    const img = images.find(i => i.url === url);
+                    if (img) await handleDelete(img.id);
+                }}
+                onDownload={(url) => {
+                    const img = images.find(i => i.url === url);
+                    if (img) handleDownload(img.url, img.id, img.prompt);
+                }}
+                onAddToProduct={onAddToProduct || (defaultProductId ? async (url) => {
+                    if (defaultProductId) {
+                        const { addProductImage } = await import('@/app/actions/product_actions');
+                        const { toast } = await import('sonner');
+                        const res = await addProductImage(defaultProductId, url);
+                        if (res.success) toast.success("Added to product listing");
+                        else toast.error("Failed to add to listing");
+                    }
+                } : undefined)}
+                canDelete={true}
+                canAddToProduct={!!onAddToProduct || !!defaultProductId}
+            />
 
             {/* Save Template Dialog */}
             <TemplateDialog

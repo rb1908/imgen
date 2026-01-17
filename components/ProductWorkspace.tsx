@@ -28,7 +28,7 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
 
     // UI State
     const [isStudioOpen, setIsStudioOpen] = useState(false);
-    const [startViewMode, setStartViewMode] = useState<'gallery' | 'editor'>('gallery');
+    const [startViewMode, setStartViewMode] = useState<'gallery' | 'viewer'>('gallery');
 
     // Handlers
     const handleGenerate = async (mode: 'template' | 'custom', input: string[] | string, referenceImageUrl?: string) => {
@@ -118,7 +118,7 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
                     onOpenStudio={(url) => {
                         if (url) {
                             setActiveImage(url);
-                            setStartViewMode('editor');
+                            setStartViewMode('viewer');
                         } else {
                             setStartViewMode('gallery');
                         }
