@@ -7,7 +7,7 @@ import { SearchModal } from '@/components/SearchModal';
 import { Product } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { RefreshCw, Search, Filter, Edit3, Loader2, List, LayoutGrid, Plus, Image as ImageIcon } from 'lucide-react';
+import { RefreshCw, Search, Filter, Edit3, Loader2, List, LayoutGrid, Plus, Image as ImageIcon, X } from 'lucide-react';
 import { syncShopifyProducts } from '@/app/actions/shopify';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -60,6 +60,30 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                         </Button>
                     </div>
                 </div>
+
+                {/* Active Search Filter Banner */}
+                {search && (
+                    <div className="flex items-center gap-2 mt-2">
+                        <Badge variant="secondary" className="px-3 py-1.5 h-8 text-sm font-normal bg-gray-100/80 text-gray-600 gap-2 border shadow-sm">
+                            <span>Searching for: </span>
+                            <span className="font-semibold text-gray-900">"{search}"</span>
+                            <button
+                                onClick={() => setSearch('')}
+                                className="ml-1 hover:bg-gray-200 rounded-full p-0.5 transition-colors"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        </Badge>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSearch('')}
+                            className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                        >
+                            Clear
+                        </Button>
+                    </div>
+                )}
             </PageHeader>
 
             {/* List */}
