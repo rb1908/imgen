@@ -75,6 +75,7 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
     });
 
     const [isPushing, setIsPushing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [isEnhancingTitle, setIsEnhancingTitle] = useState(false);
     const [isEnhancingDesc, setIsEnhancingDesc] = useState(false);
 
@@ -101,6 +102,38 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
         setIsEnhancingDesc(false);
     };
 
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            const updatedData = { ...formData, images: product.images };
+            await updateProduct(product.id, updatedData);
+            toast.success("Draft saved");
+        } catch (e) {
+            toast.error("Failed to save draft");
+        }
+        setIsSaving(false);
+    };
+
+    const handlePush = async () => {
+        setIsPushing(true);
+        try {
+            // 1. Save Local First
+            const updatedData = { ...formData, images: product.images };
+            await updateProduct(product.id, updatedData);
+
+            // 2. Then Push
+            const res = await updateShopifyProduct({ id: product.id, ...updatedData });
+
+            if (res.success) {
+                toast.success("Published to Shopify");
+            } else {
+                toast.error(res.error || "Failed to publish");
+            }
+        } catch (e) {
+            toast.error("Error syncing");
+        }
+        setIsPushing(false);
+    };
     // Derived state for tags array
     const [tagInput, setTagInput] = useState('');
     const tagsArray = formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
@@ -116,24 +149,6 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
         }));
     }, [product]);
 
-    const handlePush = async () => {
-        setIsPushing(true);
-        try {
-            // 1. Save Local + Sync
-            const updatedData = { ...formData, images: product.images };
-            await updateProduct(product.id, updatedData);
-            const res = await updateShopifyProduct({ id: product.id, ...updatedData });
-
-            if (res.success) {
-                toast.success("Published to Shopify");
-            } else {
-                toast.error(res.error || "Failed to publish");
-            }
-        } catch (e) {
-            toast.error("Error syncing");
-        }
-        setIsPushing(false);
-    };
 
     // Tag Handlers
     const addTag = () => {
@@ -327,19 +342,34 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
             </div>
 
             {/* Bottom Action Bar */}
-            <div className="p-6 border-t border-gray-100 bg-white">
+            <div className="p-6 border-t border-gray-100 bg-white flex items-center gap-3">
                 <Button
-                    className="w-full h-12 text-sm font-semibold tracking-wide shadow-lg shadow-orange-500/20 bg-[#FF6B35] hover:bg-[#F55F2A] text-white rounded-xl transition-all active:scale-[0.98]"
+                    variant="outline"
+                    className="flex-1 h-12 text-sm font-semibold tracking-wide border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all active:scale-[0.98]"
+                    onClick={handleSave}
+                    disabled={isSaving || isPushing}
+                >
+                    {isSaving ? (
+                        <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Saving...
+                        </>
+                    ) : (
+                        "Save Draft"
+                    )}
+                </Button>
+                <Button
+                    className="flex-[2] h-12 text-sm font-semibold tracking-wide shadow-lg shadow-orange-500/20 bg-[#FF6B35] hover:bg-[#F55F2A] text-white rounded-xl transition-all active:scale-[0.98]"
                     onClick={handlePush}
-                    disabled={isPushing}
+                    disabled={isSaving || isPushing}
                 >
                     {isPushing ? (
                         <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Syncing...
+                            Publishing...
                         </>
                     ) : (
-                        "Save to Shopify"
+                        "Publish to Shopify"
                     )}
                 </Button>
             </div>
