@@ -359,7 +359,7 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
                     )}
                 </Button>
                 <Button
-                    className="flex-[2] h-12 text-sm font-semibold tracking-wide shadow-lg shadow-orange-500/20 bg-[#FF6B35] hover:bg-[#F55F2A] text-white rounded-xl transition-all active:scale-[0.98]"
+                    className="flex-[2] h-12 text-sm font-semibold tracking-wide shadow-lg shadow-black/10 bg-black hover:bg-gray-800 text-white rounded-xl transition-all active:scale-[0.98]"
                     onClick={handlePush}
                     disabled={isSaving || isPushing}
                 >
