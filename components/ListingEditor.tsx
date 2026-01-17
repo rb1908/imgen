@@ -9,9 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { updateProduct } from '@/app/actions/product_actions';
 import { updateShopifyProduct } from '@/app/actions/shopify';
-import { Loader2, X, ChevronRight, LayoutGrid, Tag, DollarSign, Type, Sparkles, Plus, Image as ImageIcon, ChevronDown } from 'lucide-react';
+import { Loader2, X, ChevronRight, LayoutGrid, Tag, DollarSign, Type, Sparkles, Plus, Image as ImageIcon, ChevronDown, Wand2 } from 'lucide-react';
 import { AIIcon } from './icons/AIIcon';
 import { cn } from '@/lib/utils';
+import { enhancePrompt } from '@/app/actions/enhance';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -74,6 +75,31 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
     });
 
     const [isPushing, setIsPushing] = useState(false);
+    const [isEnhancingTitle, setIsEnhancingTitle] = useState(false);
+    const [isEnhancingDesc, setIsEnhancingDesc] = useState(false);
+
+    // AI Handlers
+    const handleEnhanceTitle = async () => {
+        if (!formData.title) return;
+        setIsEnhancingTitle(true);
+        try {
+            const { enhancedPrompt } = await enhancePrompt(`Optimize this product title for SEO and sales (keep under 80 chars): ${formData.title}`);
+            if (enhancedPrompt) setFormData(prev => ({ ...prev, title: enhancedPrompt.replace(/^"|"$/g, '') }));
+            toast.success("Title optimized");
+        } catch (e) { toast.error("Failed to enhance"); }
+        setIsEnhancingTitle(false);
+    };
+
+    const handleEnhanceDesc = async () => {
+        if (!formData.description) return;
+        setIsEnhancingDesc(true);
+        try {
+            const { enhancedPrompt } = await enhancePrompt(`Write a compelling, SEO-friendly ecommerce product description based on: ${formData.description}. Keep it engaging and highlight key features.`);
+            if (enhancedPrompt) setFormData(prev => ({ ...prev, description: enhancedPrompt }));
+            toast.success("Description enhanced");
+        } catch (e) { toast.error("Failed to enhance"); }
+        setIsEnhancingDesc(false);
+    };
 
     // Derived state for tags array
     const [tagInput, setTagInput] = useState('');
@@ -174,12 +200,27 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
                         <CollapsibleSection title="Product Information">
                             <div className="space-y-4">
                                 <div className="space-y-1.5">
-                                    <Label className="text-sm font-medium text-gray-700">Product Title</Label>
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-medium text-gray-700">Product Title</Label>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] text-gray-400 font-mono pt-1">{formData.title.length}/140</span>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={handleEnhanceTitle}
+                                                disabled={isEnhancingTitle}
+                                                className="h-6 px-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 text-[10px] uppercase font-bold tracking-wider"
+                                            >
+                                                {isEnhancingTitle ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Wand2 className="w-3 h-3 mr-1" />}
+                                                Enhance
+                                            </Button>
+                                        </div>
+                                    </div>
                                     <Input
                                         value={formData.title}
                                         onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                        className="bg-gray-50/50 border-gray-200 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-black/5 transition-all h-10"
-                                        placeholder="Short Sleeve T-Shirt"
+                                        className="bg-gray-50/50 border-gray-200 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-black/5 transition-all h-10 font-medium"
+                                        placeholder="e.g. Vintage Leather Jacket"
                                     />
                                 </div>
 
@@ -191,23 +232,27 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
                                             <Input
                                                 value={formData.price}
                                                 onChange={e => setFormData({ ...formData, price: e.target.value })}
-                                                className="pl-7 bg-gray-50/50 border-gray-200 focus-visible:bg-white focus-visible:ring-black/5 h-10"
+                                                className="pl-7 bg-gray-50/50 border-gray-200 focus-visible:bg-white focus-visible:ring-black/5 h-10 font-mono"
                                                 placeholder="0.00"
                                             />
                                         </div>
                                     </div>
                                     <div className="space-y-1.5">
                                         <Label className="text-sm font-medium text-gray-700">Status</Label>
-                                        <Select defaultValue="active">
+                                        <Select
+                                            value={formData.status}
+                                            onValueChange={(val) => setFormData({ ...formData, status: val })}
+                                        >
                                             <SelectTrigger className="bg-gray-50/50 border-gray-200 h-10">
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full bg-green-500" />
+                                                    <div className={cn("w-2 h-2 rounded-full", formData.status === 'active' ? "bg-green-500" : "bg-gray-400")} />
                                                     <SelectValue placeholder="Status" />
                                                 </div>
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="active">Active</SelectItem>
                                                 <SelectItem value="draft">Draft</SelectItem>
+                                                <SelectItem value="archived">Archived</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -215,12 +260,24 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
 
                                 {/* Description */}
                                 <div className="space-y-1.5 pt-2">
-                                    <Label className="text-sm font-medium text-gray-700">Description</Label>
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-medium text-gray-700">Description</Label>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={handleEnhanceDesc}
+                                            disabled={isEnhancingDesc}
+                                            className="h-6 px-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 text-[10px] uppercase font-bold tracking-wider"
+                                        >
+                                            {isEnhancingDesc ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Wand2 className="w-3 h-3 mr-1" />}
+                                            Write with AI
+                                        </Button>
+                                    </div>
                                     <Textarea
                                         value={formData.description}
                                         onChange={e => setFormData({ ...formData, description: e.target.value })}
                                         className="min-h-[150px] w-full resize-none border-gray-200 bg-gray-50/30 p-4 text-sm leading-relaxed focus-visible:bg-white focus-visible:ring-black/5 rounded-xl transition-all"
-                                        placeholder="Write a product description..."
+                                        placeholder="Detailed product features and benefits..."
                                     />
                                 </div>
                             </div>
