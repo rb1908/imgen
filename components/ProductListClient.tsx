@@ -7,7 +7,7 @@ import { SearchModal } from '@/components/SearchModal';
 import { Product } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { RefreshCw, Search, Filter, Edit3, Loader2, List, LayoutGrid, Plus } from 'lucide-react';
+import { RefreshCw, Search, Filter, Edit3, Loader2, List, LayoutGrid, Plus, Image as ImageIcon } from 'lucide-react';
 import { syncShopifyProducts } from '@/app/actions/shopify';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -143,45 +143,49 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                         ))}
                     </div>
                 ) : (
-                    <div className="border rounded-lg overflow-hidden">
-                        <table className="w-full text-sm text-left">
-                            <thead className="bg-muted/50 text-muted-foreground font-medium border-b">
-                                <tr className="divide-x divide-border/50">
-                                    <th className="py-3 px-4 w-[60px]">Image</th>
-                                    <th className="py-3 px-4">Title</th>
-                                    <th className="py-3 px-4">Status</th>
-                                    <th className="py-3 px-4">Price</th>
-                                    <th className="py-3 px-4">Tags</th>
-                                    <th className="py-3 px-4 text-right">Last Sync</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
-                                {filtered.map(product => (
-                                    <tr
-                                        key={product.id}
-                                        className="group hover:bg-muted/50 transition-colors cursor-pointer"
-                                        onClick={() => router.push(`/products/${product.id}`)}
-                                    >
-                                        <td className="p-2 pl-4">
-                                            <div className="w-10 h-10 relative rounded-md overflow-hidden bg-muted border">
-                                                {product.images[0] && (
-                                                    <Image src={product.images[0]} alt="Thumbnail" fill className="object-cover" />
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="p-3 px-4 font-medium">{product.title}</td>
-                                        <td className="p-3 px-4">
-                                            <Badge variant="outline" className="font-normal text-xs">{product.status}</Badge>
-                                        </td>
-                                        <td className="p-3 px-4 font-semibold">${product.price}</td>
-                                        <td className="p-3 px-4 text-muted-foreground max-w-[200px] truncate">{product.tags}</td>
-                                        <td className="p-3 px-4 text-right text-muted-foreground">
-                                            {new Date(product.updatedAt).toLocaleDateString()}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                    <div className="flex flex-col gap-2 pb-24 md:pb-0">
+                        {filtered.map(product => (
+                            <div
+                                key={product.id}
+                                onClick={() => router.push(`/products/${product.id}`)}
+                                className="group flex items-center gap-3 p-2 rounded-lg border bg-card hover:bg-muted/50 transition-all cursor-pointer shadow-sm hover:border-primary/20"
+                            >
+                                {/* Thumbnail */}
+                                <div className="relative w-12 h-12 flex-shrink-0 rounded-md overflow-hidden bg-muted border">
+                                    {product.images[0] ? (
+                                        <Image
+                                            src={product.images[0]}
+                                            alt="Thumbnail"
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground bg-secondary">
+                                            <ImageIcon className="w-4 h-4" />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Info */}
+                                <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
+                                    <h3 className="font-semibold text-sm truncate pr-2">{product.title}</h3>
+                                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                        <Badge variant="secondary" className="px-1.5 py-0 h-4 text-[10px] font-normal rounded-sm">
+                                            {product.status}
+                                        </Badge>
+                                        <span className="w-0.5 h-0.5 rounded-full bg-zinc-300" />
+                                        <span className="font-medium text-foreground">${product.price}</span>
+                                        <span className="w-0.5 h-0.5 rounded-full bg-zinc-300" />
+                                        <span className="truncate max-w-[120px]">{product.tags || "No tags"}</span>
+                                    </div>
+                                </div>
+
+                                {/* Date / Arrow */}
+                                <div className="text-[10px] text-muted-foreground shrink-0 hidden md:block">
+                                    {new Date(product.updatedAt).toLocaleDateString()}
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
 
