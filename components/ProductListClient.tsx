@@ -62,6 +62,7 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                 </div>
             </PageHeader>
 
+            <div className="space-y-6 p-4 md:p-8">
                 <div className="flex items-center justify-end gap-2 text-muted-foreground">
                     <div className="mr-auto flex items-center gap-2">
                         {search ? (
