@@ -447,18 +447,20 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
             </AnimatePresence>
 
             {/* Collapsible Prompt Bar */}
-            <PromptBar
-                isOpen={isPromptOpen}
-                onOpenChange={setIsPromptOpen}
-                prompt={customPrompt}
-                onPromptChange={setCustomPrompt}
-                onGenerate={handleGenerate}
-                isGenerating={generationStatus === 'generating'}
-                selectedTemplateCount={selectedTemplateIds.length}
-                onOpenTemplatePicker={() => setIsTemplatePickerOpen(true)}
-                onClearTemplates={() => setSelectedTemplateIds([])}
-                className="md:pl-72"
-            />
+            {!isSelectionMode && (
+                <PromptBar
+                    isOpen={isPromptOpen}
+                    onOpenChange={setIsPromptOpen}
+                    prompt={customPrompt}
+                    onPromptChange={setCustomPrompt}
+                    onGenerate={handleGenerate}
+                    isGenerating={generationStatus === 'generating'}
+                    selectedTemplateCount={selectedTemplateIds.length}
+                    onOpenTemplatePicker={() => setIsTemplatePickerOpen(true)}
+                    onClearTemplates={() => setSelectedTemplateIds([])}
+                    className="md:pl-72"
+                />
+            )}
 
             <TemplateDialog
                 open={!!editingTemplate}
