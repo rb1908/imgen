@@ -12,42 +12,22 @@ interface SearchModalProps {
     placeholder?: string;
 }
 
-// Mock Data for "What's on your mind?" (Styles)
-const CATEGORIES = [
-    { name: "Portrait", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop" },
-    { name: "Cyberpunk", image: "https://images.unsplash.com/photo-1625805866449-3589fe3f71a3?w=200&h=200&fit=crop" },
-    { name: "3D Cloud", image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&h=200&fit=crop" },
-    { name: "Anime", image: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=200&h=200&fit=crop" },
-    { name: "Landscape", image: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=200&h=200&fit=crop" },
-    { name: "Abstract", image: "https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=200&h=200&fit=crop" },
-    { name: "Surreal", image: "https://images.unsplash.com/photo-1518640467707-6811f4a6ab73?w=200&h=200&fit=crop" },
-    { name: "Minimal", image: "https://images.unsplash.com/photo-1494438639946-bda2d5ce1fbd?w=200&h=200&fit=crop" },
-];
-
-const RECENT_SEARCHES_MOCK = ["Red dress", "Poster design", "Logo for cafe"];
+const RECENT_SEARCHES_MOCK: string[] = []; // Cleared mock data for now
 
 export function SearchModal({ value = "", onChange, placeholder = "Search..." }: SearchModalProps) {
     const [open, setOpen] = useState(false);
     const [internalValue, setInternalValue] = useState(value);
-    const [recents, setRecents] = useState(RECENT_SEARCHES_MOCK);
 
     useEffect(() => {
         setInternalValue(value);
     }, [value]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // Direct update
         const newValue = e.target.value;
         setInternalValue(newValue);
         onChange(newValue);
     };
-
-    const handleCategoryClick = (name: string) => {
-        setInternalValue(name);
-        onChange(name);
-        setOpen(false); // Optional: close on selection
-    };
-
-    const clearRecents = () => setRecents([]);
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -62,123 +42,66 @@ export function SearchModal({ value = "", onChange, placeholder = "Search..." }:
                 </Button>
             </DialogTrigger>
 
-            <DialogContent className="max-w-[100vw] h-[100vh] sm:h-auto sm:max-w-[600px] sm:top-[10%] sm:translate-y-0 sm:rounded-xl p-0 gap-0 overflow-hidden outline-none bg-background border-none sm:border">
+            <DialogContent className="max-w-[100vw] h-[100vh] sm:h-auto sm:max-w-[600px] sm:top-[10%] sm:rounded-xl p-0 gap-0 overflow-hidden outline-none bg-white border-none sm:border sm:shadow-xl">
                 <DialogHeader className="sr-only">
                     <DialogTitle>Search</DialogTitle>
                 </DialogHeader>
 
-                {/* Header / Search Bar Area */}
-                <div className="p-4 pt-14 md:pt-4 border-b sticky top-0 bg-background z-10">
-                    <div className="flex items-center gap-3 bg-muted/30 p-2 rounded-2xl border transition-all focus-within:bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 -ml-1 text-muted-foreground hover:text-foreground"
-                            onClick={() => setOpen(false)}
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </Button>
-
-                        <input
-                            className="flex-1 bg-transparent text-lg outline-none placeholder:text-muted-foreground/70 min-w-0 text-foreground font-medium"
-                            placeholder={placeholder}
-                            value={internalValue}
-                            onChange={handleChange}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    setOpen(false);
-                                    onChange(internalValue);
-                                }
+                {/* Minimal Header */}
+                <div className="p-4 border-b border-gray-100 flex items-center gap-3">
+                    <Search className="w-5 h-5 text-gray-400" />
+                    <input
+                        className="flex-1 bg-transparent text-lg outline-none placeholder:text-gray-300 text-gray-900 font-medium h-10"
+                        placeholder={placeholder}
+                        value={internalValue}
+                        onChange={handleChange}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                setOpen(false);
+                                onChange(internalValue);
+                            }
+                        }}
+                        autoFocus
+                    />
+                    {internalValue && (
+                        <button
+                            onClick={() => {
+                                setInternalValue("");
+                                onChange("");
                             }}
-                            autoFocus
-                        />
-
-                        {internalValue ? (
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:text-foreground shrink-0"
-                                onClick={() => {
-                                    setInternalValue("");
-                                    onChange("");
-                                }}
-                            >
-                                <X className="w-4 h-4" />
-                            </Button>
-                        ) : (
-                            <Mic className="w-5 h-5 text-primary opacity-70 shrink-0" />
-                        )}
-                    </div>
+                            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                        >
+                            <X className="w-4 h-4 text-gray-400" />
+                        </button>
+                    )}
+                    <Button
+                        variant="ghost"
+                        className="text-sm font-medium text-gray-500 hover:text-gray-900 px-2"
+                        onClick={() => setOpen(false)}
+                    >
+                        Esc
+                    </Button>
                 </div>
 
-                {/* Scrollable Content */}
-                <div className="overflow-y-auto h-[calc(100vh-80px)] sm:max-h-[600px] p-4 pb-20 space-y-8">
-
-                    {/* Recent Searches */}
-                    {recents.length > 0 && !internalValue && (
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-xs font-semibold text-muted-foreground tracking-wider uppercase">Your Recent Searches</h3>
-                                <button onClick={clearRecents} className="text-xs font-medium text-destructive hover:underline">Clear</button>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {recents.map((term, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => handleCategoryClick(term)}
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border bg-card text-sm font-medium hover:bg-muted transition-colors"
-                                    >
-                                        <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                                        {term}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Discovery / Categories */}
-                    {!internalValue && (
-                        <div className="space-y-4">
-                            <h3 className="text-xs font-semibold text-muted-foreground tracking-wider uppercase">What's on your mind?</h3>
-                            <div className="grid grid-cols-4 gap-y-6 gap-x-2">
-                                {CATEGORIES.map((cat) => (
-                                    <button
-                                        key={cat.name}
-                                        className="flex flex-col items-center gap-2 group"
-                                        onClick={() => handleCategoryClick(cat.name)}
-                                    >
-                                        <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border border-border shadow-sm group-hover:scale-105 transition-transform bg-muted">
-                                            <Image
-                                                src={cat.image}
-                                                alt={cat.name}
-                                                fill
-                                                className="object-cover"
-                                            />
-                                        </div>
-                                        <span className="text-xs font-medium text-center group-hover:text-primary transition-colors line-clamp-1 w-full">
-                                            {cat.name}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Active Search Actions (Improved Feedback) */}
-                    {internalValue && (
-                        <div className="flex flex-col items-center justify-center py-10 space-y-4">
+                {/* Minimal Content Area */}
+                <div className="p-12 flex flex-col items-center justify-center text-center opacity-50 min-h-[300px]">
+                    {internalValue ? (
+                        <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200">
                             <Button
                                 size="lg"
-                                className="w-full max-w-sm rounded-full h-12 text-base shadow-lg"
+                                className="rounded-full px-8 bg-black text-white hover:bg-gray-800 shadow-none"
                                 onClick={() => setOpen(false)}
                             >
-                                <Search className="w-4 h-4 mr-2" />
-                                See results for "{internalValue}"
+                                Show Results
                             </Button>
-                            <p className="text-sm text-muted-foreground">Press Enter to view results</p>
+                            <p className="text-sm text-gray-400">Press Enter to search</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            <Search className="w-8 h-8 text-gray-200 mx-auto" />
+                            <p className="text-sm text-gray-400">Type to search products...</p>
                         </div>
                     )}
-
                 </div>
             </DialogContent>
         </Dialog>
