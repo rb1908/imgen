@@ -290,50 +290,71 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                                 ))}
                             </div>
                         ) : (
-                            <div className="rounded-xl border shadow-sm overflow-hidden bg-card pb-24 md:pb-0">
-                                <table className="w-full text-sm">
-                                    <thead className="bg-muted/40 text-muted-foreground font-medium border-b">
-                                        <tr>
-                                            <th className="py-2 px-4 w-[60px] text-left">Preview</th>
-                                            <th className="py-2 px-4 text-left">Name</th>
-                                            <th className="py-2 px-4 hidden sm:table-cell text-left">Created</th>
-                                            <th className="py-2 px-4 text-right">Count</th>
-                                            <th className="py-2 px-4 w-[100px]"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y">
-                                        {projects.map((project) => (
-                                            <tr
-                                                key={project.id}
-                                                className="group hover:bg-muted/50 transition-colors cursor-pointer"
-                                                onClick={() => router.push(`/project/${project.id}`)}
-                                            >
-                                                {/* Table Content (Same as before) */}
-                                                <td className="p-2 pl-4">
-                                                    <div className="w-8 h-8 relative rounded-md overflow-hidden bg-muted border">
-                                                        <Image
-                                                            src={project.originalImageUrl}
-                                                            alt="Thumbnail"
-                                                            fill
-                                                            className="object-cover"
-                                                        />
-                                                    </div>
-                                                </td>
-                                                <td className="p-2 px-4 font-medium">{project.name}</td>
-                                                <td className="p-2 px-4 text-muted-foreground hidden sm:table-cell">
-                                                    {new Date(project.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                                                </td>
-                                                <td className="p-2 px-4 text-right font-medium tabular-nums text-muted-foreground">{project._count.generations}</td>
-                                                <td className="p-2 pr-4 text-right">
-                                                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={(e) => startRenaming(project, e)}><Pencil className="w-4 h-4" /></Button>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={(e) => handleDelete(project.id, e)}><Trash2 className="w-4 h-4" /></Button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                            <div className="flex flex-col gap-3 pb-24 md:pb-0">
+                                {projects.map((project) => (
+                                    <div
+                                        key={project.id}
+                                        onClick={() => router.push(`/project/${project.id}`)}
+                                        className="group flex items-center gap-4 p-3 rounded-xl border bg-card hover:bg-muted/50 transition-all cursor-pointer shadow-sm hover:shadow-md hover:border-primary/20"
+                                    >
+                                        {/* Thumbnail */}
+                                        <div className="relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-muted border">
+                                            <Image
+                                                src={project.originalImageUrl}
+                                                alt="Thumbnail"
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        </div>
+
+                                        {/* Info */}
+                                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                            <h3 className="font-semibold text-base truncate">{project.name}</h3>
+                                            <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+                                                <span className="flex items-center gap-1">
+                                                    <ImageIcon className="w-3 h-3" />
+                                                    {project._count.generations}
+                                                </span>
+                                                <span className="w-1 h-1 rounded-full bg-zinc-300" />
+                                                <span>
+                                                    {new Date(project.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                            <div className="md:hidden">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                                                            <MoreVertical className="w-4 h-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={(e) => startRenaming(project, e as any)}>
+                                                            <Pencil className="w-4 h-4 mr-2" />
+                                                            Rename
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={(e) => handleDelete(project.id, e as any)} className="text-destructive">
+                                                            <Trash2 className="w-4 h-4 mr-2" />
+                                                            Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+
+                                            <div className="hidden md:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={(e) => startRenaming(project, e)}>
+                                                    <Pencil className="w-4 h-4" />
+                                                </Button>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={(e) => handleDelete(project.id, e)}>
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </>
