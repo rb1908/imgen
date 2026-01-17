@@ -154,7 +154,7 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
                                 onAddToProduct={handleAddToProduct}
                                 templates={templates}
                                 isGenerating={isGenerating}
-                                initialStudioOpen={true}
+                                initialStudioOpen={startViewMode === 'gallery'}
                                 initialViewMode={startViewMode}
                                 onClose={() => setIsStudioOpen(false)}
                                 onRemoveFromProduct={handleRemoveImage}

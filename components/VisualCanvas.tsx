@@ -357,7 +357,14 @@ export function VisualCanvas({
             {/* ImageViewer Overlay for Product Images */}
             <ImageViewer
                 isOpen={viewMode === 'viewer'}
-                onClose={() => setViewMode('gallery')}
+                onClose={() => {
+                    // If we started in viewer mode, close the whole overlay
+                    if (initialViewMode === 'viewer' && onClose) {
+                        onClose();
+                    } else {
+                        setViewMode('gallery');
+                    }
+                }}
                 currentImage={activeImage}
                 images={productImages}
                 onNavigate={(url) => onActiveImageChange(url)}
