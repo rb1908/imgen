@@ -290,15 +290,15 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                                 ))}
                             </div>
                         ) : (
-                            <div className="flex flex-col gap-3 pb-24 md:pb-0">
+                            <div className="flex flex-col gap-2 pb-24 md:pb-0">
                                 {projects.map((project) => (
                                     <div
                                         key={project.id}
                                         onClick={() => router.push(`/project/${project.id}`)}
-                                        className="group flex items-center gap-4 p-3 rounded-xl border bg-card hover:bg-muted/50 transition-all cursor-pointer shadow-sm hover:shadow-md hover:border-primary/20"
+                                        className="group flex items-center gap-3 p-2 rounded-lg border bg-card hover:bg-muted/50 transition-all cursor-pointer shadow-sm hover:border-primary/20"
                                     >
                                         {/* Thumbnail */}
-                                        <div className="relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-muted border">
+                                        <div className="relative w-12 h-12 flex-shrink-0 rounded-md overflow-hidden bg-muted border">
                                             <Image
                                                 src={project.originalImageUrl}
                                                 alt="Thumbnail"
@@ -309,13 +309,13 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
 
                                         {/* Info */}
                                         <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                            <h3 className="font-semibold text-base truncate">{project.name}</h3>
-                                            <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+                                            <h3 className="font-semibold text-sm truncate">{project.name}</h3>
+                                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
                                                 <span className="flex items-center gap-1">
                                                     <ImageIcon className="w-3 h-3" />
                                                     {project._count.generations}
                                                 </span>
-                                                <span className="w-1 h-1 rounded-full bg-zinc-300" />
+                                                <span className="w-0.5 h-0.5 rounded-full bg-zinc-300" />
                                                 <span>
                                                     {new Date(project.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                                 </span>
