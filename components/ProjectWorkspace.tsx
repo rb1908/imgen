@@ -385,7 +385,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
-                        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 p-2 bg-zinc-900/90 backdrop-blur-md text-white rounded-full shadow-xl border border-white/10"
+                        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 p-2 bg-zinc-900/90 backdrop-blur-md text-white rounded-full shadow-xl border border-white/10"
                     >
                         <div className="pl-4 pr-2 text-sm font-medium whitespace-nowrap">
                             {selectedGenerationIds.length} Selected
