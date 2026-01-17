@@ -219,7 +219,7 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
                                     <Input
                                         value={formData.title}
                                         onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                        className="bg-gray-50/50 border-gray-200 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-black/5 transition-all h-10 font-medium"
+                                        className="bg-transparent border-gray-200 shadow-none focus-visible:ring-0 focus-visible:border-gray-900 transition-all h-10 font-medium px-3 rounded-lg hover:border-gray-300"
                                         placeholder="e.g. Vintage Leather Jacket"
                                     />
                                 </div>
@@ -232,7 +232,7 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
                                             <Input
                                                 value={formData.price}
                                                 onChange={e => setFormData({ ...formData, price: e.target.value })}
-                                                className="pl-7 bg-gray-50/50 border-gray-200 focus-visible:bg-white focus-visible:ring-black/5 h-10 font-mono"
+                                                className="pl-7 bg-transparent border-gray-200 shadow-none focus-visible:ring-0 focus-visible:border-gray-900 h-10 font-mono rounded-lg hover:border-gray-300"
                                                 placeholder="0.00"
                                             />
                                         </div>
@@ -243,7 +243,7 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
                                             value={formData.status}
                                             onValueChange={(val) => setFormData({ ...formData, status: val })}
                                         >
-                                            <SelectTrigger className="bg-gray-50/50 border-gray-200 h-10">
+                                            <SelectTrigger className="bg-transparent border-gray-200 h-10 shadow-none focus:ring-0 focus:border-gray-900 rounded-lg">
                                                 <div className="flex items-center gap-2">
                                                     <div className={cn("w-2 h-2 rounded-full", formData.status === 'active' ? "bg-green-500" : "bg-gray-400")} />
                                                     <SelectValue placeholder="Status" />
@@ -276,7 +276,7 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
                                     <Textarea
                                         value={formData.description}
                                         onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                        className="min-h-[150px] w-full resize-none border-gray-200 bg-gray-50/30 p-4 text-sm leading-relaxed focus-visible:bg-white focus-visible:ring-black/5 rounded-xl transition-all"
+                                        className="min-h-[150px] w-full resize-none border-gray-200 bg-transparent p-4 text-sm leading-relaxed shadow-none focus-visible:ring-0 focus-visible:border-gray-900 rounded-lg transition-all hover:border-gray-300"
                                         placeholder="Detailed product features and benefits..."
                                     />
                                 </div>
@@ -291,7 +291,7 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
                                         <Label className="text-sm font-medium text-gray-700">Tags</Label>
                                     </div>
 
-                                    <div className="p-3 bg-white rounded-xl border border-gray-200 shadow-sm min-h-[100px] flex flex-col gap-2">
+                                    <div className="p-3 bg-white rounded-xl border border-gray-200 min-h-[100px] flex flex-col gap-2 focus-within:ring-1 focus-within:ring-gray-900 focus-within:border-gray-900 transition-all">
                                         <div className="flex flex-wrap gap-2">
                                             {tagsArray.map((tag, i) => (
                                                 <Badge key={i} variant="secondary" className="px-2.5 py-1 text-xs font-normal bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200/50 gap-1 rounded-md transition-colors">
