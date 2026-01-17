@@ -168,7 +168,7 @@ export function GenerationGrid({
                     return (
                         <div key={img.id} className="group flex flex-col gap-1">
                             <div
-                                className={`relative aspect-square rounded-xl overflow-hidden bg-secondary cursor-pointer transition-all ${isSelected ? 'ring-4 ring-primary ring-inset' : ''}`}
+                                className={`relative aspect-square rounded-xl overflow-hidden bg-secondary cursor-pointer transition-all ${isSelected ? 'ring-2 ring-primary ring-inset' : ''}`}
                                 onClick={() => {
                                     if (selectionMode && onToggle) {
                                         onToggle(img.id);
