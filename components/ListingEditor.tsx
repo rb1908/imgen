@@ -216,11 +216,12 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
                                             </Button>
                                         </div>
                                     </div>
-                                    <Input
+                                    <Textarea
                                         value={formData.title}
                                         onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                        className="bg-transparent border-gray-200 shadow-none focus-visible:ring-0 focus-visible:border-gray-900 transition-all h-10 font-medium px-3 rounded-lg hover:border-gray-300"
+                                        className="bg-transparent border-gray-200 shadow-none focus-visible:ring-0 focus-visible:border-gray-900 transition-all min-h-[5rem] font-medium px-3 py-2 rounded-lg hover:border-gray-300 resize-none leading-normal"
                                         placeholder="e.g. Vintage Leather Jacket"
+                                        rows={2}
                                     />
                                 </div>
 
