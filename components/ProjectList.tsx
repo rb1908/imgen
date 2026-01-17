@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { Project, Generation } from '@prisma/client';
 import { createProject, deleteProject, updateProject, getSignedUploadUrl, getPublicUrl } from '@/app/actions/projects';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, FolderOpen, Image as ImageIcon, LayoutGrid, List, Pencil, MoreVertical } from 'lucide-react';
+import { Plus, Trash2, FolderOpen, Image as ImageIcon, LayoutGrid, List, Pencil, MoreVertical, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -37,100 +37,108 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
         setProjects(initialProjects);
     }, [initialProjects]);
 
-    const [isUploading, setIsUploading] = useState(false);
     const router = useRouter();
 
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
     // Renaming State
-    // Renaming State
     const [renamingProject, setRenamingProject] = useState<Project & { generations: { imageUrl: string, createdAt: Date }[], _count: { generations: number } } | null>(null);
     const [newName, setNewName] = useState("");
 
     // Upload State
-    const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
-    const [uploadingFiles, setUploadingFiles] = useState<string[]>([]);
+    const [pendingUploads, setPendingUploads] = useState<{
+        id: string;
+        name: string;
+        previewUrl: string;
+        progress: number;
+        status: 'uploading' | 'error' | 'success';
+    }[]>([]);
 
-    // ...
+    const isUploading = pendingUploads.some(p => p.status === 'uploading');
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
 
-        setIsUploading(true);
         const fileArray = Array.from(files);
-        setUploadingFiles(fileArray.map(f => f.name));
-        setUploadProgress({}); // Reset
+        const newUploads = fileArray.map(file => ({
+            id: `temp-${Math.random().toString(36).substr(2, 9)}`,
+            name: file.name.split('.')[0],
+            previewUrl: URL.createObjectURL(file), // Immediate preview
+            progress: 0,
+            status: 'uploading' as const
+        }));
+
+        setPendingUploads(prev => [...prev, ...newUploads]);
 
         let successCount = 0;
-        let failCount = 0;
 
-        try {
-            // Process uploads in parallel
-            await Promise.all(fileArray.map(async (file) => {
-                try {
-                    // 1. Get Signed URL from Server (Secure)
-                    const { signedUrl, path } = await getSignedUploadUrl(file.name, file.type);
+        // Process uploads in parallel
+        await Promise.all(fileArray.map(async (file, index) => {
+            const pendingParams = newUploads[index];
+            try {
+                // 1. Get Signed URL from Server (Secure)
+                const { signedUrl, path } = await getSignedUploadUrl(file.name, file.type);
 
-                    // 2. Upload with Progress via Axios
-                    const axios = (await import('axios')).default;
+                // 2. Upload with Progress via Axios
+                const axios = (await import('axios')).default;
 
-                    await axios.put(signedUrl, file, {
-                        headers: {
-                            'Content-Type': file.type,
-                            'x-upsert': 'false',
-                            // Note: Supabase sometimes requires strict Content-Type match
-                        },
-                        onUploadProgress: (progressEvent) => {
-                            if (progressEvent.total) {
-                                const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                                setUploadProgress(prev => ({ ...prev, [file.name]: percent }));
-                            }
+                await axios.put(signedUrl, file, {
+                    headers: {
+                        'Content-Type': file.type,
+                        'x-upsert': 'false',
+                    },
+                    onUploadProgress: (progressEvent) => {
+                        if (progressEvent.total) {
+                            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                            setPendingUploads(prev => prev.map(p =>
+                                p.id === pendingParams.id ? { ...p, progress: percent } : p
+                            ));
                         }
-                    });
+                    }
+                });
 
-                    // 3. Get Public URL (via server helper or client)
-                    const publicUrl = await getPublicUrl(path);
+                // 3. Get Public URL
+                const publicUrl = await getPublicUrl(path);
 
-                    // 4. Create Project in DB
-                    const formData = new FormData();
-                    formData.append('imageUrl', publicUrl);
-                    formData.append('name', file.name.split('.')[0]);
+                // 4. Create Project in DB
+                const formData = new FormData();
+                formData.append('imageUrl', publicUrl);
+                formData.append('name', pendingParams.name);
 
-                    await createProject(formData);
-                    successCount++;
+                await createProject(formData);
+                successCount++;
 
-                    // Mark complete in progress (100%)
-                    setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
-
-                } catch (err) {
-                    console.error(`Failed to upload ${file.name}:`, err);
-                    failCount++;
-                    // Mark as error (-1)
-                    setUploadProgress(prev => ({ ...prev, [file.name]: -1 }));
-                }
-            }));
-
-            if (successCount > 0) {
-                toast.success(`${successCount} project${successCount > 1 ? 's' : ''} created`);
+                // Mark complete
+                setPendingUploads(prev => prev.map(p =>
+                    p.id === pendingParams.id ? { ...p, progress: 100, status: 'success' } : p
+                ));
                 router.refresh();
-            }
-            if (failCount > 0) {
-                toast.error(`${failCount} failed`);
-            }
 
-        } catch (error: any) {
-            console.error(error);
-            toast.error("Batch upload encountered errors");
-        } finally {
-            // Delay clearing so user sees 100%
-            setTimeout(() => {
-                setIsUploading(false);
-                setUploadingFiles([]);
-                setUploadProgress({});
-            }, 2000);
-            e.target.value = '';
+                // Remove after short delay to show success state
+                setTimeout(() => {
+                    setPendingUploads(prev => prev.filter(p => p.id !== pendingParams.id));
+                    URL.revokeObjectURL(pendingParams.previewUrl);
+                }, 1000);
+
+            } catch (err) {
+                console.error(`Failed to upload ${file.name}:`, err);
+                setPendingUploads(prev => prev.map(p =>
+                    p.id === pendingParams.id ? { ...p, status: 'error' } : p
+                ));
+                toast.error(`Failed to upload ${file.name}`);
+            }
+        }));
+
+        // Single Success Toast with Green Style
+        if (successCount > 0) {
+            toast.success(`${successCount} item${successCount > 1 ? 's' : ''} uploaded successfully`, {
+                className: 'bg-green-500 text-white border-green-600',
+                duration: 3000,
+            });
         }
+
+        e.target.value = '';
     };
 
     const handleDelete = async (id: string, e: React.MouseEvent) => {
@@ -180,7 +188,7 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                 <div className="relative">
                     <Button size="sm" className="gap-2 shadow-sm" disabled={isUploading}>
                         {isUploading ? <Plus className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                        <span>{isUploading ? "Creating..." : "New"}</span>
+                        <span>{isUploading ? "Uploading..." : "New"}</span>
                     </Button>
                     <input
                         type="file"
@@ -215,7 +223,7 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                     </button>
                 </div>
 
-                {projects.length === 0 ? (
+                {projects.length === 0 && pendingUploads.length === 0 ? (
                     <div className="text-center py-20 border-2 border-dashed rounded-xl bg-muted/30">
                         <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                             <FolderOpen className="w-8 h-8 text-muted-foreground" />
@@ -227,6 +235,52 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                     <>
                         {viewMode === 'grid' ? (
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 pb-20 md:pb-0">
+                                {/* Pending Upload Cards */}
+                                {pendingUploads.map((pending) => (
+                                    <div key={pending.id} className="relative aspect-video rounded-xl overflow-hidden bg-muted border border-dashed border-primary/30 shadow-sm animate-pulse">
+                                        {/* Background Preview (dimmed) */}
+                                        <Image
+                                            src={pending.previewUrl}
+                                            alt="Uploading"
+                                            fill
+                                            className="object-cover opacity-20 blur-sm"
+                                        />
+
+                                        {/* Foreground Progress */}
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 gap-3">
+                                            {pending.status === 'uploading' && (
+                                                <>
+                                                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                                                    <div className="w-full max-w-[80%] space-y-1 z-10">
+                                                        <div className="h-1.5 w-full bg-primary/20 rounded-full overflow-hidden">
+                                                            <div
+                                                                className="h-full bg-primary transition-all duration-300 ease-out"
+                                                                style={{ width: `${pending.progress}%` }}
+                                                            />
+                                                        </div>
+                                                        <p className="text-[10px] text-center text-muted-foreground font-mono">
+                                                            {pending.progress}%
+                                                        </p>
+                                                    </div>
+                                                </>
+                                            )}
+                                            {pending.status === 'success' && (
+                                                <div className="flex flex-col items-center gap-1 text-green-600 z-10">
+                                                    <div className="p-2 bg-green-100 rounded-full">
+                                                        <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-bounce" />
+                                                    </div>
+                                                    <span className="text-xs font-bold">Complete</span>
+                                                </div>
+                                            )}
+                                            {pending.status === 'error' && (
+                                                <div className="flex flex-col items-center gap-1 text-destructive z-10">
+                                                    <span className="text-xs font-bold">Failed</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+
                                 {projects.map((project) => (
                                     <Link href={`/project/${project.id}`} key={project.id} className="group relative block rounded-xl border bg-card text-card-foreground shadow transition-all hover:shadow-md hover:border-primary/50 overflow-hidden">
                                         {/* Preview Grid */}
@@ -291,6 +345,32 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                             </div>
                         ) : (
                             <div className="flex flex-col gap-2 pb-24 md:pb-0">
+                                {/* Pending List Items */}
+                                {pendingUploads.map((pending) => (
+                                    <div key={pending.id} className="flex items-center gap-3 p-2 rounded-lg border bg-card/80 transition-all shadow-sm">
+                                        <div className="relative w-12 h-12 flex-shrink-0 rounded-md overflow-hidden bg-muted border">
+                                            <Image
+                                                src={pending.previewUrl}
+                                                alt="Uploading"
+                                                fill
+                                                className="object-cover opacity-60"
+                                            />
+                                        </div>
+                                        <div className="flex-1 min-w-0 pr-4">
+                                            <div className="flex justify-between items-center mb-1">
+                                                <h3 className="font-semibold text-sm truncate opacity-70">{pending.name}</h3>
+                                                <span className="text-[10px] font-mono text-muted-foreground">{pending.progress}%</span>
+                                            </div>
+                                            <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full transition-all duration-200 ${pending.status === 'error' ? 'bg-destructive' : pending.status === 'success' ? 'bg-green-500' : 'bg-primary'}`}
+                                                    style={{ width: `${pending.progress}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+
                                 {projects.map((project) => (
                                     <div
                                         key={project.id}
@@ -386,39 +466,6 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                     </form>
                 </DialogContent>
             </Dialog>
-
-            {/* Upload Progress Overlay */}
-            {isUploading && uploadingFiles.length > 0 && (
-                <div className="fixed bottom-20 right-4 left-4 md:left-auto md:bottom-4 z-50 md:w-80 w-auto bg-background rounded-lg shadow-2xl border border-border overflow-hidden animate-in slide-in-from-bottom-5">
-                    <div className="p-3 bg-muted/50 border-b flex justify-between items-center">
-                        <span className="text-sm font-semibold">Uploading {uploadingFiles.length} item{uploadingFiles.length !== 1 ? 's' : ''}</span>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
-                    </div>
-                    <div className="max-h-60 overflow-y-auto p-2 space-y-3">
-                        {uploadingFiles.map(filename => {
-                            const p = uploadProgress[filename] || 0;
-                            const isError = p === -1;
-                            const isComplete = p === 100;
-                            return (
-                                <div key={filename} className="space-y-1">
-                                    <div className="flex justify-between text-xs">
-                                        <span className="truncate max-w-[180px] text-muted-foreground">{filename}</span>
-                                        <span className={`font-mono ${isError ? 'text-destructive' : isComplete ? 'text-green-500' : 'text-primary'}`}>
-                                            {isError ? 'Err' : isComplete ? 'Done' : `${p}%`}
-                                        </span>
-                                    </div>
-                                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                                        <div
-                                            className={`h-full transition-all duration-200 ${isError ? 'bg-destructive' : isComplete ? 'bg-green-500' : 'bg-primary'}`}
-                                            style={{ width: `${Math.max(0, p)}%` }}
-                                        />
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
         </PageScaffold>
     );
 }
