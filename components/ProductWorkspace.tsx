@@ -14,14 +14,22 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AIIcon } from './icons/AIIcon';
 
+// ... imports
+
+interface ProductWithRelations extends Product {
+    options: { id: string; name: string; values: string; position: number }[];
+    variants: { id: string; title: string; price: string | null; sku: string | null; inventoryQty: number }[];
+    metafields: { id: string; namespace: string; key: string; value: string }[];
+}
+
 interface ProductWorkspaceProps {
-    product: Product;
-    project: Project & { generations: Generation[] };
-    templates: Template[];
+    product: ProductWithRelations;
+    project: any; // Using any for project for now to avoid circular typing hell if not needed
+    templates: any[];
 }
 
 export function ProductWorkspace({ product: initialProduct, project, templates }: ProductWorkspaceProps) {
-    const [product, setProduct] = useState(initialProduct);
+    const [product, setProduct] = useState<ProductWithRelations>(initialProduct);
     const [generations, setGenerations] = useState<Generation[]>(project.generations);
     const [activeImage, setActiveImage] = useState<string>(product.images[0] || 'https://placehold.co/800x800?text=No+Image');
     const [isGenerating, setIsGenerating] = useState(false);
@@ -64,7 +72,12 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
             if (res.success && res.product) {
                 toast.dismiss();
                 toast.success("Added to Listing");
-                setProduct(res.product); // Update local product state to reflect new image
+                // Preserve relations when updating from partial response
+                setProduct(prev => ({
+                    ...prev,
+                    ...res.product!,
+                    images: res.product!.images
+                }));
             } else {
                 toast.error("Failed to add image");
             }
@@ -81,12 +94,14 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
                 const updatedProduct = res.product;
                 toast.dismiss();
                 toast.success("Image removed");
-                setProduct(updatedProduct);
+                // Preserve relations
+                setProduct(prev => ({
+                    ...prev,
+                    ...updatedProduct,
+                    images: updatedProduct.images
+                }));
 
-                // If the active image was removed, we need to handle it.
-                // VisualCanvas will try to navigate, but we need to ensure local activeImage state is valid if needed.
-                // Actually VisualCanvas logic derived navigation.
-                // If VisualCanvas unmounts or activeImage is no longer in product.images, it might be fine or switch to generic view.
+                // ...
             } else {
                 toast.error("Failed to remove image");
             }

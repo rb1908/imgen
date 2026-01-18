@@ -93,4 +93,50 @@ model Product {
   
   updatedAt       DateTime @updatedAt // Last sync time
   syncedAt        DateTime @default(now())
+  
+  options         ProductOption[]
+  variants        ProductVariant[]
+  metafields      ProductMetafield[]
+}
+
+model ProductOption {
+  id            String   @id @default(uuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name          String   // e.g. "Size", "Color"
+  values        String   // JSON string or comma-separated for simplicity. Let's use Comma Separated for SQLite/Postgres compatibility without JSONB reliance if possible, but arrays are better. 
+                         // Actually, Prisma supports String[] on Postgres but not SQLite. 
+                         // To be safe for all, we will use a String and split it, OR a relation.
+                         // But for simplicity in this stack, let's use a String with separator (e.g. comma).
+  
+  position      Int      @default(0)
+}
+
+model ProductVariant {
+  id            String   @id // Shopify ID (numeric string) or UUID if local
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  title         String   // e.g. "Small / Red"
+  price         String?
+  sku           String?
+  inventoryQty  Int      @default(0)
+  
+  // Option mapping (Shopify uses option1, option2, option3)
+  option1       String?
+  option2       String?
+  option3       String?
+  
+  imageId       String?  // basic mapping
+}
+
+model ProductMetafield {
+  id            String   @id @default(uuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  namespace     String   @default("custom")
+  key           String
+  value         String
+  type          String   @default("single_line_text_field")
 }

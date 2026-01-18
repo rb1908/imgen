@@ -59,8 +59,15 @@ function CollapsibleSection({ title, children, defaultOpen = true }: Collapsible
     );
 }
 
+// Define types locally or use Prisma generated types (preferred if available)
+interface ProductWithRelations extends Product {
+    options: { id: string; name: string; values: string; position: number }[];
+    variants: { id: string; title: string; price: string | null; sku: string | null; inventoryQty: number }[];
+    metafields: { id: string; namespace: string; key: string; value: string }[];
+}
+
 interface ListingEditorProps {
-    product: Product;
+    product: ProductWithRelations;
     onUpdate?: (updates: Partial<Product>) => void;
     onOpenStudio: (imageUrl?: string) => void;
 }
@@ -332,24 +339,73 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
 
                                 {/* Mock Category Selection */}
                                 {/* Organization Inputs */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1.5">
-                                        <Label className="text-sm font-medium text-gray-700">Product Type</Label>
-                                        <Input
-                                            value={formData.productType}
-                                            onChange={e => setFormData({ ...formData, productType: e.target.value })}
-                                            className="bg-transparent border-gray-200 outline-none shadow-none focus-visible:ring-0 focus-visible:border-gray-900 h-10 font-normal rounded-lg hover:border-gray-300"
-                                            placeholder="e.g. T-Shirt"
-                                        />
+                                {/* Options & Variants */}
+                                <div className="space-y-4 pt-4 border-t border-gray-100">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-medium text-gray-700">Options</Label>
                                     </div>
-                                    <div className="space-y-1.5">
-                                        <Label className="text-sm font-medium text-gray-700">Vendor</Label>
-                                        <Input
-                                            value={formData.vendor}
-                                            onChange={e => setFormData({ ...formData, vendor: e.target.value })}
-                                            className="bg-transparent border-gray-200 outline-none shadow-none focus-visible:ring-0 focus-visible:border-gray-900 h-10 font-normal rounded-lg hover:border-gray-300"
-                                            placeholder="e.g. My Brand"
-                                        />
+                                    <div className="space-y-2">
+                                        {product.options.map((opt) => (
+                                            <div key={opt.id} className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{opt.name}</div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {opt.values.split(',').map((val, i) => (
+                                                        <Badge key={i} variant="outline" className="bg-white">{val}</Badge>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {product.options.length === 0 && <div className="text-sm text-gray-400 italic">No options defined</div>}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4 pt-4 border-t border-gray-100">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-medium text-gray-700">Variants ({product.variants.length})</Label>
+                                    </div>
+                                    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                                        <table className="w-full text-sm text-left">
+                                            <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
+                                                <tr>
+                                                    <th className="px-3 py-2">Variant</th>
+                                                    <th className="px-3 py-2">Price</th>
+                                                    <th className="px-3 py-2">SKU</th>
+                                                    <th className="px-3 py-2 text-right">Inv</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-100">
+                                                {product.variants.map((v) => (
+                                                    <tr key={v.id} className="hover:bg-gray-50/50">
+                                                        <td className="px-3 py-2 font-medium text-gray-900">{v.title}</td>
+                                                        <td className="px-3 py-2 text-gray-600">${v.price}</td>
+                                                        <td className="px-3 py-2 text-gray-500 font-mono text-xs">{v.sku}</td>
+                                                        <td className="px-3 py-2 text-right text-gray-600">{v.inventoryQty}</td>
+                                                    </tr>
+                                                ))}
+                                                {product.variants.length === 0 && (
+                                                    <tr>
+                                                        <td colSpan={4} className="px-3 py-4 text-center text-gray-400 italic">No variants sync'd</td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4 pt-4 border-t border-gray-100">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-medium text-gray-700">Metafields</Label>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        {product.metafields.map((meta) => (
+                                            <div key={meta.id} className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-100">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs text-gray-400 font-mono">{meta.namespace}.{meta.key}</span>
+                                                    <span className="text-sm font-medium text-gray-800">{meta.value}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {product.metafields.length === 0 && <div className="text-sm text-gray-400 italic">No metafields found</div>}
                                     </div>
                                 </div>
                             </div>

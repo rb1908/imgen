@@ -10,7 +10,14 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
 
     // 1. Fetch Product and Templates in parallel
     const [product, templates] = await Promise.all([
-        prisma.product.findUnique({ where: { id } }),
+        prisma.product.findUnique({
+            where: { id },
+            include: {
+                options: { orderBy: { position: 'asc' } },
+                variants: { orderBy: { title: 'asc' } },
+                metafields: true
+            }
+        }),
         getTemplates()
     ]);
 

@@ -139,29 +139,65 @@ export async function syncShopifyProducts() {
             const price = p.variants?.[0]?.price || "0.00";
             const imageUrls = p.images?.map((img: any) => img.src) || [];
 
-            await prisma.product.upsert({
-                where: { id: String(p.id) },
-                update: {
-                    title: p.title,
-                    description: p.body_html?.replace(/<[^>]*>?/gm, '') || '',
-                    price: price,
-                    images: imageUrls,
-                    tags: p.tags,
-                    productType: p.product_type,
-                    vendor: p.vendor,
-                    status: p.status,
-                    syncedAt: new Date()
-                },
-                create: {
-                    id: String(p.id),
-                    title: p.title,
-                    description: p.body_html?.replace(/<[^>]*>?/gm, '') || '',
-                    price: price,
-                    images: imageUrls,
-                    tags: p.tags,
-                    productType: p.product_type,
-                    vendor: p.vendor,
-                    status: p.status || 'active'
+            await prisma.$transaction(async (tx) => {
+                // 1. Upsert Parent Product
+                await tx.product.upsert({
+                    where: { id: String(p.id) },
+                    update: {
+                        title: p.title,
+                        description: p.body_html?.replace(/<[^>]*>?/gm, '') || '',
+                        price: price, // Base price (usually first variant)
+                        images: imageUrls,
+                        tags: p.tags,
+                        productType: p.product_type,
+                        vendor: p.vendor,
+                        status: p.status,
+                        syncedAt: new Date()
+                    },
+                    create: {
+                        id: String(p.id),
+                        title: p.title,
+                        description: p.body_html?.replace(/<[^>]*>?/gm, '') || '',
+                        price: price,
+                        images: imageUrls,
+                        tags: p.tags,
+                        productType: p.product_type,
+                        vendor: p.vendor,
+                        status: p.status || 'active'
+                    }
+                });
+
+                // 2. Sync Options
+                // Delete existing to Ensure clean state
+                await tx.productOption.deleteMany({ where: { productId: String(p.id) } });
+                if (p.options && p.options.length > 0) {
+                    await tx.productOption.createMany({
+                        data: p.options.map((opt: any) => ({
+                            productId: String(p.id),
+                            name: opt.name,
+                            position: opt.position,
+                            values: opt.values.join(',') // Comma separated for now
+                        }))
+                    });
+                }
+
+                // 3. Sync Variants
+                await tx.productVariant.deleteMany({ where: { productId: String(p.id) } });
+                if (p.variants && p.variants.length > 0) {
+                    await tx.productVariant.createMany({
+                        data: p.variants.map((v: any) => ({
+                            id: String(v.id),
+                            productId: String(p.id),
+                            title: v.title,
+                            price: v.price,
+                            sku: v.sku,
+                            inventoryQty: v.inventory_quantity,
+                            option1: v.option1,
+                            option2: v.option2,
+                            option3: v.option3,
+                            imageId: v.image_id ? String(v.image_id) : null
+                        }))
+                    });
                 }
             });
             syncedCount++;
@@ -173,6 +209,99 @@ export async function syncShopifyProducts() {
     } catch (e) {
         console.error("Sync failed:", e);
         return { success: false, error: "Sync failed" };
+    }
+}
+
+export async function syncProductDetails(productId: string) {
+    try {
+        const integration = await prisma.shopifyIntegration.findFirst();
+        if (!integration) return { success: false, error: "Not connected" };
+        const { shopDomain, accessToken } = integration;
+
+        // 1. Fetch Product (Refresh details)
+        const prodResponse = await fetch(`https://${shopDomain}/admin/api/2023-10/products/${productId}.json`, {
+            headers: { 'X-Shopify-Access-Token': accessToken }
+        });
+        if (!prodResponse.ok) throw new Error("Failed to fetch product");
+        const { product: p } = await prodResponse.json();
+
+        // 2. Fetch Metafields
+        const metaResponse = await fetch(`https://${shopDomain}/admin/api/2023-10/products/${productId}/metafields.json`, {
+            headers: { 'X-Shopify-Access-Token': accessToken }
+        });
+        if (!metaResponse.ok) throw new Error("Failed to fetch metafields");
+        const { metafields } = await metaResponse.json();
+
+        // 3. Save to DB
+        await prisma.$transaction(async (tx) => {
+            // Update Core & Options/Variants (Same logic as bulk sync)
+            const price = p.variants?.[0]?.price || "0.00";
+            await tx.product.update({
+                where: { id: productId },
+                data: {
+                    title: p.title,
+                    description: p.body_html?.replace(/<[^>]*>?/gm, '') || '',
+                    price: price,
+                    productType: p.product_type,
+                    vendor: p.vendor,
+                    status: p.status,
+                    tags: p.tags,
+                    syncedAt: new Date()
+                }
+            });
+
+            // Sync Options
+            await tx.productOption.deleteMany({ where: { productId } });
+            if (p.options?.length) {
+                await tx.productOption.createMany({
+                    data: p.options.map((opt: any) => ({
+                        productId,
+                        name: opt.name,
+                        position: opt.position,
+                        values: opt.values.join(',')
+                    }))
+                });
+            }
+
+            // Sync Variants
+            await tx.productVariant.deleteMany({ where: { productId } });
+            if (p.variants?.length) {
+                await tx.productVariant.createMany({
+                    data: p.variants.map((v: any) => ({
+                        id: String(v.id),
+                        productId,
+                        title: v.title,
+                        price: v.price,
+                        sku: v.sku,
+                        inventoryQty: v.inventory_quantity,
+                        option1: v.option1,
+                        option2: v.option2,
+                        option3: v.option3,
+                        imageId: v.image_id ? String(v.image_id) : null
+                    }))
+                });
+            }
+
+            // Sync Metafields
+            await tx.productMetafield.deleteMany({ where: { productId } });
+            if (metafields?.length) {
+                await tx.productMetafield.createMany({
+                    data: metafields.map((m: any) => ({
+                        productId,
+                        namespace: m.namespace,
+                        key: m.key,
+                        value: String(m.value),
+                        type: m.type
+                    }))
+                });
+            }
+        });
+
+        revalidatePath(`/products/${productId}`);
+        return { success: true };
+    } catch (e) {
+        console.error("Sync Details Failed:", e);
+        return { success: false, error: "Failed to sync details" };
     }
 }
 
