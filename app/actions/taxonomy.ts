@@ -46,7 +46,7 @@ async function loadTaxonomy(): Promise<TaxonomyCache> {
         const data = await fs.promises.readFile(filePath, 'utf-8');
         const json = JSON.parse(data);
 
-        const nodes: { id: string; label: string }[] = [];
+        const nodesMap = new Map<string, { id: string; label: string }>();
         const categoryAttributes: Record<string, string[]> = {};
         const attributeDefs: Record<string, TaxonomyAttributeDef> = {};
 
@@ -70,7 +70,10 @@ async function loadTaxonomy(): Promise<TaxonomyCache> {
                 // Use full_name if available, else build it from parent
                 let label = item.full_name || (parentLabel ? `${parentLabel} > ${item.name}` : item.name);
 
-                nodes.push({ id: shortId, label });
+                // Deduplication: Only add if not exists
+                if (!nodesMap.has(shortId)) {
+                    nodesMap.set(shortId, { id: shortId, label });
+                }
 
                 // Store attribute refs
                 // The item.attributes array contains objects: { id: "gid...", name: "..." }
@@ -92,8 +95,9 @@ async function loadTaxonomy(): Promise<TaxonomyCache> {
             }
         }
 
+        const nodes = Array.from(nodesMap.values());
         cache = { nodes, categoryAttributes, attributeDefs };
-        console.log(`Loaded ${nodes.length} nodes and ${Object.keys(attributeDefs).length} attributes.`);
+        console.log(`Loaded ${nodes.length} unique nodes and ${Object.keys(attributeDefs).length} attributes.`);
         return cache;
 
     } catch (e) {
