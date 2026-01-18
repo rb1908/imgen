@@ -3,80 +3,140 @@
 import fs from 'fs';
 import path from 'path';
 
-// Cached taxonomy list in memory to avoid parsing 35MB on every request
-let taxonomyCache: { id: string; label: string }[] | null = null;
+// Types from JSON structure (approximate)
+interface TaxonomyValue {
+    id: string;
+    name: string;
+    handle: string;
+}
 
-export async function searchTaxonomy(query: string): Promise<{ id: string; label: string }[]> {
-    if (!taxonomyCache) {
-        console.log("Loading taxonomy into memory...");
-        try {
-            const filePath = path.join(process.cwd(), 'data', 'shopify_taxonomy.json');
-            const data = fs.readFileSync(filePath, 'utf-8');
-            const json = JSON.parse(data);
+interface TaxonomyAttributeDef {
+    id: string;
+    name: string;
+    handle: string;
+    description: string;
+    values: TaxonomyValue[];
+}
 
-            taxonomyCache = [];
+interface TaxonomyCategoryRef {
+    id: string;
+    name: string;
+    full_name?: string;
+    attributes: { id: string; name: string }[];
+    children: TaxonomyCategoryRef[];
+}
 
-            // Helper to traverse the tree
-            // Structure: verticals -> categories -> children...
-            // Note: The file seems to have a mixed structure based on the head output.
-            // Verticals have root categories.
-            // Let's recursively flatten.
+// In-memory cache structure
+interface TaxonomyCache {
+    nodes: { id: string; label: string }[];
+    categoryAttributes: Record<string, string[]>; // catId -> attrIds
+    attributeDefs: Record<string, TaxonomyAttributeDef>; // attrId -> Def
+}
 
-            // But wait, the `full_name` field exists in the head output! associated with level 0?
-            // "full_name": "Animals & Pet Supplies"
-            // If deeper nodes have `full_name`, that's perfect.
-            // If not, we have to build it.
+let cache: TaxonomyCache | null = null;
 
-            // Re-examining structure from head output:
-            // "children": [ { "id": "...", "name": "Live Animals" } ] <- No full name?
-            // We might need to traverse and build full names: "Parent > Child"
+async function loadTaxonomy(): Promise<TaxonomyCache> {
+    if (cache) return cache;
 
-            // Actually, let's optimize. The file is huge. 
-            // We can just iterate over all nodes if we can flatten them efficiently.
+    console.log("Loading taxonomy into memory...");
+    try {
+        const filePath = path.join(process.cwd(), 'data', 'shopify_taxonomy.json');
 
-            const traverse = (nodes: any[], parentName: string = "") => {
-                for (const node of nodes) {
-                    // ID: "gid://shopify/TaxonomyCategory/ap-1" -> "ap-1"
-                    const id = node.id.split('/').pop();
-                    const label = parentName ? `${parentName} > ${node.name}` : node.name;
+        // Use async read if preferred, but for initial load sync is fine, or fs.promises
+        const data = await fs.promises.readFile(filePath, 'utf-8');
+        const json = JSON.parse(data);
 
-                    if (id) {
-                        taxonomyCache!.push({ id, label });
-                    }
+        const nodes: { id: string; label: string }[] = [];
+        const categoryAttributes: Record<string, string[]> = {};
+        const attributeDefs: Record<string, TaxonomyAttributeDef> = {};
 
-                    if (node.children && node.children.length > 0) {
-                        traverse(node.children, label);
-                    }
+        // 1. Index Top-Level Attributes
+        if (json.attributes) {
+            for (const attr of json.attributes) {
+                // Determine if we need to store by "short id" or GID. 
+                // The JSON references use full GID. So keys should be GID.
+                attributeDefs[attr.id] = attr;
+            }
+        }
+
+        // 2. Traverse Categories
+        const traverse = (list: TaxonomyCategoryRef[], parentLabel: string = "") => {
+            for (const item of list) {
+                // ID: "gid://shopify/TaxonomyCategory/ap-1" -> "ap-1"
+                // We use this short ID for the UI "value".
+                const shortId = item.id.split('/').pop() || item.id;
+
+                // Construct label
+                // Use full_name if available, else build it from parent
+                let label = item.full_name || (parentLabel ? `${parentLabel} > ${item.name}` : item.name);
+
+                nodes.push({ id: shortId, label });
+
+                // Store attribute refs
+                // The item.attributes array contains objects: { id: "gid...", name: "..." }
+                // We map these to our indexed attributeDefs
+                if (item.attributes && item.attributes.length > 0) {
+                    categoryAttributes[shortId] = item.attributes.map((a: any) => a.id);
                 }
-            };
 
-            if (json.verticals) {
-                for (const vertical of json.verticals) {
-                    if (vertical.categories) {
-                        traverse(vertical.categories);
-                    }
+                if (item.children) {
+                    traverse(item.children, label);
                 }
             }
+        };
 
-            console.log(`Loaded ${taxonomyCache.length} taxonomy nodes.`);
-
-        } catch (e) {
-            console.error("Failed to load taxonomy:", e);
-            return [];
+        if (json.verticals) {
+            for (const v of json.verticals) {
+                // Verticals usually contain a "categories" list at the root
+                if (v.categories) traverse(v.categories);
+            }
         }
+
+        cache = { nodes, categoryAttributes, attributeDefs };
+        console.log(`Loaded ${nodes.length} nodes and ${Object.keys(attributeDefs).length} attributes.`);
+        return cache;
+
+    } catch (e) {
+        console.error("Failed to load taxonomy:", e);
+        return { nodes: [], categoryAttributes: {}, attributeDefs: {} };
     }
+}
 
-    if (!query) return taxonomyCache.slice(0, 50);
+export async function searchTaxonomy(query: string): Promise<{ id: string; label: string }[]> {
+    const { nodes } = await loadTaxonomy();
+    if (!query) return nodes.slice(0, 50);
 
-    const lowerQuery = query.toLowerCase();
-    // Simple limit to 50 results
-    return taxonomyCache
-        .filter(item => item.label.toLowerCase().includes(lowerQuery) || item.id.toLowerCase().includes(lowerQuery))
+    const lower = query.toLowerCase();
+    // Simple filter
+    return nodes
+        .filter(n => n.label.toLowerCase().includes(lower) || n.id.toLowerCase().includes(lower))
         .slice(0, 50);
 }
 
 export async function getTaxonomyLabel(id: string) {
-    // Ensure cache is loaded (might be a better way to init, but this works for lazy load)
-    if (!taxonomyCache) await searchTaxonomy("");
-    return taxonomyCache?.find(n => n.id === id)?.label || id;
+    const { nodes } = await loadTaxonomy();
+    return nodes.find(n => n.id === id)?.label || id;
+}
+
+export async function getCategoryAttributes(categoryId: string) {
+    const { categoryAttributes, attributeDefs } = await loadTaxonomy();
+
+    // categoryId comes as "aa-1" (short)
+    const attrIds = categoryAttributes[categoryId];
+    if (!attrIds) return [];
+
+    return attrIds
+        .map(id => attributeDefs[id])
+        .filter(Boolean)
+        .map(def => ({
+            id: def.id, // GID
+            name: def.name,
+            description: def.description,
+            handle: def.handle,
+            // Convert values to simple { id, name }
+            options: def.values?.map((v: TaxonomyValue) => ({
+                id: v.id, // GID
+                name: v.name
+            })) || []
+        }));
 }

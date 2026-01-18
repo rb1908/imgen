@@ -68,8 +68,12 @@ interface ListingEditorProps {
 }
 
 import { CategoryPicker } from './CategoryPicker';
-
-// ... imports
+import { getCategoryAttributes } from '@/app/actions/taxonomy';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 
 export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditorProps) {
     const [formData, setFormData] = useState({
@@ -86,6 +90,58 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
     // Editable State for Complex Data
     const [variants, setVariants] = useState(product.variants);
     const [metafields, setMetafields] = useState(product.metafields);
+
+    // Taxonomy Attributes State
+    const [taxonomyAttributes, setTaxonomyAttributes] = useState<any[]>([]);
+    const [loadingAttributes, setLoadingAttributes] = useState(false);
+
+    // Fetch Attributes when Category Changes
+    useEffect(() => {
+        if (!formData.categoryId) {
+            setTaxonomyAttributes([]);
+            return;
+        }
+
+        setLoadingAttributes(true);
+        getCategoryAttributes(formData.categoryId)
+            .then(attrs => {
+                setTaxonomyAttributes(attrs);
+            })
+            .finally(() => setLoadingAttributes(false));
+    }, [formData.categoryId]);
+
+    // Helper to get current value for a taxonomy attribute
+    const getAttributeValue = (handle: string) => {
+        return metafields.find(m => m.namespace === 'taxonomy' && m.key === handle)?.value || '';
+    };
+
+    // Helper to set value
+    const setAttributeValue = (handle: string, value: string) => {
+        setMetafields(prev => {
+            const existingIndex = prev.findIndex(m => m.namespace === 'taxonomy' && m.key === handle);
+            if (existingIndex >= 0) {
+                // Update
+                if (!value) {
+                    // Remove if empty
+                    return prev.filter((_, i) => i !== existingIndex);
+                }
+                const copy = [...prev];
+                copy[existingIndex] = { ...copy[existingIndex], value };
+                return copy;
+            } else {
+                // Create
+                if (!value) return prev;
+                return [...prev, {
+                    id: `temp_${Date.now()}_${handle}`,
+                    productId: product.id,
+                    namespace: 'taxonomy',
+                    key: handle,
+                    value,
+                    type: 'single_line_text_field'
+                }];
+            }
+        });
+    };
     // Options are read-only for now
 
     const [isPushing, setIsPushing] = useState(false);
@@ -286,6 +342,50 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
                                             onChange={(val) => setFormData(prev => ({ ...prev, categoryId: val }))}
                                         />
                                     </div>
+                                </div>
+
+                                {/* Dynamic Attributes Section - Placed below grid for full width */}
+                                {taxonomyAttributes.length > 0 && (
+                                    <div className="space-y-4 pt-4 border-t border-gray-100">
+                                        <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400">Category Attributes</h4>
+                                        {loadingAttributes ? (
+                                            <div className="flex justify-center py-4"><Loader2 className="animate-spin w-4 h-4 text-gray-400" /></div>
+                                        ) : (
+                                            <div className="grid grid-cols-2 gap-4">
+                                                {taxonomyAttributes.map(attr => (
+                                                    <div key={attr.id} className="space-y-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <Label className="text-sm truncate" title={attr.name}>{attr.name}</Label>
+                                                            {attr.description && (
+                                                                <Popover>
+                                                                    <PopoverTrigger asChild><div className="cursor-help text-[10px] text-gray-400 bg-gray-100 rounded-full w-4 h-4 flex items-center justify-center font-bold">?</div></PopoverTrigger>
+                                                                    <PopoverContent className="w-64 text-xs p-2">{attr.description}</PopoverContent>
+                                                                </Popover>
+                                                            )}
+                                                        </div>
+                                                        <Select
+                                                            value={getAttributeValue(attr.handle)}
+                                                            onValueChange={(val) => setAttributeValue(attr.handle, val)}
+                                                        >
+                                                            <SelectTrigger className="w-full">
+                                                                <SelectValue placeholder={`Select ${attr.name}`} />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {attr.options.map((opt: any) => (
+                                                                    <SelectItem key={opt.id} value={opt.id}>
+                                                                        {opt.name}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-2 gap-4 pt-4"> {/* Restart grid for legacy fields */}
                                     <div className="space-y-2">
                                         <Label>Product Type (Legacy)</Label>
                                         <Input
