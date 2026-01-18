@@ -99,12 +99,11 @@ export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
                             {!loading && results.map((item) => (
                                 <CommandItem
                                     key={item.id}
-                                    value={item.id} // Ensure this is unique and string
+                                    value={item.label} // Use label so it matches the search query and stays enabled
                                     onSelect={() => {
                                         onChange(item.id);
                                         setOpen(false);
                                     }}
-                                    // Hack: Handle mouse interaction specifically because onSelect sometimes fails with pointer events in Popovers
                                     onMouseDown={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
