@@ -54,9 +54,9 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                     />
 
                     <div className="flex items-center gap-2 ml-auto">
-                        <Button variant="default" size="sm" onClick={() => setIsCreateOpen(true)} className="h-9 shadow-sm">
-                            <Plus className="w-4 h-4 md:mr-2" />
-                            <span className="hidden md:inline">Create Product</span>
+                        <Button variant="default" size="sm" onClick={() => setIsCreateOpen(true)} className="gap-2 shadow-sm">
+                            <Plus className="w-4 h-4" />
+                            <span>New</span>
                         </Button>
                     </div>
                 </div>
