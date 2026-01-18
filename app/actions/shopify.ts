@@ -35,7 +35,7 @@ export async function getShopifyProducts() {
         const { shopDomain, accessToken } = integration;
 
         // Fetch products from Shopify
-        const response = await fetch(`https://${shopDomain}/admin/api/2023-10/products.json?limit=50&status=active`, {
+        const response = await fetch(`https://${shopDomain}/admin/api/2024-01/products.json?limit=50&status=active`, {
             headers: {
                 'X-Shopify-Access-Token': accessToken
             }
@@ -46,6 +46,8 @@ export async function getShopifyProducts() {
         }
 
         const data = await response.json();
+        // Just return simple list for UI
+        // Note: For full sync we do the DB write below
         const products = data.products.map((p: any) => ({
             id: String(p.id),
             title: p.title,
@@ -54,6 +56,20 @@ export async function getShopifyProducts() {
             description: p.body_html?.replace(/<[^>]*>?/gm, '') || '', // Strip HTML for now or keep it? Keeping plain text is safer for simple editor.
             tags: p.tags
         }));
+
+        // Do the DB Sync? Yes, the function name implies it.
+        // Wait, the function returns { products }?
+        // Ah, this function `getShopifyProducts` is just for "Import" view?
+        // No, I am editing `syncShopifyProducts`. Wait let me check the file content again.
+        // I am editing lines 38-168 previously viewed?
+        // The previous view showed `getShopifyProducts` at line 30, and `syncShopifyProducts` wasn't fully shown but `syncProductDetails` was at 215.
+        // Let me check where `syncShopifyProducts` is.
+        // I will assume `syncShopifyProducts` is what I am editing or I need to find it.
+        // Actually, looking at the code I viewed in step 8996, I see `getShopifyProducts` (lines 30-64) and `importFromShopify` (lines 66-...).
+        // I do NOT see `syncShopifyProducts` in the first snippet.
+        // Wait, in the *second* view (lines 150-300), I see logic that looks like sync around line 150.
+        // Ah, line 150 starts with `images: imageUrls`. This looks like inside a loop.
+        // Let me view the file again to find `syncShopifyProducts`.
 
         return { success: true, products };
 
@@ -150,6 +166,7 @@ export async function syncShopifyProducts() {
                         images: imageUrls,
                         tags: p.tags,
                         productType: p.product_type,
+                        categoryId: p.product_category?.product_taxonomy_node_id,
                         vendor: p.vendor,
                         status: p.status,
                         syncedAt: new Date()
@@ -162,6 +179,7 @@ export async function syncShopifyProducts() {
                         images: imageUrls,
                         tags: p.tags,
                         productType: p.product_type,
+                        categoryId: p.product_category?.product_taxonomy_node_id,
                         vendor: p.vendor,
                         status: p.status || 'active'
                     }
@@ -219,14 +237,14 @@ export async function syncProductDetails(productId: string) {
         const { shopDomain, accessToken } = integration;
 
         // 1. Fetch Product (Refresh details)
-        const prodResponse = await fetch(`https://${shopDomain}/admin/api/2023-10/products/${productId}.json`, {
+        const prodResponse = await fetch(`https://${shopDomain}/admin/api/2024-01/products/${productId}.json`, {
             headers: { 'X-Shopify-Access-Token': accessToken }
         });
         if (!prodResponse.ok) throw new Error("Failed to fetch product");
         const { product: p } = await prodResponse.json();
 
         // 2. Fetch Metafields
-        const metaResponse = await fetch(`https://${shopDomain}/admin/api/2023-10/products/${productId}/metafields.json`, {
+        const metaResponse = await fetch(`https://${shopDomain}/admin/api/2024-01/products/${productId}/metafields.json`, {
             headers: { 'X-Shopify-Access-Token': accessToken }
         });
         if (!metaResponse.ok) throw new Error("Failed to fetch metafields");
@@ -243,6 +261,7 @@ export async function syncProductDetails(productId: string) {
                     description: p.body_html?.replace(/<[^>]*>?/gm, '') || '',
                     price: price,
                     productType: p.product_type,
+                    categoryId: p.product_category?.product_taxonomy_node_id, // Map Taxonomy ID
                     vendor: p.vendor,
                     status: p.status,
                     tags: p.tags,
@@ -311,7 +330,7 @@ export async function getLocalProducts() {
     });
 }
 
-export async function updateShopifyProduct(dbProduct: { id: string; title: string; description?: string; price?: string; tags?: string; images?: string[]; productType?: string; vendor?: string; status?: string }) {
+export async function updateShopifyProduct(dbProduct: { id: string; title: string; description?: string; price?: string; tags?: string; images?: string[]; productType?: string; categoryId?: string; vendor?: string; status?: string }) {
     try {
         const integration = await prisma.shopifyIntegration.findFirst();
         if (!integration) return { success: false, error: "Not connected" };
@@ -321,14 +340,19 @@ export async function updateShopifyProduct(dbProduct: { id: string; title: strin
         const isLocalDraft = dbProduct.id.length > 20 && isNaN(Number(dbProduct.id)); // Simple heuristic: UUIDs are long non-numbers
 
         let method = 'PUT';
-        let url = `https://${shopDomain}/admin/api/2023-10/products/${dbProduct.id}.json`;
+        // USE 2024-01 API
+        let url = `https://${shopDomain}/admin/api/2024-01/products/${dbProduct.id}.json`;
 
         const payload: any = {
             product: {
                 title: dbProduct.title,
                 body_html: dbProduct.description,
                 tags: dbProduct.tags,
-                product_type: dbProduct.productType,
+                product_type: dbProduct.productType, // Legacy
+                // New Taxonomy Field
+                product_category: dbProduct.categoryId ? {
+                    product_taxonomy_node_id: dbProduct.categoryId
+                } : undefined,
                 vendor: dbProduct.vendor,
                 status: dbProduct.status, // 'active', 'draft', 'archived' maps directly for Shopify
                 variants: [

@@ -88,6 +88,7 @@ model Product {
   images          String[] // Array of image URLs
   tags            String?
   productType     String? // Mapped to product_type in Shopify
+  categoryId      String? // Shopify Standard Product Taxonomy Node ID (e.g. "aa-1")
   vendor          String? // Mapped to vendor in Shopify
   status          String   @default("active") // active, draft, archived
   

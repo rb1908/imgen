@@ -58,7 +58,7 @@ interface ProductWithRelations extends Product {
     options: { id: string; name: string; values: string; position: number }[];
     variants: { id: string; title: string; price: string | null; sku: string | null; inventoryQty: number }[];
     metafields: { id: string; namespace: string; key: string; value: string; type: string }[];
-    images: string[]; // Assuming images is an array of strings
+    images: string[];
 }
 
 interface ListingEditorProps {
@@ -67,6 +67,10 @@ interface ListingEditorProps {
     onOpenStudio: (imageUrl?: string) => void;
 }
 
+import { CategoryPicker } from './CategoryPicker';
+
+// ... imports
+
 export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditorProps) {
     const [formData, setFormData] = useState({
         title: product.title,
@@ -74,6 +78,7 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
         price: product.price || '',
         tags: product.tags || '',
         productType: product.productType || '',
+        categoryId: product.categoryId || '', // New ID
         vendor: product.vendor || '',
         status: 'active'
     });
@@ -274,6 +279,21 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Category</Label>
+                                        <CategoryPicker
+                                            value={formData.categoryId}
+                                            onChange={(val) => setFormData(prev => ({ ...prev, categoryId: val }))}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Product Type (Legacy)</Label>
+                                        <Input
+                                            value={formData.productType}
+                                            onChange={(e) => setFormData({ ...formData, productType: e.target.value })}
+                                            placeholder="e.g. Snowboard"
+                                        />
+                                    </div>
                                     <div className="space-y-1.5">
                                         <Label className="text-sm font-medium text-gray-700">Price</Label>
                                         <div className="relative">
