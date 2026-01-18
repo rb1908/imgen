@@ -101,7 +101,13 @@ export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
                                     key={item.id}
                                     value={item.id} // Ensure this is unique and string
                                     onSelect={() => {
-                                        // Directly use the item.id from closure to avoid any value mismatch or lowercase issues
+                                        onChange(item.id);
+                                        setOpen(false);
+                                    }}
+                                    // Hack: Handle mouse interaction specifically because onSelect sometimes fails with pointer events in Popovers
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
                                         onChange(item.id);
                                         setOpen(false);
                                     }}
