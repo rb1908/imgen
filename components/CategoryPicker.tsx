@@ -69,7 +69,7 @@ export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
     }, [query]);
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={setOpen} modal={true}>
             <PopoverTrigger asChild>
                 <Button
                     variant="outline"
@@ -99,9 +99,10 @@ export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
                             {!loading && results.map((item) => (
                                 <CommandItem
                                     key={item.id}
-                                    value={item.id}
+                                    value={item.id} // Ensure this is unique and string
                                     onSelect={() => {
-                                        onChange(item.id === value ? "" : item.id);
+                                        // Directly use the item.id from closure to avoid any value mismatch or lowercase issues
+                                        onChange(item.id);
                                         setOpen(false);
                                     }}
                                 >
