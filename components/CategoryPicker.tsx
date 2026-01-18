@@ -1,18 +1,10 @@
 'use client';
 
 import * as React from "react";
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2, Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from "@/components/ui/command";
 import {
     Popover,
     PopoverContent,
@@ -82,47 +74,49 @@ export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[400px] p-0" align="start">
-                <Command shouldFilter={false}>
-                    <CommandInput
-                        placeholder="Search categories (e.g. 'Clothing')..."
-                        value={query}
-                        onValueChange={setQuery}
-                    />
-                    <CommandList>
+                <div className="flex flex-col max-h-[400px]">
+                    <div className="flex items-center border-b px-3">
+                        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                        <input
+                            className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="Search categories (e.g. 'Clothing')..."
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="overflow-y-auto overflow-x-hidden p-1 max-h-[300px]">
                         {loading && (
                             <div className="py-6 text-center text-sm text-muted-foreground flex justify-center">
                                 <Loader2 className="w-4 h-4 animate-spin" />
                             </div>
                         )}
-                        {!loading && results.length === 0 && <CommandEmpty>No category found.</CommandEmpty>}
-                        <CommandGroup>
-                            {!loading && results.map((item) => (
-                                <CommandItem
-                                    key={item.id}
-                                    value={item.label} // Use label so it matches the search query and stays enabled
-                                    onSelect={() => {
-                                        onChange(item.id);
-                                        setOpen(false);
-                                    }}
-                                    onMouseDown={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        onChange(item.id);
-                                        setOpen(false);
-                                    }}
-                                >
-                                    <Check
-                                        className={cn(
-                                            "mr-2 h-4 w-4",
-                                            value === item.id ? "opacity-100" : "opacity-0"
-                                        )}
-                                    />
-                                    {item.label}
-                                </CommandItem>
-                            ))}
-                        </CommandGroup>
-                    </CommandList>
-                </Command>
+                        {!loading && results.length === 0 && (
+                            <div className="py-6 text-center text-sm text-muted-foreground">No category found.</div>
+                        )}
+                        {!loading && results.map((item) => (
+                            <div
+                                key={item.id}
+                                className={cn(
+                                    "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors",
+                                    value === item.id && "bg-accent text-accent-foreground"
+                                )}
+                                onClick={() => {
+                                    onChange(item.id);
+                                    setOpen(false);
+                                }}
+                            >
+                                <Check
+                                    className={cn(
+                                        "mr-2 h-4 w-4",
+                                        value === item.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                />
+                                {item.label}
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </PopoverContent>
         </Popover>
     );
