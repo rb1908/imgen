@@ -19,7 +19,7 @@ import { AIIcon } from './icons/AIIcon';
 interface ProductWithRelations extends Product {
     options: { id: string; name: string; values: string; position: number }[];
     variants: { id: string; title: string; price: string | null; sku: string | null; inventoryQty: number }[];
-    metafields: { id: string; namespace: string; key: string; value: string }[];
+    metafields: { id: string; namespace: string; key: string; value: string; type: string }[];
 }
 
 interface ProductWorkspaceProps {

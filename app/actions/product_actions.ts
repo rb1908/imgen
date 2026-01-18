@@ -129,3 +129,50 @@ export async function addProductImages(productId: string, imageUrls: string[]) {
         return { success: false, error: "Failed to add images" };
     }
 }
+
+export async function updateProductVariants(productId: string, variants: { id: string; price?: string | null; sku?: string | null; inventoryQty?: number }[]) {
+    try {
+        await prisma.$transaction(
+            variants.map(v =>
+                prisma.productVariant.update({
+                    where: { id: v.id },
+                    data: {
+                        price: v.price,
+                        sku: v.sku,
+                        inventoryQty: v.inventoryQty
+                    }
+                })
+            )
+        );
+        revalidatePath(`/products/${productId}`);
+        return { success: true };
+    } catch (e) {
+        console.error("Failed to update variants:", e);
+        return { success: false, error: "Failed to update variants" };
+    }
+}
+
+export async function updateProductMetafields(productId: string, metafields: { id?: string; namespace: string; key: string; value: string; type: string }[]) {
+    try {
+        await prisma.$transaction(async (tx) => {
+            await tx.productMetafield.deleteMany({ where: { productId } });
+            if (metafields.length > 0) {
+                await tx.productMetafield.createMany({
+                    data: metafields.map(m => ({
+                        productId,
+                        namespace: m.namespace || 'custom',
+                        key: m.key,
+                        value: m.value,
+                        type: m.type || 'single_line_text_field'
+                    }))
+                });
+            }
+        });
+
+        revalidatePath(`/products/${productId}`);
+        return { success: true };
+    } catch (e) {
+        console.error("Failed to update metafields:", e);
+        return { success: false, error: "Failed to update metafields" };
+    }
+}

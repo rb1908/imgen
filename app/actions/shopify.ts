@@ -443,3 +443,81 @@ export async function updateShopifyProduct(dbProduct: { id: string; title: strin
         return { success: false, error: e instanceof Error ? e.message : "Push failed" };
     }
 }
+
+export async function updateShopifyVariants(shopDomain: string, accessToken: string, variants: { id: string; price?: string; sku?: string; inventory_quantity?: number }[]) {
+    const results = await Promise.all(variants.map(async (v) => {
+        try {
+            if (v.id.length > 20 && isNaN(Number(v.id))) return { id: v.id, success: false, error: "Local variant ID" };
+
+            const response = await fetch(`https://${shopDomain}/admin/api/2023-10/variants/${v.id}.json`, {
+                method: 'PUT',
+                headers: {
+                    'X-Shopify-Access-Token': accessToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ variant: v })
+            });
+            if (!response.ok) throw new Error(response.statusText);
+            return { id: v.id, success: true };
+        } catch (e) {
+            return { id: v.id, success: false, error: String(e) };
+        }
+    }));
+    return results;
+}
+
+export async function pushProductUpdatesToShopify(productId: string, data: { variants?: any[]; metafields?: any[] }) {
+    try {
+        const integration = await prisma.shopifyIntegration.findFirst();
+        if (!integration) return { success: false, error: "Not connected" };
+        const { shopDomain, accessToken } = integration;
+
+        const errors = [];
+
+        if (data.variants && data.variants.length > 0) {
+            const variantResults = await updateShopifyVariants(shopDomain, accessToken, data.variants.map((v: any) => ({
+                id: v.id,
+                price: v.price,
+                sku: v.sku,
+                inventory_quantity: v.inventoryQty
+            })));
+            const failed = variantResults.filter(r => !r.success);
+            if (failed.length > 0) errors.push(`Failed to update ${failed.length} variants`);
+        }
+
+        if (data.metafields) {
+            const payload = {
+                product: {
+                    id: Number(productId),
+                    metafields: data.metafields.map((m: any) => ({
+                        namespace: m.namespace,
+                        key: m.key,
+                        value: m.value,
+                        type: m.type
+                    }))
+                }
+            };
+
+            const response = await fetch(`https://${shopDomain}/admin/api/2023-10/products/${productId}.json`, {
+                method: 'PUT',
+                headers: {
+                    'X-Shopify-Access-Token': accessToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const err = await response.text();
+                errors.push(`Metafields update failed: ${err}`);
+            }
+        }
+
+        if (errors.length > 0) return { success: false, error: errors.join(', ') };
+        return { success: true };
+
+    } catch (e) {
+        console.error("Push Updates Failed:", e);
+        return { success: false, error: String(e) };
+    }
+}
