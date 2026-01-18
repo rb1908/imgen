@@ -87,6 +87,8 @@ model Product {
   price           String?
   images          String[] // Array of image URLs
   tags            String?
+  productType     String? // Mapped to product_type in Shopify
+  vendor          String? // Mapped to vendor in Shopify
   status          String   @default("active") // active, draft, archived
   
   updatedAt       DateTime @updatedAt // Last sync time

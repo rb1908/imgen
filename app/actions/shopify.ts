@@ -147,7 +147,9 @@ export async function syncShopifyProducts() {
                     price: price,
                     images: imageUrls,
                     tags: p.tags,
-                    status: 'active', // Assuming active since we filtered by status=active
+                    productType: p.product_type,
+                    vendor: p.vendor,
+                    status: p.status,
                     syncedAt: new Date()
                 },
                 create: {
@@ -157,7 +159,9 @@ export async function syncShopifyProducts() {
                     price: price,
                     images: imageUrls,
                     tags: p.tags,
-                    status: 'active'
+                    productType: p.product_type,
+                    vendor: p.vendor,
+                    status: p.status || 'active'
                 }
             });
             syncedCount++;
@@ -178,7 +182,7 @@ export async function getLocalProducts() {
     });
 }
 
-export async function updateShopifyProduct(dbProduct: { id: string; title: string; description?: string; price?: string; tags?: string; images?: string[] }) {
+export async function updateShopifyProduct(dbProduct: { id: string; title: string; description?: string; price?: string; tags?: string; images?: string[]; productType?: string; vendor?: string; status?: string }) {
     try {
         const integration = await prisma.shopifyIntegration.findFirst();
         if (!integration) return { success: false, error: "Not connected" };
@@ -195,9 +199,44 @@ export async function updateShopifyProduct(dbProduct: { id: string; title: strin
                 title: dbProduct.title,
                 body_html: dbProduct.description,
                 tags: dbProduct.tags,
-                // price: dbProduct.price // Price updating requires variant handling
+                product_type: dbProduct.productType,
+                vendor: dbProduct.vendor,
+                status: dbProduct.status, // 'active', 'draft', 'archived' maps directly for Shopify
+                variants: [
+                    {
+                        price: dbProduct.price,
+                        // If we had more variants, we would need to fetch them first.
+                        // For now, this assumes single variant or updating the first one implicitly?
+                        // Actually, to update the main price safely without wiping variants:
+                        // Ideally we grab the main variant ID.
+                        // But for "Create", this works.
+                        // For "Update", if we don't send variant IDs, Shopify might re-create them or error if we don't match.
+                        // Let's assume simplest case: Update Price = Update all variants? Or just the first?
+                        // For now, let's TRY just sending price in the root/variant[0] and see if Shopify accepts it.
+                        // Actually, Shopify API for product Update:
+                        // "To change the price ... modify the variant."
+                        // We need the variant ID if it exists?
+                        // If we don't have it, we might be safer NOT sending variants unless we know we are overwriting.
+                        // Strategy: For NEW products, send variants: [{ price }]
+                        // For EXISTING products, if we want to update price, we should fetch variants first?
+                        // Optimization: We will send variants for creation. For update, we risk overwriting if we don't include ID.
+                        // Let's omit variants from Update for now unless we are confident, OR just try to update price on the first variant if we have its ID?
+                        // We don't store variant IDs locally yet.
+                        // Let's stick to updating Core Fields (Title, Desc, Tags, Type, Vendor, Status).
+                        // Price syncing on UPDATE requires Variant ID. We will SKIP Price on Update for safety until we map Variants.
+                        // BUT for Creation, we include it.
+                    }
+                ]
             }
         };
+
+        // Remove variants from payload if Updating to avoid overwriting variants safely
+        // UNLESS we want to force the price. 
+        // Let's keeping it simple: Only send price on Creation.
+        if (!isLocalDraft) {
+            delete payload.product.variants;
+            // TODO: To support Price Update, we need to fetch product variants, get ID, and update that variant.
+        }
 
         if (dbProduct.images) {
             payload.product.images = dbProduct.images.map(url => ({ src: url }));

@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
 
-export async function createProduct(data: { title: string; description?: string; price?: string; tags?: string }) {
+export async function createProduct(data: { title: string; description?: string; price?: string; tags?: string; productType?: string; vendor?: string; status?: string }) {
     try {
         const id = randomUUID();
         const product = await prisma.product.create({
@@ -14,8 +14,10 @@ export async function createProduct(data: { title: string; description?: string;
                 description: data.description,
                 price: data.price,
                 tags: data.tags,
+                productType: data.productType,
+                vendor: data.vendor,
                 images: [],
-                status: 'draft' // Default to draft for local creation
+                status: data.status || 'draft' // Default to draft for local creation
             }
         });
         revalidatePath('/products');
@@ -26,7 +28,7 @@ export async function createProduct(data: { title: string; description?: string;
     }
 }
 
-export async function updateProduct(id: string, data: { title: string; description: string; tags: string; price: string; images: string[] }) {
+export async function updateProduct(id: string, data: { title: string; description?: string; tags?: string; price?: string; images?: string[]; productType?: string; vendor?: string; status?: string }) {
     try {
         await prisma.product.update({
             where: { id },
@@ -35,7 +37,10 @@ export async function updateProduct(id: string, data: { title: string; descripti
                 description: data.description,
                 tags: data.tags,
                 price: data.price,
-                images: data.images
+                images: data.images,
+                productType: data.productType,
+                vendor: data.vendor,
+                status: data.status
             }
         });
         revalidatePath('/products');

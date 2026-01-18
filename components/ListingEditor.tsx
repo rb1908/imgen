@@ -71,6 +71,8 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
         description: product.description || '',
         price: product.price || '',
         tags: product.tags || '',
+        productType: product.productType || '',
+        vendor: product.vendor || '',
         status: 'active'
     });
 
@@ -146,6 +148,8 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
             description: product.description || '',
             price: product.price || '',
             tags: product.tags || '',
+            productType: product.productType || '',
+            vendor: product.vendor || '',
         }));
     }, [product]);
 
@@ -327,13 +331,26 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
                                 </div>
 
                                 {/* Mock Category Selection */}
-                                <div className="space-y-1.5 opacity-60 hover:opacity-100 transition-opacity">
-                                    <Label className="text-sm font-medium text-gray-700">Vendor</Label>
-                                    <Select disabled>
-                                        <SelectTrigger className="bg-gray-50/50 border-gray-200 h-10">
-                                            <SelectValue placeholder="Select Vendor (Shopify)" />
-                                        </SelectTrigger>
-                                    </Select>
+                                {/* Organization Inputs */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-sm font-medium text-gray-700">Product Type</Label>
+                                        <Input
+                                            value={formData.productType}
+                                            onChange={e => setFormData({ ...formData, productType: e.target.value })}
+                                            className="bg-transparent border-gray-200 outline-none shadow-none focus-visible:ring-0 focus-visible:border-gray-900 h-10 font-normal rounded-lg hover:border-gray-300"
+                                            placeholder="e.g. T-Shirt"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-sm font-medium text-gray-700">Vendor</Label>
+                                        <Input
+                                            value={formData.vendor}
+                                            onChange={e => setFormData({ ...formData, vendor: e.target.value })}
+                                            className="bg-transparent border-gray-200 outline-none shadow-none focus-visible:ring-0 focus-visible:border-gray-900 h-10 font-normal rounded-lg hover:border-gray-300"
+                                            placeholder="e.g. My Brand"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </CollapsibleSection>
