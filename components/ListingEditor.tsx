@@ -345,12 +345,19 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
                                 </div>
 
                                 {/* Dynamic Attributes Section - Placed below grid for full width */}
-                                {taxonomyAttributes.length > 0 && (
+                                {(loadingAttributes || taxonomyAttributes.length > 0) && (
                                     <div className="space-y-4 pt-4 border-t border-gray-100">
-                                        <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400">Category Attributes</h4>
-                                        {loadingAttributes ? (
-                                            <div className="flex justify-center py-4"><Loader2 className="animate-spin w-4 h-4 text-gray-400" /></div>
-                                        ) : (
+                                        <div className="flex items-center gap-2">
+                                            <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400">Category Attributes</h4>
+                                            {loadingAttributes && (
+                                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600">
+                                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                                    <span className="text-[10px] font-medium">Fetching available local attributes...</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {!loadingAttributes && (
                                             <div className="grid grid-cols-2 gap-4">
                                                 {taxonomyAttributes.map(attr => (
                                                     <div key={attr.id} className="space-y-2">
