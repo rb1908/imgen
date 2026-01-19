@@ -141,3 +141,15 @@ model ProductMetafield {
   value         String
   type          String   @default("single_line_text_field")
 }
+
+model ProductTemplate {
+  id          String   @id @default(uuid())
+  name        String
+  icon        String?  // Lucide icon name or emoji
+  
+  // Snapshot of product data
+  data        Json     // { title, description, price, tags, productType, categoryId, attributes }
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

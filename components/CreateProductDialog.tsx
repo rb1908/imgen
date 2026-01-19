@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { createProduct } from '@/app/actions/product_actions';
+import { getProductTemplates } from '@/app/actions/product_templates';
 import { generateDraftFromText, analyzeImageForDraft, uploadLauncherImage } from '@/app/actions/launcher';
 import { toast } from 'sonner';
 import { Loader2, Sparkles, Camera, LayoutTemplate, ArrowRight, Upload, X } from 'lucide-react';
@@ -156,16 +157,19 @@ export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogP
         }
     };
 
-    const handleTemplateSelect = (templateId: string) => {
-        // Mock template data
-        const templateData = {
-            title: "New Gift Basket",
-            description: "<ul><li>Item 1</li><li>Item 2</li></ul>",
-            price: "50.00",
-            productType: "Gift Basket",
-            tags: "gift, basket, custom"
-        };
-        handleCreateWithData(templateData);
+    // Template State
+    const [templates, setTemplates] = useState<any[]>([]);
+
+    // Fetch templates when entering step
+    useEffect(() => {
+        if (open && step === 'TEMPLATE_SELECT') {
+            getProductTemplates().then(setTemplates);
+        }
+    }, [open, step]);
+
+    const handleTemplateSelect = (template: any) => {
+        const data = template.data as any;
+        handleCreateWithData(data);
     };
 
     // --- Render ---
@@ -333,17 +337,19 @@ export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogP
                                     </div>
                                 </DialogHeader>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    {['Gift Basket', 'Apparel', 'Digital Art', 'Furniture'].map((t) => (
-                                        <button key={t} onClick={() => handleTemplateSelect(t)} className="p-4 rounded-lg border border-gray-200 hover:border-indigo-500 hover:bg-indigo-50 text-left transition-all">
-                                            <div className="w-full h-24 bg-gray-100 rounded-md mb-2 mb-3 relative overflow-hidden">
-                                                {/* Placeholder for template preview */}
-                                                <div className="absolute inset-0 flex items-center justify-center text-gray-300">
-                                                    <LayoutTemplate className="w-8 h-8" />
-                                                </div>
+                                <div className="grid grid-cols-2 gap-4 max-h-[400px] overflow-y-auto">
+                                    {templates.length === 0 && (
+                                        <div className="col-span-2 text-center py-8 text-gray-500">
+                                            No templates found. Save a product as a template first!
+                                        </div>
+                                    )}
+                                    {templates.map((t) => (
+                                        <button key={t.id} onClick={() => handleTemplateSelect(t)} className="p-4 rounded-lg border border-gray-200 hover:border-indigo-500 hover:bg-indigo-50 text-left transition-all">
+                                            <div className="w-full h-24 bg-gray-100 rounded-md mb-3 relative overflow-hidden flex items-center justify-center text-gray-400">
+                                                <LayoutTemplate className="w-8 h-8" />
                                             </div>
-                                            <h4 className="font-medium text-sm">{t}</h4>
-                                            <p className="text-xs text-gray-500">~2 min setup</p>
+                                            <h4 className="font-medium text-sm truncate" title={t.name}>{t.name}</h4>
+                                            <p className="text-xs text-gray-500">Click to use</p>
                                         </button>
                                     ))}
                                 </div>

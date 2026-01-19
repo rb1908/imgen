@@ -9,7 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { updateProduct, updateProductVariants, updateProductMetafields } from '@/app/actions/product_actions';
 import { updateShopifyProduct, pushProductUpdatesToShopify } from '@/app/actions/shopify';
-import { Loader2, X, ChevronRight, LayoutGrid, Tag, DollarSign, Type, Sparkles, Plus, Image as ImageIcon, ChevronDown, Wand2, Trash2 } from 'lucide-react';
+import { saveAsTemplate } from '@/app/actions/product_templates';
+import { Loader2, X, ChevronRight, LayoutGrid, Tag, DollarSign, Type, Sparkles, Plus, Image as ImageIcon, ChevronDown, Wand2, Trash2, LayoutTemplate } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -146,6 +148,33 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
 
     const [isPushing, setIsPushing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+
+    // Template State
+    const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false);
+    const [templateName, setTemplateName] = useState("");
+    const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+
+    const handleSaveTemplate = async () => {
+        if (!templateName.trim()) return;
+        setIsSavingTemplate(true);
+        try {
+            // Save active changes first
+            await updateProduct(product.id, { ...formData, images: product.images });
+
+            const res = await saveAsTemplate(product.id, templateName);
+            if (res.success) {
+                toast.success(`Template "${templateName}" saved!`);
+                setIsSaveTemplateOpen(false);
+                setTemplateName("");
+            } else {
+                toast.error("Failed to save template");
+            }
+        } catch (e) {
+            toast.error("Error saving template");
+        } finally {
+            setIsSavingTemplate(false);
+        }
+    };
 
     // Derived state for tags array
     const [tagInput, setTagInput] = useState('');
@@ -536,6 +565,9 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
 
             {/* Bottom Action Bar */}
             <div className="p-6 border-t border-gray-100 bg-white flex items-center gap-3">
+                <Button variant="ghost" size="icon" onClick={() => setIsSaveTemplateOpen(true)} className="h-12 w-12 rounded-xl text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 border border-transparent hover:border-indigo-100" title="Save as Template">
+                    <LayoutTemplate className="w-5 h-5" />
+                </Button>
                 <Button variant="outline" className="flex-1 h-12 text-sm font-semibold tracking-wide border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all active:scale-[0.98]" onClick={handleSave} disabled={isSaving || isPushing}>
                     {isSaving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</> : "Save Draft"}
                 </Button>
@@ -543,6 +575,31 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
                     {isPushing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Publishing...</> : "Publish to Shopify"}
                 </Button>
             </div>
+
+            {/* Save Template Dialog */}
+            <Dialog open={isSaveTemplateOpen} onOpenChange={setIsSaveTemplateOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Save as Template</DialogTitle>
+                        <DialogDescription>
+                            Create a reusable template from this product's details.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="t-name">Template Name</Label>
+                            <Input id="t-name" value={templateName} onChange={(e) => setTemplateName(e.target.value)} placeholder="e.g. Summer Collection Base" />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsSaveTemplateOpen(false)}>Cancel</Button>
+                        <Button onClick={handleSaveTemplate} disabled={!templateName.trim() || isSavingTemplate}>
+                            {isSavingTemplate && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save Template
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
