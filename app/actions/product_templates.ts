@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { auth } from "@clerk/nextjs/server";
 
 export async function saveAsTemplate(productId: string, templateName: string) {
     try {
@@ -29,12 +30,16 @@ export async function saveAsTemplate(productId: string, templateName: string) {
             }))
         };
 
+        const { userId } = await auth();
+        if (!userId) throw new Error("Unauthorized");
+
         // 3. Create Template
         const template = await prisma.productTemplate.create({
             data: {
                 name: templateName,
                 icon: "layout-template", // Default icon
-                data: templateData
+                data: templateData,
+                userId
             }
         });
 
@@ -50,7 +55,11 @@ export async function saveAsTemplate(productId: string, templateName: string) {
 
 export async function getProductTemplates() {
     try {
+        const { userId } = await auth();
+        if (!userId) return [];
+
         const templates = await prisma.productTemplate.findMany({
+            where: { userId },
             orderBy: { createdAt: 'desc' }
         });
         return templates;

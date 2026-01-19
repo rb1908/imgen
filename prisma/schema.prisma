@@ -17,10 +17,13 @@ model Project {
   shopifyId       String?      // External ID if imported
   originalImageUrl String      // Store the base/original image URL
   defaultProductId String?     // Link to a Product (Shopify ID)
+  userId          String       @default("user_default") // Owner ID
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
   generations     Generation[]
+
+  @@index([userId])
 }
 
 model Template {
@@ -30,10 +33,13 @@ model Template {
   description String?
   thumbnailUrl String?
   category    String   @default("custom")
+  userId      String   @default("user_default") // Owner ID (or system)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   generations Generation[]
+
+  @@index([userId])
 }
 
 model Generation {
@@ -66,8 +72,11 @@ model EtsyIntegration {
   
   pkceVerifier  String?  // Temporary storage during auth if needed, but cookie is better.
   
+  userId        String?  // Linked Clerk User
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model ShopifyIntegration {
@@ -76,8 +85,11 @@ model ShopifyIntegration {
   accessToken   String
   scopes        String
   
+  userId        String?  // Linked Clerk User
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Product {
@@ -94,6 +106,7 @@ model Product {
   
   updatedAt       DateTime @updatedAt // Last sync time
   syncedAt        DateTime @default(now())
+  userId          String   @default("user_default")
   
   options         ProductOption[]
   variants        ProductVariant[]
@@ -152,4 +165,7 @@ model ProductTemplate {
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  userId      String   @default("user_default")
+
+  @@index([userId])
 }

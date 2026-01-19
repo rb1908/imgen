@@ -2,6 +2,7 @@
 
 import { LayoutDashboard, Image as ImageIcon, Settings, PlusCircle, Sparkles, ChevronLeft, ChevronRight, Palette, ShoppingBag } from 'lucide-react';
 import { AIIcon } from './icons/AIIcon';
+import { SignedIn, UserButton } from "@clerk/nextjs";
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -77,7 +78,23 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
                 })}
             </nav>
 
-            <div className="mt-auto p-4">
+            <div className="mt-auto p-4 flex flex-col gap-4">
+                <div className={cn("flex justify-center", isCollapsed ? "" : "w-full justify-start")}>
+                    <SignedIn>
+                        <div className={cn("flex items-center gap-3", isCollapsed ? "justify-center" : "")}>
+                            <UserButton
+                                showName={!isCollapsed}
+                                appearance={{
+                                    elements: {
+                                        userButtonBox: "flex-row-reverse",
+                                        userButtonOuterIdentifier: "text-sm text-muted-foreground font-medium"
+                                    }
+                                }}
+                            />
+                        </div>
+                    </SignedIn>
+                </div>
+
                 {!isCollapsed ? (
                     <div className="bg-accent/50 rounded-xl p-4 overflow-hidden">
                         <h4 className="font-medium text-sm mb-1 whitespace-nowrap">Pro Plan</h4>

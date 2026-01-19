@@ -4,6 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { prisma } from '@/lib/db';
 import { uploadImageToStorage } from '@/lib/supabase';
 import { revalidatePath, revalidateTag } from 'next/cache';
+import { auth } from "@clerk/nextjs/server";
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || '';
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -15,9 +16,12 @@ export async function generateVariations(
     overrideImageUrl?: string
 ) {
     try {
-        // 1. Get Project & Image
+        const { userId } = await auth();
+        if (!userId) throw new Error("Unauthorized");
+
+        // 1. Get Project & Image (and verify ownership)
         const project = await prisma.project.findUnique({
-            where: { id: projectId }
+            where: { id: projectId, userId }
         });
 
         if (!project) throw new Error('Project not found');

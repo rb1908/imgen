@@ -3,9 +3,13 @@
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
+import { auth } from "@clerk/nextjs/server";
 
 export async function createProduct(data: { title: string; description?: string; price?: string; tags?: string; productType?: string; vendor?: string; status?: string }) {
     try {
+        const { userId } = await auth();
+        if (!userId) throw new Error("Unauthorized");
+
         const id = randomUUID();
         const product = await prisma.product.create({
             data: {
@@ -17,7 +21,8 @@ export async function createProduct(data: { title: string; description?: string;
                 productType: data.productType,
                 vendor: data.vendor,
                 images: [],
-                status: data.status || 'draft' // Default to draft for local creation
+                status: data.status || 'draft',
+                userId
             }
         });
         revalidatePath('/products');
@@ -30,8 +35,11 @@ export async function createProduct(data: { title: string; description?: string;
 
 export async function updateProduct(id: string, data: { title: string; description?: string; tags?: string; price?: string; images?: string[]; productType?: string; vendor?: string; status?: string }) {
     try {
+        const { userId } = await auth();
+        if (!userId) throw new Error("Unauthorized");
+
         await prisma.product.update({
-            where: { id },
+            where: { id, userId },
             data: {
                 title: data.title,
                 description: data.description,
@@ -54,7 +62,10 @@ export async function updateProduct(id: string, data: { title: string; descripti
 
 export async function addProductImage(productId: string, imageUrl: string) {
     try {
-        const product = await prisma.product.findUnique({ where: { id: productId } });
+        const { userId } = await auth();
+        if (!userId) throw new Error("Unauthorized");
+
+        const product = await prisma.product.findUnique({ where: { id: productId, userId } });
         if (!product) throw new Error("Product not found");
 
         const images = product.images || [];

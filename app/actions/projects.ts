@@ -5,6 +5,7 @@ import { Project } from '@prisma/client';
 import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 import { uploadImageToStorage } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
+import { auth } from "@clerk/nextjs/server";
 
 // Helper for signed URLs
 export async function getSignedUploadUrl(fileName: string, fileType: string) {
@@ -41,6 +42,9 @@ export async function getPublicUrl(path: string) {
 
 export async function createProject(formData: FormData): Promise<Project> {
     try {
+        const { userId } = await auth();
+        if (!userId) throw new Error("Unauthorized");
+
         const imageUrl = formData.get('imageUrl') as string;
         const name = formData.get('name') as string;
 
@@ -51,7 +55,8 @@ export async function createProject(formData: FormData): Promise<Project> {
         const project = await prisma.project.create({
             data: {
                 originalImageUrl: imageUrl,
-                name: name || "Untitled Project"
+                name: name || "Untitled Project",
+                userId
             }
         });
 
@@ -66,7 +71,11 @@ export async function createProject(formData: FormData): Promise<Project> {
 
 export async function getProjects() {
     try {
+        const { userId } = await auth();
+        if (!userId) return [];
+
         const projects = await prisma.project.findMany({
+            where: { userId },
             orderBy: { createdAt: 'desc' },
             select: {
                 id: true,
@@ -79,6 +88,7 @@ export async function getProjects() {
                 price: true,
                 shopifyId: true,
                 defaultProductId: true,
+                userId: true,
                 _count: {
                     select: { generations: true }
                 },
@@ -171,9 +181,15 @@ export async function setProjectDefaultProduct(id: string, productId: string | n
 
 export async function getOrCreateProjectForProduct(product: { id: string; title: string; images: string[] }) {
     try {
-        // 1. Try to find existing project linked to this product
+        const { userId } = await auth();
+        // Since this is called from product page which might be public or protected, 
+        // if no user, we fall back to "user_default" or handle gracefullly. 
+        // For now, let's assume protected.
+        const ownerId = userId || "user_default";
+
+        // 1. Try to find existing project linked to this product (and owned by user)
         const existing = await prisma.project.findFirst({
-            where: { defaultProductId: product.id },
+            where: { defaultProductId: product.id, userId: ownerId },
             include: { generations: { orderBy: { createdAt: 'desc' } } }
         });
 
@@ -188,7 +204,8 @@ export async function getOrCreateProjectForProduct(product: { id: string; title:
                 name: product.title,
                 originalImageUrl: flowImageUrl,
                 defaultProductId: product.id,
-                description: `Workspace for ${product.title}`
+                description: `Workspace for ${product.title}`,
+                userId: ownerId
             },
             include: { generations: { orderBy: { createdAt: 'desc' } } }
         });
