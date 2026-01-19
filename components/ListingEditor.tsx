@@ -10,8 +10,9 @@ import { toast } from 'sonner';
 import { updateProduct, updateProductVariants, updateProductMetafields } from '@/app/actions/product_actions';
 import { updateShopifyProduct, pushProductUpdatesToShopify } from '@/app/actions/shopify';
 import { saveAsTemplate } from '@/app/actions/product_templates';
-import { Loader2, X, ChevronRight, LayoutGrid, Tag, DollarSign, Type, Sparkles, Plus, Image as ImageIcon, ChevronDown, Wand2, Trash2, LayoutTemplate } from 'lucide-react';
+import { Loader2, X, ChevronRight, LayoutGrid, Tag, DollarSign, Type, Sparkles, Plus, Image as ImageIcon, ChevronDown, Wand2, Trash2, LayoutTemplate, MoreHorizontal } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -565,15 +566,26 @@ export function ListingEditor({ product, onUpdate, onOpenStudio }: ListingEditor
 
             {/* Bottom Action Bar */}
             <div className="p-6 border-t border-gray-100 bg-white flex items-center gap-3">
-                <Button variant="ghost" size="icon" onClick={() => setIsSaveTemplateOpen(true)} className="h-12 w-12 rounded-xl text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 border border-transparent hover:border-indigo-100" title="Save as Template">
-                    <LayoutTemplate className="w-5 h-5" />
-                </Button>
                 <Button variant="outline" className="flex-1 h-12 text-sm font-semibold tracking-wide border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all active:scale-[0.98]" onClick={handleSave} disabled={isSaving || isPushing}>
                     {isSaving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</> : "Save Draft"}
                 </Button>
                 <Button className="flex-[2] h-12 text-sm font-semibold tracking-wide shadow-lg shadow-black/10 bg-black hover:bg-gray-800 text-white rounded-xl transition-all active:scale-[0.98]" onClick={handlePush} disabled={isSaving || isPushing}>
                     {isPushing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Publishing...</> : "Publish to Shopify"}
                 </Button>
+
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100">
+                            <MoreHorizontal className="w-5 h-5" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setIsSaveTemplateOpen(true)}>
+                            <LayoutTemplate className="w-4 h-4 mr-2" />
+                            Save as Template
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
 
             {/* Save Template Dialog */}

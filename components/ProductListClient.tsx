@@ -7,7 +7,11 @@ import { SearchModal } from '@/components/SearchModal';
 import { Product } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { RefreshCw, Search, Filter, Edit3, Loader2, List, LayoutGrid, Plus, Image as ImageIcon, X } from 'lucide-react';
+import { RefreshCw, Search, Filter, Edit3, Loader2, List, LayoutGrid, Plus, Image as ImageIcon, X, MoreHorizontal, LayoutTemplate } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { saveAsTemplate } from '@/app/actions/product_templates';
 import { syncShopifyProducts } from '@/app/actions/shopify';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +31,38 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
     const router = useRouter();
 
     const [lastSynced, setLastSynced] = useState<string | null>(null);
+
+    // Template State
+    const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false);
+    const [templateName, setTemplateName] = useState("");
+    const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+    const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+
+    const openSaveTemplate = (e: React.MouseEvent, productId: string) => {
+        e.stopPropagation(); // Prevent card click
+        setSelectedProductId(productId);
+        setIsSaveTemplateOpen(true);
+    };
+
+    const handleSaveTemplate = async () => {
+        if (!templateName.trim() || !selectedProductId) return;
+        setIsSavingTemplate(true);
+        try {
+            const res = await saveAsTemplate(selectedProductId, templateName);
+            if (res.success) {
+                toast.success(`Template "${templateName}" saved!`);
+                setIsSaveTemplateOpen(false);
+                setTemplateName("");
+                setSelectedProductId(null);
+            } else {
+                toast.error("Failed to save template");
+            }
+        } catch (e) {
+            toast.error("Error saving template");
+        } finally {
+            setIsSavingTemplate(false);
+        }
+    };
 
     const handleSync = async () => {
         setIsSyncing(true);
@@ -137,10 +173,20 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-muted-foreground">No Image</div>
                                     )}
-                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Badge variant="secondary" className="bg-background/80 hover:bg-background">
-                                            <Edit3 className="w-3 h-3 mr-1" /> Edit
-                                        </Badge>
+                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="secondary" size="icon" className="h-7 w-7 bg-background/80 hover:bg-background rounded-full shadow-sm" onClick={(e) => e.stopPropagation()}>
+                                                    <MoreHorizontal className="w-4 h-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={(e) => openSaveTemplate(e, product.id)}>
+                                                    <LayoutTemplate className="w-4 h-4 mr-2" />
+                                                    Save as Template
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </div>
                                 </div>
                                 <div className="p-3">
@@ -194,9 +240,21 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                                     </div>
                                 </div>
 
-                                {/* Date / Arrow */}
-                                <div className="text-[10px] text-muted-foreground shrink-0 hidden md:block">
-                                    {new Date(product.updatedAt).toLocaleDateString()}
+                                {/* Actions */}
+                                <div className="shrink-0 flex items-center gap-2">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-background" onClick={(e) => e.stopPropagation()}>
+                                                <MoreHorizontal className="w-4 h-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={(e) => openSaveTemplate(e, product.id)}>
+                                                <LayoutTemplate className="w-4 h-4 mr-2" />
+                                                Save as Template
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </div>
                             </div>
                         ))}
@@ -211,6 +269,31 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
             </div>
 
             <CreateProductDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
+
+            {/* Save Template Dialog */}
+            <Dialog open={isSaveTemplateOpen} onOpenChange={setIsSaveTemplateOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Save as Template</DialogTitle>
+                        <DialogDescription>
+                            Create a reusable template from this product.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="t-name">Template Name</Label>
+                            <Input id="t-name" value={templateName} onChange={(e) => setTemplateName(e.target.value)} placeholder="e.g. Best Seller Setup" />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsSaveTemplateOpen(false)}>Cancel</Button>
+                        <Button onClick={handleSaveTemplate} disabled={!templateName.trim() || isSavingTemplate}>
+                            {isSavingTemplate && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save Template
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </PageScaffold >
     );
 }
