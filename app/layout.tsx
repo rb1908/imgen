@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { LayoutShell } from "@/components/LayoutShell";
 import { Toaster } from 'sonner';
 
 
@@ -34,9 +33,7 @@ export default function RootLayout({
                 <body
                     className={`${inter.className} antialiased bg-background text-foreground`}
                 >
-                    <LayoutShell>
-                        {children}
-                    </LayoutShell>
+                    {children}
                     <Toaster />
                 </body>
             </html>
