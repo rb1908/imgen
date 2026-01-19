@@ -4,9 +4,16 @@ import { prisma } from '@/lib/db';
 import { Generation } from '@prisma/client';
 import { revalidatePath, revalidateTag } from 'next/cache';
 
+import { auth } from '@clerk/nextjs/server';
+
 export async function getAllGenerations(limit = 100, query = '') {
     try {
-        const where: any = {};
+        const { userId } = await auth();
+        if (!userId) return [];
+
+        const where: any = {
+            project: { userId } // Filter by project ownership
+        };
         if (query) {
             where.OR = [
                 { promptUsed: { contains: query, mode: 'insensitive' } },
@@ -36,9 +43,15 @@ export async function getAllGenerations(limit = 100, query = '') {
 }
 export async function deleteGenerations(ids: string[]) {
     try {
+        const { userId } = await auth();
+        if (!userId) throw new Error("Unauthorized");
+
         // Fetch generations first to get projectIds for revalidation
         const generationsToDelete = await prisma.generation.findMany({
-            where: { id: { in: ids } },
+            where: {
+                id: { in: ids },
+                project: { userId } // Verify ownership
+            },
             select: { projectId: true }
         });
 

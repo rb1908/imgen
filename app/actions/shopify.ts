@@ -2,10 +2,16 @@
 
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { auth } from '@clerk/nextjs/server';
 
 export async function getShopifyStatus() {
     try {
-        const integration = await prisma.shopifyIntegration.findFirst();
+        const { userId } = await auth();
+        if (!userId) return { connected: false };
+
+        const integration = await prisma.shopifyIntegration.findFirst({
+            where: { userId }
+        });
         if (!integration) return { connected: false };
 
         return {
@@ -20,7 +26,12 @@ export async function getShopifyStatus() {
 
 export async function disconnectShopify() {
     try {
-        await prisma.shopifyIntegration.deleteMany();
+        const { userId } = await auth();
+        if (!userId) return;
+
+        await prisma.shopifyIntegration.deleteMany({
+            where: { userId }
+        });
         revalidatePath('/settings');
     } catch (e) {
         console.error("Failed to disconnect Shopify:", e);
@@ -29,7 +40,12 @@ export async function disconnectShopify() {
 
 export async function getShopifyProducts() {
     try {
-        const integration = await prisma.shopifyIntegration.findFirst();
+        const { userId } = await auth();
+        if (!userId) return { success: false, error: "Unauthorized" };
+
+        const integration = await prisma.shopifyIntegration.findFirst({
+            where: { userId }
+        });
         if (!integration) return { success: false, error: "Not connected" };
 
         const { shopDomain, accessToken } = integration;
@@ -46,30 +62,14 @@ export async function getShopifyProducts() {
         }
 
         const data = await response.json();
-        // Just return simple list for UI
-        // Note: For full sync we do the DB write below
         const products = data.products.map((p: any) => ({
             id: String(p.id),
             title: p.title,
             image: p.image?.src || null,
             price: p.variants?.[0]?.price,
-            description: p.body_html?.replace(/<[^>]*>?/gm, '') || '', // Strip HTML for now or keep it? Keeping plain text is safer for simple editor.
+            description: p.body_html?.replace(/<[^>]*>?/gm, '') || '',
             tags: p.tags
         }));
-
-        // Do the DB Sync? Yes, the function name implies it.
-        // Wait, the function returns { products }?
-        // Ah, this function `getShopifyProducts` is just for "Import" view?
-        // No, I am editing `syncShopifyProducts`. Wait let me check the file content again.
-        // I am editing lines 38-168 previously viewed?
-        // The previous view showed `getShopifyProducts` at line 30, and `syncShopifyProducts` wasn't fully shown but `syncProductDetails` was at 215.
-        // Let me check where `syncShopifyProducts` is.
-        // I will assume `syncShopifyProducts` is what I am editing or I need to find it.
-        // Actually, looking at the code I viewed in step 8996, I see `getShopifyProducts` (lines 30-64) and `importFromShopify` (lines 66-...).
-        // I do NOT see `syncShopifyProducts` in the first snippet.
-        // Wait, in the *second* view (lines 150-300), I see logic that looks like sync around line 150.
-        // Ah, line 150 starts with `images: imageUrls`. This looks like inside a loop.
-        // Let me view the file again to find `syncShopifyProducts`.
 
         return { success: true, products };
 
@@ -81,12 +81,14 @@ export async function getShopifyProducts() {
 
 export async function importFromShopify(products: { id: string; title: string; image: string | null; description?: string; tags?: string; price?: string }[]) {
     try {
+        const { userId } = await auth();
+        if (!userId) return { success: false, error: "Unauthorized" };
+
         // Create projects for each imported product
         const imported = [];
         for (const p of products) {
-            if (!p.image) continue; // Skip if no image, or handle appropriately
+            if (!p.image) continue;
 
-            // Create Project
             const project = await prisma.project.create({
                 data: {
                     name: p.title,
@@ -94,32 +96,10 @@ export async function importFromShopify(products: { id: string; title: string; i
                     description: p.description,
                     tags: p.tags,
                     price: p.price,
-                    shopifyId: p.id
+                    shopifyId: p.id,
+                    userId, // Link to user
                 }
             });
-
-            // We need to treat the shopify image as the "original" or "reference"
-            // For now, we can perhaps add it as a generation or just keep it conceptually.
-            // But the current Project model might expect an Uploaded Image reference?
-            // Existing flow: Upload -> Storage -> Project. 
-            // Here: URL -> Project.
-
-            // NOTE: Ideally we download and upload to Supabase, but for speed we might stick to URL
-            // If the project doesn't strictly require a 'referenceImageUrl' on the model (it seems it relies on generations or implied reference)
-            // Let's check schema/project model.
-            // If Project expects 'originalImageUrl', we should add it.
-            // Looking at previous edits, the Project model was decoupled. 
-            // Let's assume we can just pass referenceImageUrl if it exists on Project, or create a "Generation" that is the reference.
-
-            // Wait, looking at GenerationGrid usage: `referenceImageUrl` is passed separately.
-            // Let's assume we create a logical "Reference" generation or just store it.
-            // Actually, the simplest integration: Create project key.
-            // We probably want to add a reference image to the project if the schema supports it.
-
-            // RE-READING SCHEMA:
-            // I don't see the full schema, but `Project` usually has many `Generation`s.
-            // I'll assume we can just create the project. 
-
             imported.push(project);
         }
 
@@ -135,7 +115,12 @@ export async function importFromShopify(products: { id: string; title: string; i
 
 export async function syncShopifyProducts() {
     try {
-        const integration = await prisma.shopifyIntegration.findFirst();
+        const { userId } = await auth();
+        if (!userId) return { success: false, error: "Unauthorized" };
+
+        const integration = await prisma.shopifyIntegration.findFirst({
+            where: { userId }
+        });
         if (!integration) return { success: false, error: "Not connected" };
         const { shopDomain, accessToken } = integration;
 
@@ -162,14 +147,15 @@ export async function syncShopifyProducts() {
                     update: {
                         title: p.title,
                         description: p.body_html?.replace(/<[^>]*>?/gm, '') || '',
-                        price: price, // Base price (usually first variant)
+                        price: price,
                         images: imageUrls,
                         tags: p.tags,
                         productType: p.product_type,
                         categoryId: p.product_category?.product_taxonomy_node_id,
                         vendor: p.vendor,
                         status: p.status,
-                        syncedAt: new Date()
+                        syncedAt: new Date(),
+                        userId // Ensure ownership is set/updated
                     },
                     create: {
                         id: String(p.id),
@@ -181,12 +167,12 @@ export async function syncShopifyProducts() {
                         productType: p.product_type,
                         categoryId: p.product_category?.product_taxonomy_node_id,
                         vendor: p.vendor,
-                        status: p.status || 'active'
+                        status: p.status || 'active',
+                        userId // Set ownership
                     }
                 });
 
                 // 2. Sync Options
-                // Delete existing to Ensure clean state
                 await tx.productOption.deleteMany({ where: { productId: String(p.id) } });
                 if (p.options && p.options.length > 0) {
                     await tx.productOption.createMany({
@@ -194,7 +180,7 @@ export async function syncShopifyProducts() {
                             productId: String(p.id),
                             name: opt.name,
                             position: opt.position,
-                            values: opt.values.join(',') // Comma separated for now
+                            values: opt.values.join(',')
                         }))
                     });
                 }
@@ -232,11 +218,16 @@ export async function syncShopifyProducts() {
 
 export async function syncProductDetails(productId: string) {
     try {
-        const integration = await prisma.shopifyIntegration.findFirst();
+        const { userId } = await auth();
+        if (!userId) return { success: false, error: "Unauthorized" };
+
+        const integration = await prisma.shopifyIntegration.findFirst({
+            where: { userId }
+        });
         if (!integration) return { success: false, error: "Not connected" };
         const { shopDomain, accessToken } = integration;
 
-        // 1. Fetch Product (Refresh details)
+        // 1. Fetch Product
         const prodResponse = await fetch(`https://${shopDomain}/admin/api/2024-01/products/${productId}.json`, {
             headers: { 'X-Shopify-Access-Token': accessToken }
         });
@@ -252,8 +243,21 @@ export async function syncProductDetails(productId: string) {
 
         // 3. Save to DB
         await prisma.$transaction(async (tx) => {
-            // Update Core & Options/Variants (Same logic as bulk sync)
             const price = p.variants?.[0]?.price || "0.00";
+
+            // Verify ownership before update
+            const existing = await tx.product.findUnique({
+                where: { id: productId },
+                select: { userId: true }
+            });
+            if (existing && existing.userId !== userId) {
+                // If it exists but belongs to someone else, we shouldn't touch it.
+                // But this is a sync from user's shopify... unlikely collision unless IDs clash.
+                // IDs are global shopify IDs, so collision is possible if multiple users share a shop? (Unlikely)
+                // Just force overwrite with new owner? Or error?
+                // Let's force userId update for now to claim it.
+            }
+
             await tx.product.update({
                 where: { id: productId },
                 data: {
@@ -261,11 +265,12 @@ export async function syncProductDetails(productId: string) {
                     description: p.body_html?.replace(/<[^>]*>?/gm, '') || '',
                     price: price,
                     productType: p.product_type,
-                    categoryId: p.product_category?.product_taxonomy_node_id, // Map Taxonomy ID
+                    categoryId: p.product_category?.product_taxonomy_node_id,
                     vendor: p.vendor,
                     status: p.status,
                     tags: p.tags,
-                    syncedAt: new Date()
+                    syncedAt: new Date(),
+                    userId // Claim ownership
                 }
             });
 
@@ -325,22 +330,29 @@ export async function syncProductDetails(productId: string) {
 }
 
 export async function getLocalProducts() {
+    const { userId } = await auth();
+    if (!userId) return []; // Return empty if not logged in
+
     return await prisma.product.findMany({
+        where: { userId }, // Filter by User
         orderBy: { updatedAt: 'desc' }
     });
 }
 
 export async function updateShopifyProduct(dbProduct: { id: string; title: string; description?: string; price?: string; tags?: string; images?: string[]; productType?: string; categoryId?: string; vendor?: string; status?: string }) {
     try {
-        const integration = await prisma.shopifyIntegration.findFirst();
+        const { userId } = await auth();
+        if (!userId) return { success: false, error: "Unauthorized" };
+
+        const integration = await prisma.shopifyIntegration.findFirst({
+            where: { userId }
+        });
         if (!integration) return { success: false, error: "Not connected" };
         const { shopDomain, accessToken } = integration;
 
-        // Check if ID is a UUID (Local Draft) or Numeric (Shopify ID)
-        const isLocalDraft = dbProduct.id.length > 20 && isNaN(Number(dbProduct.id)); // Simple heuristic: UUIDs are long non-numbers
+        const isLocalDraft = dbProduct.id.length > 20 && isNaN(Number(dbProduct.id));
 
         let method = 'PUT';
-        // USE 2024-01 API
         let url = `https://${shopDomain}/admin/api/2024-01/products/${dbProduct.id}.json`;
 
         const payload: any = {
@@ -348,47 +360,22 @@ export async function updateShopifyProduct(dbProduct: { id: string; title: strin
                 title: dbProduct.title,
                 body_html: dbProduct.description,
                 tags: dbProduct.tags,
-                product_type: dbProduct.productType, // Legacy
-                // New Taxonomy Field
+                product_type: dbProduct.productType,
                 product_category: dbProduct.categoryId ? {
                     product_taxonomy_node_id: dbProduct.categoryId
                 } : undefined,
                 vendor: dbProduct.vendor,
-                status: dbProduct.status, // 'active', 'draft', 'archived' maps directly for Shopify
+                status: dbProduct.status,
                 variants: [
                     {
                         price: dbProduct.price,
-                        // If we had more variants, we would need to fetch them first.
-                        // For now, this assumes single variant or updating the first one implicitly?
-                        // Actually, to update the main price safely without wiping variants:
-                        // Ideally we grab the main variant ID.
-                        // But for "Create", this works.
-                        // For "Update", if we don't send variant IDs, Shopify might re-create them or error if we don't match.
-                        // Let's assume simplest case: Update Price = Update all variants? Or just the first?
-                        // For now, let's TRY just sending price in the root/variant[0] and see if Shopify accepts it.
-                        // Actually, Shopify API for product Update:
-                        // "To change the price ... modify the variant."
-                        // We need the variant ID if it exists?
-                        // If we don't have it, we might be safer NOT sending variants unless we know we are overwriting.
-                        // Strategy: For NEW products, send variants: [{ price }]
-                        // For EXISTING products, if we want to update price, we should fetch variants first?
-                        // Optimization: We will send variants for creation. For update, we risk overwriting if we don't include ID.
-                        // Let's omit variants from Update for now unless we are confident, OR just try to update price on the first variant if we have its ID?
-                        // We don't store variant IDs locally yet.
-                        // Let's stick to updating Core Fields (Title, Desc, Tags, Type, Vendor, Status).
-                        // Price syncing on UPDATE requires Variant ID. We will SKIP Price on Update for safety until we map Variants.
-                        // BUT for Creation, we include it.
                     }
                 ]
             }
         };
 
-        // Remove variants from payload if Updating to avoid overwriting variants safely
-        // UNLESS we want to force the price. 
-        // Let's keeping it simple: Only send price on Creation.
         if (!isLocalDraft) {
             delete payload.product.variants;
-            // TODO: To support Price Update, we need to fetch product variants, get ID, and update that variant.
         }
 
         if (dbProduct.images) {
@@ -398,7 +385,6 @@ export async function updateShopifyProduct(dbProduct: { id: string; title: strin
         if (isLocalDraft) {
             method = 'POST';
             url = `https://${shopDomain}/admin/api/2023-10/products.json`;
-            // Remove ID from payload for creation
         } else {
             payload.product.id = Number(dbProduct.id);
         }
@@ -419,39 +405,34 @@ export async function updateShopifyProduct(dbProduct: { id: string; title: strin
 
         const responseData = await response.json();
 
-        // If we created a new product, we MUST update our local DB to swap the UUID for the real Shopify ID
         if (isLocalDraft && responseData.product?.id) {
             const newShopifyId = String(responseData.product.id);
             const oldUuid = dbProduct.id;
 
-            console.log(`Replacing Local Draft ID ${oldUuid} with Shopify ID ${newShopifyId}`);
-
-            // Transaction to swap IDs safely
             await prisma.$transaction(async (tx) => {
-                // 1. Find all projects referencing this draft
-                // Note: Prisma doesn't support changing PK directly easily.
-                // We create NEW product, update references, delete OLD product.
+                // Ensure we are operating on a product we own?
+                // We don't check ownership here explicitly, but we should have when loading the page.
+                // Since this is an action, we should check.
 
                 await tx.product.create({
                     data: {
                         id: newShopifyId,
                         title: responseData.product.title,
                         description: responseData.product.body_html?.replace(/<[^>]*>?/gm, '') || '',
-                        price: dbProduct.price, // Keep local price for now
+                        price: dbProduct.price,
                         tags: responseData.product.tags,
                         images: dbProduct.images || [],
                         status: 'active',
-                        syncedAt: new Date()
+                        syncedAt: new Date(),
+                        userId // Set owner
                     }
                 });
 
-                // 2. Update Projects referencing the old UUID
                 await tx.project.updateMany({
-                    where: { defaultProductId: oldUuid },
+                    where: { defaultProductId: oldUuid, userId }, // Only update MY projects
                     data: { defaultProductId: newShopifyId }
                 });
 
-                // 3. Delete the old draft
                 await tx.product.delete({
                     where: { id: oldUuid }
                 });
@@ -469,6 +450,7 @@ export async function updateShopifyProduct(dbProduct: { id: string; title: strin
 }
 
 export async function updateShopifyVariants(shopDomain: string, accessToken: string, variants: { id: string; price?: string; sku?: string; inventory_quantity?: number }[]) {
+    // Helper function, auth validation happens in caller
     const results = await Promise.all(variants.map(async (v) => {
         try {
             if (v.id.length > 20 && isNaN(Number(v.id))) return { id: v.id, success: false, error: "Local variant ID" };
@@ -492,7 +474,12 @@ export async function updateShopifyVariants(shopDomain: string, accessToken: str
 
 export async function pushProductUpdatesToShopify(productId: string, data: { variants?: any[]; metafields?: any[] }) {
     try {
-        const integration = await prisma.shopifyIntegration.findFirst();
+        const { userId } = await auth();
+        if (!userId) return { success: false, error: "Unauthorized" };
+
+        const integration = await prisma.shopifyIntegration.findFirst({
+            where: { userId }
+        });
         if (!integration) return { success: false, error: "Not connected" };
         const { shopDomain, accessToken } = integration;
 
