@@ -193,7 +193,9 @@ export async function getOrCreateProjectForProduct(product: { id: string; title:
             include: { generations: { orderBy: { createdAt: 'desc' } } }
         });
 
-        revalidatePath('/projects');
+        // Loophole: We cannot revalidatePath during render (GET).
+        // Since this is lazy creation on view, we skip revalidating the list for now.
+        // revalidatePath('/projects'); 
         return newProject;
     } catch (e) {
         console.error("Failed to get/create project for product:", e);
