@@ -125,7 +125,7 @@ export async function syncShopifyProducts() {
         const { shopDomain, accessToken } = integration;
 
         // Fetch all products
-        const response = await fetch(`https://${shopDomain}/admin/api/2023-10/products.json?limit=250&status=active`, {
+        const response = await fetch(`https://${shopDomain}/admin/api/2024-01/products.json?limit=250&status=active`, {
             headers: { 'X-Shopify-Access-Token': accessToken }
         });
 
@@ -384,7 +384,7 @@ export async function updateShopifyProduct(dbProduct: { id: string; title: strin
 
         if (isLocalDraft) {
             method = 'POST';
-            url = `https://${shopDomain}/admin/api/2023-10/products.json`;
+            url = `https://${shopDomain}/admin/api/2024-01/products.json`;
         } else {
             payload.product.id = Number(dbProduct.id);
         }
@@ -455,7 +455,7 @@ export async function updateShopifyVariants(shopDomain: string, accessToken: str
         try {
             if (v.id.length > 20 && isNaN(Number(v.id))) return { id: v.id, success: false, error: "Local variant ID" };
 
-            const response = await fetch(`https://${shopDomain}/admin/api/2023-10/variants/${v.id}.json`, {
+            const response = await fetch(`https://${shopDomain}/admin/api/2024-01/variants/${v.id}.json`, {
                 method: 'PUT',
                 headers: {
                     'X-Shopify-Access-Token': accessToken,
@@ -509,7 +509,7 @@ export async function pushProductUpdatesToShopify(productId: string, data: { var
                 }
             };
 
-            const response = await fetch(`https://${shopDomain}/admin/api/2023-10/products/${productId}.json`, {
+            const response = await fetch(`https://${shopDomain}/admin/api/2024-01/products/${productId}.json`, {
                 method: 'PUT',
                 headers: {
                     'X-Shopify-Access-Token': accessToken,
