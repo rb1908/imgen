@@ -7,7 +7,7 @@ import { SearchModal } from '@/components/SearchModal';
 import { Product } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { RefreshCw, Search, Filter, Edit3, Loader2, List, LayoutGrid, Plus, Image as ImageIcon, X, MoreHorizontal, LayoutTemplate } from 'lucide-react';
+import { RefreshCw, Search, Filter, Edit3, Loader2, List, LayoutGrid, Plus, Image as ImageIcon, X, MoreVertical, LayoutTemplate } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -173,11 +173,11 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-muted-foreground">No Image</div>
                                     )}
-                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                                    <div className="absolute top-2 right-2 flex items-center gap-1 z-10">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="secondary" size="icon" className="h-7 w-7 bg-background/80 hover:bg-background rounded-full shadow-sm" onClick={(e) => e.stopPropagation()}>
-                                                    <MoreHorizontal className="w-4 h-4" />
+                                                <Button variant="secondary" size="icon" className="h-7 w-7 bg-white/90 hover:bg-white rounded-full shadow-sm text-gray-700" onClick={(e) => e.stopPropagation()}>
+                                                    <MoreVertical className="w-4 h-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
@@ -245,7 +245,7 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-background" onClick={(e) => e.stopPropagation()}>
-                                                <MoreHorizontal className="w-4 h-4" />
+                                                <MoreVertical className="w-4 h-4" />
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">

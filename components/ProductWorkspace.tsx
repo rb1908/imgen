@@ -3,7 +3,12 @@
 import { useState } from 'react';
 import { Product, Project, Template, Generation } from '@prisma/client';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, X } from 'lucide-react';
+import { ArrowLeft, X, LayoutTemplate, MoreVertical, Loader2 } from 'lucide-react';
+import { saveAsTemplate } from '@/app/actions/product_templates';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
 import { VisualCanvas } from './VisualCanvas';
 import { ListingEditor } from './ListingEditor';
@@ -33,6 +38,30 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
     const [generations, setGenerations] = useState<Generation[]>(project.generations);
     const [activeImage, setActiveImage] = useState<string>(product.images[0] || 'https://placehold.co/800x800?text=No+Image');
     const [isGenerating, setIsGenerating] = useState(false);
+
+    // Template State
+    const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false);
+    const [templateName, setTemplateName] = useState("");
+    const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+
+    const handleSaveTemplate = async () => {
+        if (!templateName.trim()) return;
+        setIsSavingTemplate(true);
+        try {
+            const res = await saveAsTemplate(product.id, templateName);
+            if (res.success) {
+                toast.success(`Template "${templateName}" saved!`);
+                setIsSaveTemplateOpen(false);
+                setTemplateName("");
+            } else {
+                toast.error("Failed to save template");
+            }
+        } catch (e) {
+            toast.error("Error saving template");
+        } finally {
+            setIsSavingTemplate(false);
+        }
+    };
 
     // UI State
     const [isStudioOpen, setIsStudioOpen] = useState(false);
@@ -124,6 +153,22 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
                         {/* Breadcrumb / Subtitle */}
                     </div>
                 </div>
+
+                <div className="flex items-center gap-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted text-muted-foreground hover:text-foreground">
+                                <MoreVertical className="w-5 h-5" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setIsSaveTemplateOpen(true)}>
+                                <LayoutTemplate className="w-4 h-4 mr-2" />
+                                Save as Template
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </header>
 
             {/* Main Layout - Single View */}
@@ -178,6 +223,31 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Save Template Dialog */}
+            <Dialog open={isSaveTemplateOpen} onOpenChange={setIsSaveTemplateOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Save as Template</DialogTitle>
+                        <DialogDescription>
+                            Create a reusable template from this product.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="t-name">Template Name</Label>
+                            <Input id="t-name" value={templateName} onChange={(e) => setTemplateName(e.target.value)} placeholder="e.g. Best Seller Setup" />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsSaveTemplateOpen(false)}>Cancel</Button>
+                        <Button onClick={handleSaveTemplate} disabled={!templateName.trim() || isSavingTemplate}>
+                            {isSavingTemplate && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save Template
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
