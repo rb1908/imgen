@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { ETSY_TOKEN_URL } from '@/lib/etsy';
+import { auth } from '@clerk/nextjs/server';
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
@@ -65,6 +66,7 @@ export async function GET(request: NextRequest) {
         // For simplicity in this single-workspace app:
 
         // Check if one exists
+        const { userId } = await auth();
         const existing = await prisma.etsyIntegration.findFirst();
 
         if (existing) {
@@ -76,9 +78,11 @@ export async function GET(request: NextRequest) {
                     expiresIn: data.expires_in,
                     expiresAt: expiresAt,
                     etsyUserId: userIdPrefix,
+                    userId // Ensure ownership is set/updated
                 }
             });
         } else {
+            // userId already fetched above
             await prisma.etsyIntegration.create({
                 data: {
                     accessToken: data.access_token,
@@ -86,6 +90,7 @@ export async function GET(request: NextRequest) {
                     expiresIn: data.expires_in,
                     expiresAt: expiresAt,
                     etsyUserId: userIdPrefix,
+                    userId
                 }
             });
         }

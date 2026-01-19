@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyHmac } from '@/lib/shopify';
 import { prisma } from '@/lib/db';
+import { auth } from '@clerk/nextjs/server';
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
@@ -46,16 +47,20 @@ export async function GET(request: NextRequest) {
 
         // Store in DB
         // Upsert based on shop domain
+        const { userId } = await auth();
+
         await prisma.shopifyIntegration.upsert({
             where: { shopDomain: shop },
             update: {
                 accessToken,
                 scopes,
+                userId // Update owner if needed
             },
             create: {
                 shopDomain: shop,
                 accessToken,
                 scopes,
+                userId
             }
         });
 
