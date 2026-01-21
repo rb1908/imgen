@@ -134,58 +134,127 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                         onClick={handleSync}
                         disabled={isSyncing}
                         className={`p-2 rounded-md transition-all hover:bg-accent text-muted-foreground hover:text-foreground ${isSyncing ? 'animate-pulse' : ''}`}
+                    >
                         <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                </button>
+                    </button>
 
-                <button
-                    onClick={() => setIsReviewOpen(true)}
-                    className="p-2 rounded-md transition-all hover:bg-accent text-orange-600 hover:text-orange-700 bg-orange-500/10 hover:bg-orange-500/20 mr-1"
-                    title="Review Local Changes"
-                >
-                    <ArrowUpCircle className="w-4 h-4" />
-                </button>
+                    <button
+                        onClick={() => setIsReviewOpen(true)}
+                        className="p-2 rounded-md transition-all hover:bg-accent text-orange-600 hover:text-orange-700 bg-orange-500/10 hover:bg-orange-500/20 mr-1"
+                        title="Review Local Changes"
+                    >
+                        <ArrowUpCircle className="w-4 h-4" />
+                    </button>
 
-                <div className="w-[1px] h-4 bg-border mx-1" />
+                    <div className="w-[1px] h-4 bg-border mx-1" />
 
-                <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded-md transition-all hover:bg-accent ${viewMode === 'grid' ? 'text-foreground bg-accent/50' : 'text-muted-foreground'}`}
-                    title="Grid View"
-                >
-                    <LayoutGrid className="w-4 h-4" />
-                </button>
-                <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 rounded-md transition-all hover:bg-accent ${viewMode === 'list' ? 'text-foreground bg-accent/50' : 'text-muted-foreground'}`}
-                    title="List View"
-                >
-                    <List className="w-4 h-4" />
-                </button>
-            </div>
+                    <button
+                        onClick={() => setViewMode('grid')}
+                        className={`p-2 rounded-md transition-all hover:bg-accent ${viewMode === 'grid' ? 'text-foreground bg-accent/50' : 'text-muted-foreground'}`}
+                        title="Grid View"
+                    >
+                        <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button
+                        onClick={() => setViewMode('list')}
+                        className={`p-2 rounded-md transition-all hover:bg-accent ${viewMode === 'list' ? 'text-foreground bg-accent/50' : 'text-muted-foreground'}`}
+                        title="List View"
+                    >
+                        <List className="w-4 h-4" />
+                    </button>
+                </div>
 
-            {viewMode === 'grid' ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
-                    {filtered.map(product => (
-                        <div
-                            key={product.id}
-                            className="group border rounded-lg bg-card hover:shadow-md transition-all cursor-pointer overflow-hidden flex flex-col"
-                            onClick={() => router.push(`/products/${product.id}`)}
-                        >
-                            <div className="aspect-[4/3] relative bg-muted">
-                                {product.images[0] ? (
-                                    <Image
-                                        src={product.images[0]}
-                                        alt={product.title}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">No Image</div>
-                                )}
-                                <div className="absolute top-2 right-2 flex items-center gap-1 z-10">
+                {viewMode === 'grid' ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+                        {filtered.map(product => (
+                            <div
+                                key={product.id}
+                                className="group border rounded-lg bg-card hover:shadow-md transition-all cursor-pointer overflow-hidden flex flex-col"
+                                onClick={() => router.push(`/products/${product.id}`)}
+                            >
+                                <div className="aspect-[4/3] relative bg-muted">
+                                    {product.images[0] ? (
+                                        <Image
+                                            src={product.images[0]}
+                                            alt={product.title}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">No Image</div>
+                                    )}
+                                    <div className="absolute top-2 right-2 flex items-center gap-1 z-10">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="secondary" size="icon" className="h-7 w-7 bg-white/90 hover:bg-white rounded-full shadow-sm text-gray-700" onClick={(e) => e.stopPropagation()}>
+                                                    <MoreVertical className="w-4 h-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={(e) => openSaveTemplate(e, product.id)}>
+                                                    <LayoutTemplate className="w-4 h-4 mr-2" />
+                                                    Save as Template
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+                                </div>
+                                <div className="p-3">
+                                    <h3 className="font-medium line-clamp-1" title={product.title}>{product.title}</h3>
+                                    <div className="flex items-center justify-between mt-2 text-sm">
+                                        <span className="font-semibold">${product.price}</span>
+                                        <Badge variant="outline" className="text-xs font-normal">{product.status}</Badge>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+                                        {product.description || "No description"}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="flex flex-col gap-2 pb-24 md:pb-0">
+                        {filtered.map(product => (
+                            <div
+                                key={product.id}
+                                onClick={() => router.push(`/products/${product.id}`)}
+                                className="group flex items-center gap-3 p-2 rounded-lg border bg-card hover:bg-muted/50 transition-all cursor-pointer shadow-sm hover:border-primary/20"
+                            >
+                                {/* Thumbnail */}
+                                <div className="relative w-12 h-12 flex-shrink-0 rounded-md overflow-hidden bg-muted border">
+                                    {product.images[0] ? (
+                                        <Image
+                                            src={product.images[0]}
+                                            alt="Thumbnail"
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground bg-secondary">
+                                            <ImageIcon className="w-4 h-4" />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Info */}
+                                <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
+                                    <h3 className="font-semibold text-sm truncate pr-2">{product.title}</h3>
+                                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                        <Badge variant="secondary" className="px-1.5 py-0 h-4 text-[10px] font-normal rounded-sm">
+                                            {product.status}
+                                        </Badge>
+                                        <span className="w-0.5 h-0.5 rounded-full bg-zinc-300" />
+                                        <span className="font-medium text-foreground">${product.price}</span>
+                                        <span className="w-0.5 h-0.5 rounded-full bg-zinc-300" />
+                                        <span className="truncate max-w-[120px]">{product.tags || "No tags"}</span>
+                                    </div>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="shrink-0 flex items-center gap-2">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="secondary" size="icon" className="h-7 w-7 bg-white/90 hover:bg-white rounded-full shadow-sm text-gray-700" onClick={(e) => e.stopPropagation()}>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-background" onClick={(e) => e.stopPropagation()}>
                                                 <MoreVertical className="w-4 h-4" />
                                             </Button>
                                         </DropdownMenuTrigger>
@@ -198,114 +267,46 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                                     </DropdownMenu>
                                 </div>
                             </div>
-                            <div className="p-3">
-                                <h3 className="font-medium line-clamp-1" title={product.title}>{product.title}</h3>
-                                <div className="flex items-center justify-between mt-2 text-sm">
-                                    <span className="font-semibold">${product.price}</span>
-                                    <Badge variant="outline" className="text-xs font-normal">{product.status}</Badge>
-                                </div>
-                                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
-                                    {product.description || "No description"}
-                                </p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                <div className="flex flex-col gap-2 pb-24 md:pb-0">
-                    {filtered.map(product => (
-                        <div
-                            key={product.id}
-                            onClick={() => router.push(`/products/${product.id}`)}
-                            className="group flex items-center gap-3 p-2 rounded-lg border bg-card hover:bg-muted/50 transition-all cursor-pointer shadow-sm hover:border-primary/20"
-                        >
-                            {/* Thumbnail */}
-                            <div className="relative w-12 h-12 flex-shrink-0 rounded-md overflow-hidden bg-muted border">
-                                {product.images[0] ? (
-                                    <Image
-                                        src={product.images[0]}
-                                        alt="Thumbnail"
-                                        fill
-                                        className="object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground bg-secondary">
-                                        <ImageIcon className="w-4 h-4" />
-                                    </div>
-                                )}
-                            </div>
+                        ))}
+                    </div>
+                )}
 
-                            {/* Info */}
-                            <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
-                                <h3 className="font-semibold text-sm truncate pr-2">{product.title}</h3>
-                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                    <Badge variant="secondary" className="px-1.5 py-0 h-4 text-[10px] font-normal rounded-sm">
-                                        {product.status}
-                                    </Badge>
-                                    <span className="w-0.5 h-0.5 rounded-full bg-zinc-300" />
-                                    <span className="font-medium text-foreground">${product.price}</span>
-                                    <span className="w-0.5 h-0.5 rounded-full bg-zinc-300" />
-                                    <span className="truncate max-w-[120px]">{product.tags || "No tags"}</span>
-                                </div>
-                            </div>
+                {filtered.length === 0 && (
+                    <div className="text-center py-20 text-muted-foreground">
+                        No products found. Try syncing!
+                    </div>
+                )}
+            </div>
 
-                            {/* Actions */}
-                            <div className="shrink-0 flex items-center gap-2">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-background" onClick={(e) => e.stopPropagation()}>
-                                            <MoreVertical className="w-4 h-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={(e) => openSaveTemplate(e, product.id)}>
-                                            <LayoutTemplate className="w-4 h-4 mr-2" />
-                                            Save as Template
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
 
-            {filtered.length === 0 && (
-                <div className="text-center py-20 text-muted-foreground">
-                    No products found. Try syncing!
-                </div>
-            )}
-        </div>
-
-            </div >
 
             <CreateProductDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
             <UnsyncedChangesDialog open={isReviewOpen} onOpenChange={setIsReviewOpen} />
 
-    {/* Save Template Dialog */ }
-    <Dialog open={isSaveTemplateOpen} onOpenChange={setIsSaveTemplateOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-                <DialogTitle>Save as Template</DialogTitle>
-                <DialogDescription>
-                    Create a reusable template from this product.
-                </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                    <Label htmlFor="t-name">Template Name</Label>
-                    <Input id="t-name" value={templateName} onChange={(e) => setTemplateName(e.target.value)} placeholder="e.g. Best Seller Setup" />
-                </div>
-            </div>
-            <DialogFooter>
-                <Button variant="outline" onClick={() => setIsSaveTemplateOpen(false)}>Cancel</Button>
-                <Button onClick={handleSaveTemplate} disabled={!templateName.trim() || isSavingTemplate}>
-                    {isSavingTemplate && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Template
-                </Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
+            {/* Save Template Dialog */}
+            <Dialog open={isSaveTemplateOpen} onOpenChange={setIsSaveTemplateOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Save as Template</DialogTitle>
+                        <DialogDescription>
+                            Create a reusable template from this product.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="t-name">Template Name</Label>
+                            <Input id="t-name" value={templateName} onChange={(e) => setTemplateName(e.target.value)} placeholder="e.g. Best Seller Setup" />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsSaveTemplateOpen(false)}>Cancel</Button>
+                        <Button onClick={handleSaveTemplate} disabled={!templateName.trim() || isSavingTemplate}>
+                            {isSavingTemplate && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save Template
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </PageScaffold >
     );
 }
