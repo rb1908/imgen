@@ -136,13 +136,18 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
                                     size="sm"
                                     onClick={() => handleDelete(selectedIds)}
                                     disabled={isDeleting}
-                                    className="h-8"
+                                    className="h-8 shadow-sm"
                                 >
                                     {isDeleting ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Trash2 className="w-3 h-3 mr-2" />}
                                     Delete {selectedIds.length}
                                 </Button>
-                                <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])} className="h-8 text-muted-foreground">
-                                    Cancel
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setSelectedIds(selectedIds.length === filtered.length ? [] : filtered.map(p => p.id))}
+                                    className="h-8"
+                                >
+                                    {selectedIds.length === filtered.length ? "Deselect All" : "Select All"}
                                 </Button>
                             </div>
                         ) : (
