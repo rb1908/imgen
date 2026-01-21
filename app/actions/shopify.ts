@@ -441,6 +441,14 @@ export async function updateShopifyProduct(dbProduct: { id: string; title: strin
             return { success: true, newId: newShopifyId };
         }
 
+        // Update syncedAt for existing product push
+        if (!isLocalDraft) {
+            await prisma.product.update({
+                where: { id: dbProduct.id },
+                data: { syncedAt: new Date() }
+            });
+        }
+
         return { success: true };
 
     } catch (e) {
@@ -525,10 +533,102 @@ export async function pushProductUpdatesToShopify(productId: string, data: { var
         }
 
         if (errors.length > 0) return { success: false, error: errors.join(', ') };
+
+        // Update syncedAt
+        await prisma.product.update({
+            where: { id: productId },
+            data: { syncedAt: new Date() }
+        });
+
         return { success: true };
 
     } catch (e) {
         console.error("Push Updates Failed:", e);
         return { success: false, error: String(e) };
+    }
+}
+
+export async function getUnsyncedProducts() {
+    const { userId } = await auth();
+    if (!userId) return [];
+
+    const products = await prisma.product.findMany({
+        where: {
+            userId,
+            updatedAt: { gt: prisma.product.fields.syncedAt }
+        },
+        orderBy: { updatedAt: 'desc' }
+    });
+    return products;
+}
+
+export async function bulkPushProducts(productIds: string[]) {
+    const { userId } = await auth();
+    if (!userId) return { success: false, error: "Unauthorized" };
+
+    try {
+        const productsToPush = await prisma.product.findMany({
+            where: {
+                id: { in: productIds },
+                userId
+            },
+            include: {
+                variants: true
+            }
+        });
+
+        let successCount = 0;
+        let errors: string[] = [];
+
+        for (const p of productsToPush) {
+            try {
+                // 1. Push Core Details
+                const coreRes = await updateShopifyProduct({
+                    id: p.id,
+                    title: p.title,
+                    description: p.description || "",
+                    price: p.price || "0.00",
+                    tags: p.tags || "",
+                    images: p.images,
+                    productType: p.productType || undefined,
+                    categoryId: p.categoryId || undefined,
+                    vendor: p.vendor || undefined,
+                    status: p.status
+                });
+
+                if (!coreRes.success) throw new Error(`Core push failed: ${coreRes.error}`);
+
+                const targetId = coreRes.newId || p.id;
+
+                if (p.variants.length > 0 && !coreRes.newId) {
+                    const variantRes = await pushProductUpdatesToShopify(targetId, {
+                        variants: p.variants.map(v => ({
+                            id: v.id,
+                            price: v.price,
+                            sku: v.sku,
+                            inventoryQty: v.inventoryQty
+                        }))
+                    });
+                    if (!variantRes.success) throw new Error(`Variant push failed: ${variantRes.error}`);
+                }
+
+                successCount++;
+            } catch (e) {
+                console.error(`Failed to push product ${p.title}:`, e);
+                errors.push(`${p.title}: ${e instanceof Error ? e.message : String(e)}`);
+            }
+        }
+
+        revalidatePath('/products');
+
+        return {
+            success: errors.length === 0,
+            count: successCount,
+            errors: errors.length > 0 ? errors : undefined
+        };
+
+    } catch (e) {
+        console.error("Bulk Push Failed:", e);
+        return { success: false, error: "Bulk push failed" };
     }
 }
