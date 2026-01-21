@@ -632,3 +632,23 @@ export async function bulkPushProducts(productIds: string[]) {
         return { success: false, error: "Bulk push failed" };
     }
 }
+
+export async function deleteProducts(productIds: string[]) {
+    const { userId } = await auth();
+    if (!userId) return { success: false, error: "Unauthorized" };
+
+    try {
+        await prisma.product.deleteMany({
+            where: {
+                id: { in: productIds },
+                userId
+            }
+        });
+
+        revalidatePath('/products');
+        return { success: true };
+    } catch (e) {
+        console.error("Delete Failed:", e);
+        return { success: false, error: "Delete failed" };
+    }
+}
