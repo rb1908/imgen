@@ -38,7 +38,7 @@ export function SocialControls({ format, setFormat, onAddText, onSelectAsset, cu
                 setMetadata(res.data);
                 toast.success("Metadata generated!");
             } else {
-                toast.error("Generation failed");
+                toast.error(res.error || "Generation failed");
             }
         } catch (e) {
             toast.error("Error generating metadata");

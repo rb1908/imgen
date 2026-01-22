@@ -8,6 +8,8 @@ const genAI = new GoogleGenerativeAI(apiKey);
 
 export async function generateSocialMetadata(imageUrl: string, tone: 'professional' | 'fun' | 'urgent' = 'fun') {
     try {
+        if (!apiKey) throw new Error("GEMINI_API_KEY is not set in environment variables");
+
         const { userId } = await auth();
         if (!userId) throw new Error("Unauthorized");
 
@@ -47,8 +49,11 @@ export async function generateSocialMetadata(imageUrl: string, tone: 'profession
         const data = JSON.parse(cleanedText);
 
         return { success: true, data };
-    } catch (e) {
+    } catch (e: any) {
         console.error("Metadata Generation Failed:", e);
-        return { success: false, error: "Failed to generate metadata" };
+        return {
+            success: false,
+            error: e.message || "Failed to generate metadata"
+        };
     }
 }
