@@ -10,7 +10,10 @@ export type CanvasCommand =
     | { type: 'SET_POSE'; id: string; x: number; y: number; r?: number; scaleX?: number; scaleY?: number }
     | { type: 'DELETE_ENTITY'; id: string }
     | { type: 'ADD_ZONE'; zone: Zone }
-    | { type: 'ADD_TOOL'; toolType: string; x: number; y: number }; // Higher level command for AI
+    | { type: 'ADD_ZONE'; zone: Zone }
+    | { type: 'ADD_TOOL'; toolType: string; x: number; y: number }
+    | { type: 'ADD_TEXT'; content: string; x: number; y: number; style?: string }
+    | { type: 'ADD_IMAGE'; url: string; x: number; y: number };
 
 export interface CommandResult {
     scene: Scene;
@@ -34,6 +37,32 @@ export function applyCommand(currentScene: Scene, command: CanvasCommand): Comma
             validateSceneBounds(tool, nextScene);
             nextScene.objects.push(tool);
             return { scene: nextScene, event: `Added Tool ${tool.metadata.toolType}` };
+
+        case 'ADD_TEXT':
+            const textId = `text_${Date.now()}`;
+            nextScene.objects.push({
+                id: textId,
+                type: 'text',
+                pose: { x: command.x, y: command.y, r: 0, scaleX: 1, scaleY: 1 },
+                content: command.content,
+                style: { fontSize: 40, fill: 'white', fontFamily: 'Inter' },
+                locked: false,
+                metadata: {}
+            });
+            return { scene: nextScene, event: 'Added Text' };
+
+        case 'ADD_IMAGE':
+            const imgId = `img_${Date.now()}`;
+            nextScene.objects.push({
+                id: imgId,
+                type: 'image',
+                pose: { x: command.x, y: command.y, r: 0, scaleX: 1, scaleY: 1 },
+                content: command.url,
+                style: { width: 150, height: 150 },
+                locked: false,
+                metadata: {}
+            });
+            return { scene: nextScene, event: 'Added Image' };
 
         case 'UPDATE_OBJECT':
             const objIndex = nextScene.objects.findIndex(o => o.id === command.id);

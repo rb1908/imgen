@@ -26,6 +26,12 @@ interface CanvasStore {
     // Selection (UI State only)
     selectedId: string | null;
     setSelectedId: (id: string | null) => void;
+
+    // Editor UI State
+    safeAreaVisible: boolean;
+    setSafeAreaVisible: (visible: boolean) => void;
+    snapEnabled: boolean;
+    setSnapEnabled: (enabled: boolean) => void;
 }
 
 export const useCanvasStore = create<CanvasStore>((set, get) => ({
@@ -34,6 +40,8 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     historyFuture: [],
     actionLog: [],
     selectedId: null,
+    safeAreaVisible: false,
+    snapEnabled: true,
 
     initScene: (width, height, backgroundUrl) => {
         set({
@@ -45,6 +53,8 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     },
 
     setSelectedId: (id) => set({ selectedId: id }),
+    setSafeAreaVisible: (visible) => set({ safeAreaVisible: visible }),
+    setSnapEnabled: (enabled) => set({ snapEnabled: enabled }),
 
     dispatch: (input, actor = 'human') => {
         const state = get();
