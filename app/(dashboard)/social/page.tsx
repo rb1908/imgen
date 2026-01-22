@@ -26,6 +26,9 @@ export default function SocialGeneratorPage() {
     // Export State
     const [exportPost, setExportPost] = useState<SocialPostVariant | null>(null);
 
+    // Fine Tune State
+    const [fineTunePost, setFineTunePost] = useState<SocialPostVariant | null>(null);
+
     const handleGenerate = async () => {
         if (!selectedAsset) return toast.error("Please select an asset first");
         if (!selectedVibe) return toast.error("Please select a vibe");
@@ -109,7 +112,7 @@ export default function SocialGeneratorPage() {
                                         {...variant}
                                         isRecommended={index === 0} // First one is recommended
                                         onUse={() => setExportPost(variant)}
-                                        onEdit={() => toast.info("Fine-tuning coming soon!")}
+                                        onEdit={() => setFineTunePost(variant)}
                                         onDiscard={() => handleDiscard(variant.id)}
                                     />
                                 ))}
@@ -131,6 +134,18 @@ export default function SocialGeneratorPage() {
                     open={!!exportPost}
                     onOpenChange={(open) => !open && setExportPost(null)}
                     post={exportPost}
+                />
+
+                <FineTuneCanvas
+                    open={!!fineTunePost}
+                    onOpenChange={(open) => !open && setFineTunePost(null)}
+                    baseImage={fineTunePost?.imageUrl || ''}
+                    onSave={(newUrl) => {
+                        if (fineTunePost) {
+                            setVariants(prev => prev.map(v => v.id === fineTunePost.id ? { ...v, imageUrl: newUrl } : v));
+                            toast.success("Changes saved!");
+                        }
+                    }}
                 />
             </div>
         </PageScaffold>
