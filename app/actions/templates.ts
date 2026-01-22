@@ -5,9 +5,9 @@ import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 import { z } from 'zod';
 const CreateTemplateSchema = z.object({
     name: z.string().min(1, 'Name is required'),
-    prompt: z.string().min(10, 'Prompt must be at least 10 characters'),
-    description: z.string().optional(),
-    thumbnailUrl: z.string().optional(),
+    prompt: z.string().nullable().optional(), // Allow null/optional for Prompt
+    description: z.string().nullable().optional(),
+    thumbnailUrl: z.string().nullable().optional(),
     category: z.string().default('custom'),
 });
 
