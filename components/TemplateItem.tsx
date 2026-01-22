@@ -33,6 +33,10 @@ export function TemplateItem({ template, isSelected, onToggle, onEdit, onDelete,
 
     const handleCopy = (e: React.MouseEvent) => {
         e.stopPropagation();
+        if (!template.prompt) {
+            toast.error("No prompt to copy.");
+            return;
+        }
         navigator.clipboard.writeText(template.prompt);
         toast.info("Prompt copied to clipboard!");
     };
@@ -147,10 +151,12 @@ export function TemplateItem({ template, isSelected, onToggle, onEdit, onDelete,
                             </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-40">
-                            <DropdownMenuItem onClick={handleCopy}>
-                                <Copy className="w-4 h-4 mr-2" />
-                                Copy Prompt
-                            </DropdownMenuItem>
+                            {template.prompt && (
+                                <DropdownMenuItem onClick={handleCopy}>
+                                    <Copy className="w-4 h-4 mr-2" />
+                                    Copy Prompt
+                                </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem onClick={handleEdit}>
                                 <Pencil className="w-4 h-4 mr-2" />
                                 Edit

@@ -29,17 +29,42 @@ model Project {
 model Template {
   id          String   @id @default(uuid())
   name        String
-  prompt      String
+  purpose     String   @default("prompt") // prompt, social
+  
+  // Prompt specific
+  prompt      String?
+  
+  // Social specific
+  config      Json?    // { format: 'story', overlays: [...] }
+  
   description String?
   thumbnailUrl String?
   category    String   @default("custom")
-  userId      String   @default("user_default") // Owner ID (or system)
+  userId      String   @default("user_default")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   generations Generation[]
 
   @@index([userId])
+}
+
+model SocialPost {
+  id          String   @id @default(uuid())
+  content     Json     // { imageUrl, overlays: [], caption: "" }
+  platform    String   // instagram_story, instagram_feed, etc.
+  status      String   @default("draft") // draft, scheduled, published
+  scheduledAt DateTime?
+  
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
+  
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([scheduledAt])
 }
 
 model Generation {
@@ -111,6 +136,7 @@ model Product {
   options         ProductOption[]
   variants        ProductVariant[]
   metafields      ProductMetafield[]
+  posts           SocialPost[]
 }
 
 model ProductOption {

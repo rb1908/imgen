@@ -11,10 +11,11 @@ const CreateTemplateSchema = z.object({
     category: z.string().default('custom'),
 });
 
-export const getTemplates = async () => {
+export const getTemplates = async (purpose: 'prompt' | 'social' = 'prompt') => {
     return await unstable_cache(
         async () => {
             return await prisma.template.findMany({
+                where: { purpose },
                 orderBy: { createdAt: 'desc' },
                 include: {
                     generations: {
@@ -25,7 +26,7 @@ export const getTemplates = async () => {
                 }
             });
         },
-        ['templates-list'],
+        [`templates-list-${purpose}`],
         { tags: ['templates'] }
     )();
 };

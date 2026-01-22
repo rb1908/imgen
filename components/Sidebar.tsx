@@ -11,6 +11,7 @@ const sidebarItems = [
     { icon: LayoutDashboard, label: 'Projects', href: '/projects' },
     { icon: AIIcon, label: 'Generations', href: '/generations' },
     { icon: ShoppingBag, label: 'Products', href: '/products' },
+    { icon: Sparkles, label: 'Social Studio', href: '/social' },
     { icon: Settings, label: 'Settings', href: '/settings' },
 ];
 

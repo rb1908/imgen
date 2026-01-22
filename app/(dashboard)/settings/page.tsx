@@ -15,9 +15,9 @@ export default function SettingsHub() {
             color: 'bg-blue-500/10 text-blue-600',
         },
         {
-            href: '/settings/looks',
-            title: 'Saved Looks',
-            description: 'Manage generation templates and styles.',
+            href: '/settings/templates',
+            title: 'Template Library',
+            description: 'Manage Social, Product, and Prompt templates.',
             icon: Palette,
             color: 'bg-purple-500/10 text-purple-600',
         },

@@ -53,7 +53,11 @@ export async function generateVariations(
             const templates = await prisma.template.findMany({
                 where: { id: { in: input } }
             });
-            templates.forEach((t: { prompt: string; id: string }) => tasks.push({ prompt: t.prompt, templateId: t.id }));
+            templates.forEach((t) => {
+                if (t.prompt) {
+                    tasks.push({ prompt: t.prompt, templateId: t.id });
+                }
+            });
         } else if (mode === 'custom' && typeof input === 'string') {
             tasks.push({ prompt: input });
         }
