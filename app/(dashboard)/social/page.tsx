@@ -3,72 +3,115 @@
 import { useState } from 'react';
 import { PageScaffold } from '@/components/PageScaffold';
 import { PageHeader } from '@/components/PageHeader';
-import { Button } from '@/components/ui/button';
-import { Download, Save } from 'lucide-react';
-import { SocialCanvas } from '@/components/social/SocialCanvas';
-import { SocialControls } from '@/components/social/SocialControls';
 import { AssetPickerDialog } from '@/components/social/AssetPickerDialog';
+import { SocialInputSection } from '@/components/social/SocialInputSection';
+import { SocialPostCard } from '@/components/social/SocialPostCard';
+import { generatePostVariants, SocialPostVariant } from '@/app/actions/social_generator';
+import { toast } from 'sonner';
+import { Loader2, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-export default function SocialStudioPage() {
-    const [format, setFormat] = useState<'square' | 'story' | 'og'>('square');
-    const [overlays, setOverlays] = useState<any[]>([]);
-    const [backgroundImage, setBackgroundImage] = useState<string | undefined>(undefined);
+export default function SocialGeneratorPage() {
+    // Input State
+    const [selectedAsset, setSelectedAsset] = useState<string | undefined>(undefined);
+    const [selectedVibe, setSelectedVibe] = useState<string>('');
     const [isAssetPickerOpen, setIsAssetPickerOpen] = useState(false);
 
-    const handleAddText = () => {
-        setOverlays([...overlays, { type: 'text', content: 'New Text', x: 50, y: 50 }]);
-    };
+    // Generation State
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [variants, setVariants] = useState<SocialPostVariant[]>([]);
 
-    const handleSelectAsset = () => {
-        setIsAssetPickerOpen(true);
+    const handleGenerate = async () => {
+        if (!selectedAsset) return toast.error("Please select an asset first");
+        if (!selectedVibe) return toast.error("Please select a vibe");
+
+        setIsGenerating(true);
+        setVariants([]); // Clear previous results? Or append? Let's clear for now.
+
+        try {
+            const res = await generatePostVariants(selectedAsset, selectedVibe);
+            if (res.success && res.variants) {
+                setVariants(res.variants);
+                toast.success("Generated 3 variants!");
+            } else {
+                toast.error(res.error || "Generation failed");
+            }
+        } catch (e) {
+            toast.error("Something went wrong");
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     return (
         <PageScaffold>
-            <div className="flex flex-col h-full bg-background overflow-hidden relative">
+            <div className="flex flex-col min-h-full bg-background pb-32 relative">
                 <PageHeader
                     title="Social Studio"
-                    description="Create thumb-stopping social content."
-                >
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="gap-2">
-                            <Save className="w-4 h-4" />
-                            Save Draft
-                        </Button>
-                        <Button size="sm" className="gap-2">
-                            <Download className="w-4 h-4" />
-                            Export
-                        </Button>
-                    </div>
-                </PageHeader>
+                    description="Turn your products into social content in seconds."
+                />
 
-                <div className="flex-1 flex overflow-hidden">
-                    {/* Main Canvas Area */}
-                    <div className="flex-1 relative z-0">
-                        <SocialCanvas
-                            format={format}
-                            backgroundColor="#f5f5f5"
-                            backgroundImage={backgroundImage}
-                            overlays={overlays}
-                            onDrop={() => { }}
-                        />
-                    </div>
+                <main className="flex-1 container max-w-5xl mx-auto p-6 space-y-12">
 
-                    {/* Right Controls */}
-                    <SocialControls
-                        format={format}
-                        setFormat={setFormat}
-                        onAddText={handleAddText}
-                        onSelectAsset={handleSelectAsset}
-                        currentImage={backgroundImage}
-                        onImageGenerated={setBackgroundImage}
+                    {/* 1. Input Section */}
+                    <SocialInputSection
+                        selectedAsset={selectedAsset}
+                        onSelectAsset={() => setIsAssetPickerOpen(true)}
+                        onClearAsset={() => setSelectedAsset(undefined)}
+                        selectedVibe={selectedVibe}
+                        onSelectVibe={setSelectedVibe}
+                        isGenerating={isGenerating}
                     />
-                </div>
+
+                    {/* 2. Generation Action (Centrally placed if no results, otherwise bottom?) */}
+                    {/* Actually, let's put it right below Input for clear flow */}
+                    <div className="flex justify-center">
+                        <Button
+                            size="lg"
+                            className="rounded-full px-8 h-12 text-base shadow-lg bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 transition-all hover:scale-105"
+                            onClick={handleGenerate}
+                            disabled={isGenerating || !selectedAsset || !selectedVibe}
+                        >
+                            {isGenerating ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                    Creating Magic...
+                                </>
+                            ) : (
+                                <>
+                                    Generate Posts <ArrowRight className="w-5 h-5 ml-2" />
+                                </>
+                            )}
+                        </Button>
+                    </div>
+
+                    {/* 3. Output Grid */}
+                    {variants.length > 0 && (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-semibold">Generated Options</h3>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {variants.map((variant) => (
+                                    <SocialPostCard
+                                        key={variant.id}
+                                        {...variant}
+                                        onEdit={() => toast.info("Fine-tuning coming soon!")}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </main>
 
                 <AssetPickerDialog
                     open={isAssetPickerOpen}
                     onOpenChange={setIsAssetPickerOpen}
-                    onSelect={setBackgroundImage}
+                    onSelect={(url) => {
+                        setSelectedAsset(url);
+                        // Auto-select vibe if not selected?
+                    }}
                 />
             </div>
         </PageScaffold>
