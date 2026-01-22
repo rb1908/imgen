@@ -13,8 +13,8 @@ export async function generateSocialMetadata(imageUrl: string, tone: 'profession
         const { userId } = await auth();
         if (!userId) throw new Error("Unauthorized");
 
-        // Try Flash first, then Pro as fallback
-        const models = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest"];
+        // Try Flash 2.0 (Newest) first, then 1.5 Flash, then Pro as fallback
+        const models = ["gemini-2.0-flash-exp", "gemini-1.5-flash-latest", "gemini-1.5-pro-latest"];
         let result = null;
         let lastError = null;
 
