@@ -7,7 +7,6 @@ import { AssetPickerDialog } from '@/components/social/AssetPickerDialog';
 import { SocialInputSection } from '@/components/social/SocialInputSection';
 import { SocialPostCard } from '@/components/social/SocialPostCard';
 import { ExportDialog } from '@/components/social/ExportDialog';
-import { ExportDialog } from '@/components/social/ExportDialog';
 import { generatePostVariants, SocialPostVariant } from '@/app/actions/social_generator';
 import { createDraft } from '@/app/actions/social';
 import { useRouter } from 'next/navigation';
@@ -16,6 +15,7 @@ import { Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function SocialGeneratorPage() {
+    const router = useRouter();
     // Input State
     const [selectedAsset, setSelectedAsset] = useState<string | undefined>(undefined);
     const [selectedVibe, setSelectedVibe] = useState<string>('');
@@ -55,6 +55,28 @@ export default function SocialGeneratorPage() {
     const handleDiscard = (id: string) => {
         setVariants(prev => prev.filter(v => v.id !== id));
         toast.info("Option discarded");
+    };
+
+    const handleFineTune = async (variant: SocialPostVariant) => {
+        const loadingToast = toast.loading("Creating draft...");
+        try {
+            const res = await createDraft({
+                imageUrl: variant.imageUrl,
+                platform: variant.platform,
+                caption: variant.caption
+            });
+
+            if (res.success && res.draftId) {
+                toast.dismiss(loadingToast);
+                router.push(`/social/editor/${res.draftId}`);
+            } else {
+                toast.error("Failed to create draft");
+                toast.dismiss(loadingToast);
+            }
+        } catch (error) {
+            toast.error("Something went wrong");
+            toast.dismiss(loadingToast);
+        }
     };
 
     return (
@@ -113,7 +135,7 @@ export default function SocialGeneratorPage() {
                                         {...variant}
                                         isRecommended={index === 0} // First one is recommended
                                         onUse={() => setExportPost(variant)}
-                                        onEdit={() => setFineTunePost(variant)}
+                                        onEdit={() => handleFineTune(variant)}
                                         onDiscard={() => handleDiscard(variant.id)}
                                     />
                                 ))}
@@ -137,17 +159,7 @@ export default function SocialGeneratorPage() {
                     post={exportPost}
                 />
 
-                <FineTuneCanvas
-                    open={!!fineTunePost}
-                    onOpenChange={(open) => !open && setFineTunePost(null)}
-                    baseImage={fineTunePost?.imageUrl || ''}
-                    onSave={(newUrl) => {
-                        if (fineTunePost) {
-                            setVariants(prev => prev.map(v => v.id === fineTunePost.id ? { ...v, imageUrl: newUrl } : v));
-                            toast.success("Changes saved!");
-                        }
-                    }}
-                />
+
             </div>
         </PageScaffold>
     );
