@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Check, Type, Image as ImageIcon, RotateCcw, X, Move } from 'lucide-react';
+import html2canvas from 'html2canvas';
 
 // Simplified Overlay Interface
 interface Overlay {
@@ -35,15 +36,36 @@ export function FineTuneCanvas({ open, onOpenChange, baseImage, onSave }: FineTu
     const [overlays, setOverlays] = useState<Overlay[]>([]);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const canvasRef = useRef<HTMLDivElement>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
-    // Mock Save
-    const handleSave = () => {
-        // In a real app, we'd use html2canvas or fabric.toDataURL here.
-        // For V1, we'll just acknowledge the save and return the original (or a handled version)
-        // Since we can't easily merge client-side layers to a single file without a library in this snippet,
-        // We will assume the functionality is "visual only" for this prototype or returns original.
-        onSave(baseImage);
-        onOpenChange(false);
+    const handleSave = async () => {
+        if (!canvasRef.current) return;
+
+        setIsSaving(true);
+        setSelectedId(null); // Deselect to hide borders
+
+        try {
+            // Wait for selection to clear visually
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            const canvas = await html2canvas(canvasRef.current, {
+                useCORS: true,
+                scale: 2, // High resolution
+                backgroundColor: null,
+            });
+
+            // Convert to Data URL (Client-Side only for V1)
+            const dataUrl = canvas.toDataURL('image/png');
+
+            onSave(dataUrl);
+            onOpenChange(false);
+
+        } catch (e) {
+            console.error(e);
+            // In a real app we'd toast success/error here
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const addText = (presetId: string) => {
@@ -51,13 +73,30 @@ export function FineTuneCanvas({ open, onOpenChange, baseImage, onSave }: FineTu
         setOverlays([...overlays, {
             id,
             type: 'text',
-            content: 'Double Click to Edit',
+            content: 'Double Click',
             x: 50, // Center %
             y: 50,
             scale: 1,
             style: presetId
         }]);
         setSelectedId(id);
+    };
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const url = URL.createObjectURL(file);
+            const id = Math.random().toString(36).substr(2, 9);
+            setOverlays([...overlays, {
+                id,
+                type: 'image',
+                content: url,
+                x: 50,
+                y: 50,
+                scale: 0.5,
+            }]);
+            setSelectedId(id);
+        }
     };
 
     const removeOverlay = (id: string) => {
@@ -76,8 +115,14 @@ export function FineTuneCanvas({ open, onOpenChange, baseImage, onSave }: FineTu
                         className="relative shadow-2xl bg-white"
                         style={{ aspectRatio: '1/1', height: '100%', maxHeight: '500px' }}
                     >
-                        {/* Base Image */}
-                        <img src={baseImage} alt="Base" className="w-full h-full object-cover select-none pointer-events-none" />
+                        {/* Base Image (Cross-Origin handled by proxy if needed, but for local uploads it works) */}
+                        {/* Note: Cross-origin images might taint canvas. Assuming baseImage is local blob or proxied. */}
+                        <img
+                            src={baseImage}
+                            alt="Base"
+                            className="w-full h-full object-cover select-none pointer-events-none"
+                            crossOrigin="anonymous"
+                        />
 
                         {/* Overlays */}
                         {overlays.map(overlay => {
@@ -108,6 +153,14 @@ export function FineTuneCanvas({ open, onOpenChange, baseImage, onSave }: FineTu
                                         >
                                             {overlay.content}
                                         </div>
+                                    )}
+
+                                    {overlay.type === 'image' && (
+                                        <img
+                                            src={overlay.content}
+                                            alt="Overlay"
+                                            className="w-32 h-32 object-contain pointer-events-none"
+                                        />
                                     )}
 
                                     {selectedId === overlay.id && (
@@ -157,18 +210,27 @@ export function FineTuneCanvas({ open, onOpenChange, baseImage, onSave }: FineTu
                         {/* Image Tools */}
                         <div className="space-y-3">
                             <label className="text-xs font-bold uppercase text-muted-foreground">Overlays</label>
-                            <Button variant="outline" className="w-full justify-start" disabled>
-                                <ImageIcon className="w-4 h-4 mr-2" />
-                                Upload Logo (Coming Soon)
-                            </Button>
+                            <div className="relative">
+                                <Button variant="outline" className="w-full justify-start cursor-pointer transition-colors hover:bg-muted">
+                                    <ImageIcon className="w-4 h-4 mr-2" />
+                                    Upload Sticker
+                                </Button>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                    onChange={handleImageUpload}
+                                />
+                            </div>
                         </div>
                     </ScrollArea>
 
                     <div className="p-4 border-t bg-muted/10 space-y-2">
-                        <Button className="w-full" onClick={handleSave}>
-                            <Check className="w-4 h-4 mr-2" /> Done
+                        <Button className="w-full" onClick={handleSave} disabled={isSaving}>
+                            {isSaving ? <RotateCcw className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
+                            {isSaving ? "Saving..." : "Done"}
                         </Button>
-                        <Button variant="ghost" className="w-full" onClick={() => onOpenChange(false)}>
+                        <Button variant="ghost" className="w-full" onClick={() => onOpenChange(false)} disabled={isSaving}>
                             Cancel
                         </Button>
                     </div>
