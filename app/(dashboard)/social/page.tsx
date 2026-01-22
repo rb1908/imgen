@@ -5,7 +5,6 @@ import { PageScaffold } from '@/components/PageScaffold';
 import { PageHeader } from '@/components/PageHeader';
 import { AssetPickerDialog } from '@/components/social/AssetPickerDialog';
 import { SocialInputSection } from '@/components/social/SocialInputSection';
-import { SocialInputSection } from '@/components/social/SocialInputSection';
 import { SocialPostCard } from '@/components/social/SocialPostCard';
 import { ExportDialog } from '@/components/social/ExportDialog';
 import { FineTuneCanvas } from '@/components/social/FineTuneCanvas';
