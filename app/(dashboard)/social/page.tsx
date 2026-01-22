@@ -60,6 +60,7 @@ export default function SocialStudioPage() {
                         setFormat={setFormat}
                         onAddText={handleAddText}
                         onSelectAsset={handleSelectAsset}
+                        currentImage={backgroundImage} // Pass selected image
                     />
                 </div>
 
