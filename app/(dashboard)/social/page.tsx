@@ -7,19 +7,20 @@ import { Button } from '@/components/ui/button';
 import { Download, Save } from 'lucide-react';
 import { SocialCanvas } from '@/components/social/SocialCanvas';
 import { SocialControls } from '@/components/social/SocialControls';
+import { AssetPickerDialog } from '@/components/social/AssetPickerDialog';
 
 export default function SocialStudioPage() {
     const [format, setFormat] = useState<'square' | 'story' | 'og'>('square');
     const [overlays, setOverlays] = useState<any[]>([]);
     const [backgroundImage, setBackgroundImage] = useState<string | undefined>(undefined);
+    const [isAssetPickerOpen, setIsAssetPickerOpen] = useState(false);
 
     const handleAddText = () => {
         setOverlays([...overlays, { type: 'text', content: 'New Text', x: 50, y: 50 }]);
     };
 
     const handleSelectAsset = () => {
-        // Placeholder for asset picker dialog
-        setBackgroundImage('https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1000&auto=format&fit=crop');
+        setIsAssetPickerOpen(true);
     };
 
     return (
@@ -61,6 +62,12 @@ export default function SocialStudioPage() {
                         onSelectAsset={handleSelectAsset}
                     />
                 </div>
+
+                <AssetPickerDialog
+                    open={isAssetPickerOpen}
+                    onOpenChange={setIsAssetPickerOpen}
+                    onSelect={setBackgroundImage}
+                />
             </div>
         </PageScaffold>
     );
