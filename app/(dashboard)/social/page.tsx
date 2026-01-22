@@ -5,7 +5,10 @@ import { PageScaffold } from '@/components/PageScaffold';
 import { PageHeader } from '@/components/PageHeader';
 import { AssetPickerDialog } from '@/components/social/AssetPickerDialog';
 import { SocialInputSection } from '@/components/social/SocialInputSection';
+import { SocialInputSection } from '@/components/social/SocialInputSection';
 import { SocialPostCard } from '@/components/social/SocialPostCard';
+import { ExportDialog } from '@/components/social/ExportDialog';
+import { FineTuneCanvas } from '@/components/social/FineTuneCanvas';
 import { generatePostVariants, SocialPostVariant } from '@/app/actions/social_generator';
 import { toast } from 'sonner';
 import { Loader2, ArrowRight } from 'lucide-react';
@@ -20,6 +23,9 @@ export default function SocialGeneratorPage() {
     // Generation State
     const [isGenerating, setIsGenerating] = useState(false);
     const [variants, setVariants] = useState<SocialPostVariant[]>([]);
+
+    // Export State
+    const [exportPost, setExportPost] = useState<SocialPostVariant | null>(null);
 
     const handleGenerate = async () => {
         if (!selectedAsset) return toast.error("Please select an asset first");
@@ -41,6 +47,11 @@ export default function SocialGeneratorPage() {
         } finally {
             setIsGenerating(false);
         }
+    };
+
+    const handleDiscard = (id: string) => {
+        setVariants(prev => prev.filter(v => v.id !== id));
+        toast.info("Option discarded");
     };
 
     return (
@@ -93,11 +104,14 @@ export default function SocialGeneratorPage() {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {variants.map((variant) => (
+                                {variants.map((variant, index) => (
                                     <SocialPostCard
                                         key={variant.id}
                                         {...variant}
+                                        isRecommended={index === 0} // First one is recommended
+                                        onUse={() => setExportPost(variant)}
                                         onEdit={() => toast.info("Fine-tuning coming soon!")}
+                                        onDiscard={() => handleDiscard(variant.id)}
                                     />
                                 ))}
                             </div>
@@ -112,6 +126,12 @@ export default function SocialGeneratorPage() {
                         setSelectedAsset(url);
                         // Auto-select vibe if not selected?
                     }}
+                />
+
+                <ExportDialog
+                    open={!!exportPost}
+                    onOpenChange={(open) => !open && setExportPost(null)}
+                    post={exportPost}
                 />
             </div>
         </PageScaffold>

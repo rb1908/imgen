@@ -1,11 +1,10 @@
-'use client';
-
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Download, Edit2, Share2, Copy, Check } from 'lucide-react';
+import { Download, Edit2, Share2, Copy, Check, Trash2, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface SocialPostCardProps {
     id: string;
