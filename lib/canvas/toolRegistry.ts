@@ -38,6 +38,7 @@ export function createToolObject(type: string, x: number, y: number): CanvasObje
         style,
         metadata: {
             toolType: type,
-        }
+        },
+        locked: false,
     };
 }

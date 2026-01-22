@@ -18,7 +18,7 @@ export const CanvasObjectSchema = z.object({
     pose: PoseSchema,
     content: z.any().optional(), // Text content, Image URL, etc.
     style: z.any().optional(), // Color, font, shadow, specific preset ID
-    metadata: z.record(z.any()).default({}), // Extra data
+    metadata: z.record(z.string(), z.any()).default({}), // Extra data
     locked: z.boolean().default(false),
 });
 

@@ -7,8 +7,10 @@ import { AssetPickerDialog } from '@/components/social/AssetPickerDialog';
 import { SocialInputSection } from '@/components/social/SocialInputSection';
 import { SocialPostCard } from '@/components/social/SocialPostCard';
 import { ExportDialog } from '@/components/social/ExportDialog';
-import { FineTuneCanvas } from '@/components/social/FineTuneCanvas';
+import { ExportDialog } from '@/components/social/ExportDialog';
 import { generatePostVariants, SocialPostVariant } from '@/app/actions/social_generator';
+import { createDraft } from '@/app/actions/social';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,8 +28,7 @@ export default function SocialGeneratorPage() {
     // Export State
     const [exportPost, setExportPost] = useState<SocialPostVariant | null>(null);
 
-    // Fine Tune State
-    const [fineTunePost, setFineTunePost] = useState<SocialPostVariant | null>(null);
+
 
     const handleGenerate = async () => {
         if (!selectedAsset) return toast.error("Please select an asset first");
