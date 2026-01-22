@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Undo, Redo, Check } from 'lucide-react';
-import { Stage, Layer, Image as KonvaImage, Text as KonvaText, Transformer, Rect as KonvaRect } from 'react-konva';
+import { Undo, Redo, Check, ZoomIn, ZoomOut, Hand } from 'lucide-react';
+import { Stage, Layer, Image as KonvaImage, Text as KonvaText, Transformer, Rect as KonvaRect, Group } from 'react-konva';
 import useImage from 'use-image';
 import { useCanvasStore } from '@/lib/canvas/store';
 import { SocialEditorTools } from './SocialEditorTools';
@@ -34,20 +34,28 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
         selectedId,
         setSelectedId,
         safeAreaVisible,
-        snapEnabled
+        snapEnabled,
+        zoom, setZoom,
+        pan, setPan
     } = useCanvasStore();
 
     const stageRef = useRef<any>(null);
     const trRef = useRef<any>(null);
 
-    // Initialize Scene on Mount if baseImage provided
+    // Local Interaction State
+    const [panningMode, setPanningMode] = useState(false);
+
+    // Initialize Scene
     useEffect(() => {
         if (baseImage) {
             initScene(1080, 1080, baseImage);
+            // Center init
+            setPan({ x: 50, y: 50 }); // Approx center offset logic if needed, or 0,0
+            setZoom(0.4); // Zoom out to see full 1080p canvas on typical screen
         }
     }, [baseImage]);
 
-    // Transformer Logic
+    // Transformer
     useEffect(() => {
         if (selectedId && trRef.current && stageRef.current) {
             const node = stageRef.current.findOne('#' + selectedId);
@@ -60,18 +68,121 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
         }
     }, [selectedId, scene.objects]);
 
+    // Keyboard Shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Delete
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+                if (selectedId) {
+                    dispatch({ type: 'DELETE_ENTITY', id: selectedId });
+                    setSelectedId(null);
+                }
+            }
+            // Undo/Redo
+            if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+                e.preventDefault();
+                if (e.shiftKey) redo();
+                else undo();
+            }
+            // Spacebar Pan
+            if (e.code === 'Space' && !panningMode) {
+                setPanningMode(true);
+            }
+            // Nudge
+            if (selectedId) {
+                const step = e.shiftKey ? 10 : 1;
+                if (e.key === 'ArrowUp') { e.preventDefault(); dispatch({ type: 'MOVE_OBJECT', id: selectedId, dx: 0, dy: -step }); }
+                if (e.key === 'ArrowDown') { e.preventDefault(); dispatch({ type: 'MOVE_OBJECT', id: selectedId, dx: 0, dy: step }); }
+                if (e.key === 'ArrowLeft') { e.preventDefault(); dispatch({ type: 'MOVE_OBJECT', id: selectedId, dx: -step, dy: 0 }); }
+                if (e.key === 'ArrowRight') { e.preventDefault(); dispatch({ type: 'MOVE_OBJECT', id: selectedId, dx: step, dy: 0 }); }
+            }
+        };
+
+        const handleKeyUp = (e: KeyboardEvent) => {
+            if (e.code === 'Space') setPanningMode(false);
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, [selectedId, panningMode]);
+
+    // Wheel Zoom
+    const handleWheel = (e: any) => {
+        e.evt.preventDefault();
+        // If cmd/ctrl key is pressed or just default behavior, usually default is pan, cmd+scroll is zoom.
+        // Let's make scroll = zoom for "pro" feel or pan vertically.
+        // Figma: Ctrl+Scroll = Zoom. Space+Drag = Pan.
+
+        if (e.evt.ctrlKey || e.evt.metaKey) {
+            const scaleBy = 1.1;
+            const stage = e.target.getStage();
+            const oldScale = stage.scaleX();
+            const mousePointTo = {
+                x: stage.getPointerPosition().x / oldScale - stage.x() / oldScale,
+                y: stage.getPointerPosition().y / oldScale - stage.y() / oldScale,
+            };
+
+            const newScale = e.evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy;
+            const clampedScale = Math.max(0.05, Math.min(newScale, 5));
+
+            setZoom(clampedScale);
+
+            const newPos = {
+                x: -(mousePointTo.x - stage.getPointerPosition().x / clampedScale) * clampedScale,
+                y: -(mousePointTo.y - stage.getPointerPosition().y / clampedScale) * clampedScale,
+            };
+            setPan(newPos);
+        } else {
+            // Pan on scroll
+            setPan({
+                x: pan.x - e.evt.deltaX,
+                y: pan.y - e.evt.deltaY
+            });
+        }
+    };
+
     const handleSave = () => {
         if (stageRef.current && onSave) {
-            // Unselect before saving
             setSelectedId(null);
             setTimeout(() => {
+                // Export logic needs to account for zoom/pan scaling
+                // Temporarily reset scale to 1:1 for export then restore?
+                // Or create a hidden stage. For V1 simple trick:
+                const oldScale = stageRef.current.scaleX();
+                const oldPos = stageRef.current.position();
+
+                stageRef.current.scale({ x: 1, y: 1 });
+                stageRef.current.position({ x: 0, y: 0 });
+
                 const dataUrl = stageRef.current.toDataURL({ pixelRatio: 2 });
+
+                // Restore logic
+                stageRef.current.scale({ x: oldScale, y: oldScale });
+                stageRef.current.position(oldPos);
+
                 onSave(dataUrl);
             }, 50);
         }
     };
 
-    const handleDragEnd = (e: any, id: string) => {
+    // Forward drag events to store
+    const handleDragStart = () => {
+        // Optional logic
+    };
+
+    const handleStageDragEnd = (e: any) => {
+        // Sync pan state
+        setPan({
+            x: e.target.x(),
+            y: e.target.y()
+        });
+    };
+
+    const handleObjectDragEnd = (e: any, id: string) => {
         dispatch({
             type: 'SET_POSE',
             id,
@@ -80,6 +191,7 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
         });
     };
 
+    // Shared transform logic
     const handleTransformEnd = (e: any, id: string) => {
         const node = e.target;
         dispatch({
@@ -93,161 +205,164 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
         });
     };
 
-    // Snap Logic (Simple Center Snap)
-    const handleDragMove = (e: any) => {
-        if (!snapEnabled) return;
-
-        const node = e.target;
-        const stage = node.getStage();
-        const stageWidth = stage.width();
-        const stageHeight = stage.height();
-
-        // Snap to center
-        const threshold = 10;
-        if (Math.abs(node.x() - stageWidth / 2) < threshold) {
-            node.x(stageWidth / 2);
-            // Ideally draw guide lines here
-        }
-        if (Math.abs(node.y() - stageHeight / 2) < threshold) {
-            node.y(stageHeight / 2);
-        }
-    };
-
     return (
-        <div className="flex h-full w-full overflow-hidden bg-background">
+        <div className="flex h-full w-full overflow-hidden bg-neutral-950 text-white">
 
-            {/* Left Toolbar */}
-            <SocialEditorTools />
+            {/* Left Toolbar - Dark */}
+            <div className="border-r border-neutral-800 bg-neutral-900">
+                <SocialEditorTools />
+            </div>
 
             {/* Middle: Canvas Area */}
-            <div className="flex-1 bg-muted/50 relative overflow-hidden flex flex-col">
-                {/* Top Bar Actions */}
-                <div className="h-14 border-b bg-background flex items-center justify-between px-4 z-20 shadow-sm">
+            <div className="flex-1 relative overflow-hidden flex flex-col bg-neutral-950">
 
+                {/* Top Bar Actions */}
+                <div className="h-14 border-b border-neutral-800 bg-neutral-900 flex items-center justify-between px-4 z-20 shadow-sm">
                     <div className="flex gap-2">
-                        <Button variant="ghost" size="icon" onClick={undo} disabled={historyPast.length === 0}>
+                        <Button variant="ghost" size="icon" className="hover:bg-neutral-800 text-neutral-400 hover:text-white" onClick={undo} disabled={historyPast.length === 0}>
                             <Undo className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={redo} disabled={historyFuture.length === 0}>
+                        <Button variant="ghost" size="icon" className="hover:bg-neutral-800 text-neutral-400 hover:text-white" onClick={redo} disabled={historyFuture.length === 0}>
                             <Redo className="w-4 h-4" />
                         </Button>
                     </div>
 
-                    <div className="font-semibold text-sm text-muted-foreground">
-                        {scene.width} x {scene.height}
+                    <div className="font-mono text-xs text-neutral-500 flex items-center gap-4">
+                        <span>{scene.width} x {scene.height}</span>
+                        <span>{Math.round(zoom * 100)}%</span>
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                        <Button size="sm" variant="ghost" className="text-neutral-400 hover:text-white" onClick={() => setZoom(Math.max(0.1, zoom - 0.1))}>
+                            <ZoomOut className="w-4 h-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-neutral-400 hover:text-white" onClick={() => setZoom(Math.min(5, zoom + 0.1))}>
+                            <ZoomIn className="w-4 h-4" />
+                        </Button>
+                        <div className="w-px h-4 bg-neutral-800 mx-2" />
+                        <Button size="sm" className="bg-white text-black hover:bg-neutral-200" onClick={handleSave} disabled={isSaving}>
                             <Check className="w-4 h-4 mr-2" />
                             {isSaving ? "Saving..." : "Save"}
                         </Button>
                     </div>
                 </div>
 
-                {/* Canvas Stage Wrapper */}
-                <div className="flex-1 flex items-center justify-center p-8 bg-neutral-100 overflow-auto">
-                    <div className="shadow-2xl bg-white relative">
-                        <Stage
-                            width={500} // This assumes fixed preview size, ideally responsive
-                            height={500}
-                            ref={stageRef}
-                            onMouseDown={(e) => {
-                                // Deselect if clicked on empty stage
-                                if (e.target === e.target.getStage()) {
-                                    setSelectedId(null);
-                                }
-                            }}
-                        >
-                            <Layer>
-                                {/* Base Image */}
-                                {scene.backgroundUrl && (
-                                    <URLImage
-                                        src={scene.backgroundUrl}
-                                        x={0} y={0}
-                                        width={500} height={500}
-                                        listening={false}
-                                    />
-                                )}
+                {/* Infinite Canvas */}
+                <div className="flex-1 relative cursor-dots" style={{ cursor: panningMode ? 'grab' : 'default' }}>
+                    <Stage
+                        width={window.innerWidth - 380} // Approx responsive width
+                        height={window.innerHeight - 60}
+                        scaleX={zoom}
+                        scaleY={zoom}
+                        x={pan.x}
+                        y={pan.y}
+                        draggable={panningMode} // Only drag stage if spacebar is held
+                        onWheel={handleWheel}
+                        onDragEnd={handleStageDragEnd}
+                        ref={stageRef}
+                        onMouseDown={(e) => {
+                            if (e.target === e.target.getStage()) {
+                                setSelectedId(null);
+                            }
+                        }}
+                    >
+                        <Layer>
+                            {/* Canvas Background (The "Paper") */}
+                            <KonvaRect
+                                x={0} y={0}
+                                width={1080} height={1080}
+                                fill="white"
+                                shadowColor="black"
+                                shadowBlur={50}
+                                shadowOpacity={0.5}
+                            />
 
-                                {/* Objects */}
-                                {scene.objects.map((obj) => {
-                                    if (obj.type === 'text') {
-                                        return (
-                                            <KonvaText
-                                                key={obj.id}
-                                                id={obj.id}
-                                                draggable
-                                                onClick={() => setSelectedId(obj.id)}
-                                                onTap={() => setSelectedId(obj.id)}
-                                                onDragEnd={(e) => handleDragEnd(e, obj.id)}
-                                                onDragMove={handleDragMove}
-                                                onTransformEnd={(e) => handleTransformEnd(e, obj.id)}
-                                                x={obj.pose.x}
-                                                y={obj.pose.y}
-                                                rotation={obj.pose.r}
-                                                scaleX={obj.pose.scaleX}
-                                                scaleY={obj.pose.scaleY}
-                                                text={obj.content}
-                                                // Dynamic Style
-                                                fontSize={obj.style?.fontSize || 40}
-                                                fill={obj.style?.fill || 'white'}
-                                                stroke={obj.style?.stroke || 'black'}
-                                                fontFamily={obj.style?.fontFamily || 'Inter'}
-                                                opacity={obj.style?.opacity ?? 1}
-                                                strokeWidth={1}
-                                            />
-                                        );
-                                    }
-                                    if (obj.type === 'tool' || obj.type === 'image') {
-                                        return (
-                                            <URLImage
-                                                key={obj.id}
-                                                id={obj.id}
-                                                draggable
-                                                onClick={() => setSelectedId(obj.id)}
-                                                onTap={() => setSelectedId(obj.id)}
-                                                onDragEnd={(e: any) => handleDragEnd(e, obj.id)}
-                                                onDragMove={handleDragMove}
-                                                onTransformEnd={(e: any) => handleTransformEnd(e, obj.id)}
-                                                x={obj.pose.x}
-                                                y={obj.pose.y}
-                                                rotation={obj.pose.r}
-                                                scaleX={obj.pose.scaleX}
-                                                scaleY={obj.pose.scaleY}
-                                                src={obj.content}
-                                                width={obj.style?.width || 100}
-                                                height={obj.style?.height || 100}
-                                                opacity={obj.style?.opacity ?? 1}
-                                            />
-                                        );
-                                    }
-                                    return null;
-                                })}
-
-                                {/* Transformer */}
-                                <Transformer ref={trRef} />
-                            </Layer>
-
-                            {/* Safe Area Overlay Layer */}
-                            {safeAreaVisible && (
-                                <Layer listening={false}>
-                                    <KonvaRect
-                                        x={50} y={50} width={400} height={400}
-                                        stroke="cyan"
-                                        strokeWidth={2}
-                                        dash={[10, 5]}
-                                    />
-                                    <KonvaText x={215} y={20} text="Safe Zone" fill="cyan" />
-                                </Layer>
+                            {/* Base Image */}
+                            {scene.backgroundUrl && (
+                                <URLImage
+                                    src={scene.backgroundUrl}
+                                    x={0} y={0}
+                                    width={1080} height={1080}
+                                    listening={false}
+                                />
                             )}
-                        </Stage>
-                    </div>
+
+                            {/* Objects */}
+                            {scene.objects.map((obj) => {
+                                // ... (Object rendering logic, same as before but ensure interactivity)
+                                if (obj.type === 'text') {
+                                    return (
+                                        <KonvaText
+                                            key={obj.id}
+                                            id={obj.id}
+                                            draggable
+                                            onClick={() => setSelectedId(obj.id)}
+                                            onTap={() => setSelectedId(obj.id)}
+                                            onDragEnd={(e) => handleObjectDragEnd(e, obj.id)}
+                                            onTransformEnd={(e) => handleTransformEnd(e, obj.id)}
+                                            x={obj.pose.x}
+                                            y={obj.pose.y}
+                                            rotation={obj.pose.r}
+                                            scaleX={obj.pose.scaleX}
+                                            scaleY={obj.pose.scaleY}
+                                            text={obj.content}
+                                            fontSize={obj.style?.fontSize || 40}
+                                            fill={obj.style?.fill || 'black'}
+                                            fontFamily={obj.style?.fontFamily || 'Inter'}
+                                            opacity={obj.style?.opacity ?? 1}
+                                        />
+                                    );
+                                }
+                                if (obj.type === 'image' || obj.type === 'tool') {
+                                    return (
+                                        <URLImage
+                                            key={obj.id}
+                                            id={obj.id}
+                                            draggable
+                                            onClick={() => setSelectedId(obj.id)}
+                                            onTap={() => setSelectedId(obj.id)}
+                                            onDragEnd={(e: any) => handleObjectDragEnd(e, obj.id)}
+                                            onTransformEnd={(e: any) => handleTransformEnd(e, obj.id)}
+                                            x={obj.pose.x}
+                                            y={obj.pose.y}
+                                            rotation={obj.pose.r}
+                                            scaleX={obj.pose.scaleX}
+                                            scaleY={obj.pose.scaleY}
+                                            src={obj.content}
+                                            width={obj.style?.width || 100}
+                                            height={obj.style?.height || 100}
+                                            opacity={obj.style?.opacity ?? 1}
+                                        />
+                                    );
+                                }
+                                return null;
+                            })}
+
+                            <Transformer ref={trRef}
+                                borderStroke="#3b82f6"
+                                anchorStroke="#3b82f6"
+                                anchorFill="white"
+                                anchorSize={10}
+                            />
+                        </Layer>
+
+                        {safeAreaVisible && (
+                            <Layer listening={false}>
+                                <KonvaRect
+                                    x={100} y={200} width={880} height={680} // Example Safe Zone
+                                    stroke="#06b6d4" strokeWidth={2 / zoom} dash={[10, 10]}
+                                />
+                            </Layer>
+                        )}
+
+                    </Stage>
                 </div>
             </div>
 
-            {/* Right Panel: Properties or AI */}
-            <SocialEditorProperties />
+            {/* Right Panel - Dark */}
+            <div className="border-l border-neutral-800 bg-neutral-900">
+                <SocialEditorProperties />
+            </div>
 
         </div>
     );

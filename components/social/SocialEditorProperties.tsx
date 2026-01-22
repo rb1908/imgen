@@ -64,12 +64,12 @@ export function SocialEditorProperties() {
     };
 
     return (
-        <div className="w-80 border-l bg-background flex flex-col h-full">
-            <div className="p-4 border-b bg-muted/20 flex justify-between items-center">
+        <div className="w-80 border-l border-neutral-800 bg-neutral-900 text-white flex flex-col h-full">
+            <div className="p-4 border-b border-neutral-800 bg-neutral-900/50 flex justify-between items-center">
                 <h3 className="font-semibold text-sm uppercase tracking-wide">
                     Edit {selectedObject.type}
                 </h3>
-                <Button variant="ghost" size="icon" onClick={() => setSelectedId(null)}>
+                <Button variant="ghost" size="icon" className="text-neutral-400 hover:text-white" onClick={() => setSelectedId(null)}>
                     <span className="sr-only">Close</span>
                     ×
                 </Button>
@@ -117,7 +117,7 @@ export function SocialEditorProperties() {
                             <Slider
                                 min={12} max={120} step={1}
                                 value={[selectedObject.style?.fontSize || 24]}
-                                onValueChange={(v) => updateProp('fontSize', v[0])}
+                                onValueChange={(v: number[]) => updateProp('fontSize', v[0])}
                             />
                         </div>
                     </>
@@ -129,7 +129,7 @@ export function SocialEditorProperties() {
                     <Slider
                         min={0} max={1} step={0.1}
                         value={[selectedObject.style?.opacity ?? 1]}
-                        onValueChange={(v) => updateProp('opacity', v[0])}
+                        onValueChange={(v: number[]) => updateProp('opacity', v[0])}
                     />
                 </div>
 

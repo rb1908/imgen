@@ -32,6 +32,12 @@ interface CanvasStore {
     setSafeAreaVisible: (visible: boolean) => void;
     snapEnabled: boolean;
     setSnapEnabled: (enabled: boolean) => void;
+
+    // Viewport State
+    zoom: number;
+    setZoom: (zoom: number) => void;
+    pan: { x: number, y: number };
+    setPan: (pan: { x: number, y: number }) => void;
 }
 
 export const useCanvasStore = create<CanvasStore>((set, get) => ({
@@ -42,6 +48,8 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     selectedId: null,
     safeAreaVisible: false,
     snapEnabled: true,
+    zoom: 1,
+    pan: { x: 0, y: 0 },
 
     initScene: (width, height, backgroundUrl) => {
         set({
@@ -55,6 +63,8 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     setSelectedId: (id) => set({ selectedId: id }),
     setSafeAreaVisible: (visible) => set({ safeAreaVisible: visible }),
     setSnapEnabled: (enabled) => set({ snapEnabled: enabled }),
+    setZoom: (zoom) => set({ zoom }),
+    setPan: (pan) => set({ pan }),
 
     dispatch: (input, actor = 'human') => {
         const state = get();
