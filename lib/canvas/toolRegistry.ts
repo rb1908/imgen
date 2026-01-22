@@ -19,15 +19,20 @@ export function createToolObject(type: string, x: number, y: number): CanvasObje
 
     switch (type) {
         case TOOL_TYPES.KNIFE:
-            content = 'https://placehold.co/100x400?text=Knife'; // Mock asset
+            // TODO: Replace with real SVG/PNG in public/assets/
+            content = 'https://cdn-icons-png.flaticon.com/512/3209/3209931.png';
             style = { width: 50, height: 200 };
             break;
         case TOOL_TYPES.CUTTING_BOARD:
-            content = 'https://placehold.co/600x400?text=Board';
+            content = 'https://cdn-icons-png.flaticon.com/512/2917/2917633.png';
             style = { width: 300, height: 200, color: '#e5d0b1' };
             break;
+        case TOOL_TYPES.SPATULA:
+            content = 'https://cdn-icons-png.flaticon.com/512/1830/1830839.png';
+            style = { width: 60, height: 250 };
+            break;
         default:
-            content = 'https://placehold.co/100x100?text=Tool';
+            content = 'https://cdn-icons-png.flaticon.com/512/1000/1000997.png'; // Generic tool
     }
 
     return {

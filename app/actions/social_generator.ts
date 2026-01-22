@@ -10,36 +10,61 @@ export interface SocialPostVariant {
     platform: 'instagram' | 'pinterest' | 'etsy';
 }
 
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || '';
+const genAI = new GoogleGenerativeAI(apiKey);
+
 export async function generatePostVariants(
     inputImage: string,
     vibe: string
 ): Promise<{ success: boolean, variants?: SocialPostVariant[], error?: string }> {
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
-    // Mock Response
-    return {
-        success: true,
-        variants: [
-            {
-                id: '1',
-                imageUrl: inputImage, // Use same image for now
-                caption: `Loving the ${vibe} vibes! ✨ Check out our latest collection. #style #${vibe}`,
-                platform: 'instagram'
-            },
-            {
-                id: '2',
-                imageUrl: inputImage,
-                caption: `Get the look: ${vibe} edition. Link in bio! 🛍️`,
-                platform: 'pinterest'
-            },
-            {
-                id: '3',
-                imageUrl: inputImage,
-                caption: `New Drop Alert 🚨 Transform your space with this ${vibe} aesthetic.`,
-                platform: 'etsy'
-            }
+        const prompt = `
+        You are a social media manager. 
+        Generate 3 distinct social post variants for a product with the vibe: "${vibe}".
+        
+        INPUT CONTEXT:
+        - Image URL: ${inputImage} (Do not analyze the image content deeply for now, just trust the vibe).
+        - Vibe: ${vibe}
+
+        OUTPUT REQUIREMENTS:
+        - Return a JSON array of 3 objects.
+        - Each object must have:
+          - "caption": Engaging caption with emojis and hashtags.
+          - "platform": One for "instagram", one for "pinterest", one for "etsy" (listing title/desc style).
+        
+        Example:
+        [
+            { "caption": "...", "platform": "instagram" }
         ]
-    };
+        `;
+
+        const result = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: "application/json" }
+        });
+
+        const text = result.response.text();
+        const data = JSON.parse(text);
+
+        if (!Array.isArray(data)) throw new Error("Invalid AI response");
+
+        // Map to variants
+        const variants: SocialPostVariant[] = data.map((item: any, i: number) => ({
+            id: Math.random().toString(36).substr(2, 9),
+            imageUrl: inputImage, // Using original image. In future V2 we can use GenAI to edit the image too.
+            caption: item.caption,
+            platform: item.platform || 'instagram'
+        }));
+
+        return { success: true, variants };
+
+    } catch (error) {
+        console.error("Social Gen Error:", error);
+        return { success: false, error: "AI Failed to generate posts" };
+    }
 }

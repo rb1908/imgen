@@ -10,51 +10,12 @@ import { CanvasCommand } from '@/lib/canvas/commands';
 import { Sparkles, Play, SkipForward, X, Check, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
-// MOCK AI GENERATOR (Replace with real server action later)
-async function mockGenerateCommands(goal: string, scene: any): Promise<CanvasCommand[]> {
-    await new Promise(r => setTimeout(r, 1000)); // Simulate latency
+import { generateCanvasCommands } from '@/app/actions/copilot';
 
-    const goalLower = goal.toLowerCase();
-    const commands: CanvasCommand[] = [];
-
-    if (goalLower.includes('knife')) {
-        commands.push({ type: 'ADD_TOOL', toolType: 'tool.knife', x: 200, y: 200 });
-    }
-
-    if (goalLower.includes('move')) {
-        // Find first object
-        if (scene.objects.length > 0) {
-            commands.push({ type: 'MOVE_OBJECT', id: scene.objects[0].id, dx: 50, dy: 50 });
-        } else {
-            throw new Error("No objects to move!");
-        }
-    }
-
-    if (goalLower.includes('rotate')) {
-        if (scene.objects.length > 0) {
-            // 45 deg rotation
-            commands.push({ type: 'UPDATE_OBJECT', id: scene.objects[0].id, patch: { pose: { ...scene.objects[0].pose, r: 45 } } });
-        }
-    }
-
-    if (goalLower.includes('delete')) {
-        if (scene.selectedId) {
-            commands.push({ type: 'DELETE_ENTITY', id: scene.selectedId });
-        } else if (scene.objects.length > 0) {
-            commands.push({ type: 'DELETE_ENTITY', id: scene.objects[scene.objects.length - 1].id });
-        }
-    }
-
-    if (commands.length === 0) {
-        // Fallback demo
-        commands.push({ type: 'ADD_TOOL', toolType: 'tool.brush', x: 500, y: 500 });
-    }
-
-    return commands;
-}
+// ... (imports remain)
 
 export function AICopilotPanel() {
-    const { scene, dispatch } = useCanvasStore();
+    const { scene, selectedId, dispatch } = useCanvasStore();
     const [goal, setGoal] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [proposedCommands, setProposedCommands] = useState<CanvasCommand[] | null>(null);
@@ -65,11 +26,21 @@ export function AICopilotPanel() {
         setProposedCommands(null);
 
         try {
-            const cmds = await mockGenerateCommands(goal, scene);
-            setProposedCommands(cmds);
-            // toast.success(`AI proposed ${cmds.length} actions`);
+            // Pass scene context (simplified)
+            const context = {
+                selectedId: selectedId,
+                objectCount: scene.objects.length
+            };
+
+            const cmds = await generateCanvasCommands(goal, context);
+
+            if (cmds && cmds.length > 0) {
+                setProposedCommands(cmds);
+            } else {
+                toast.error("AI couldn't figure that out. Try simpler instructions.");
+            }
         } catch (e: any) {
-            toast.error(e.message);
+            toast.error("AI Error: " + e.message);
         } finally {
             setIsGenerating(false);
         }
