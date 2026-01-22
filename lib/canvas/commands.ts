@@ -1,0 +1,105 @@
+import { CanvasObject, Scene, Zone } from './sceneSchema';
+import { validateSceneBounds, validateUniqueId, validateZone } from './validators';
+import { createToolObject } from './toolRegistry';
+
+// Discriminated Union of Commands
+export type CanvasCommand =
+    | { type: 'ADD_OBJECT'; object: CanvasObject }
+    | { type: 'UPDATE_OBJECT'; id: string; patch: Partial<CanvasObject> }
+    | { type: 'MOVE_OBJECT'; id: string; dx: number; dy: number }
+    | { type: 'SET_POSE'; id: string; x: number; y: number; r?: number; scaleX?: number; scaleY?: number }
+    | { type: 'DELETE_ENTITY'; id: string }
+    | { type: 'ADD_ZONE'; zone: Zone }
+    | { type: 'ADD_TOOL'; toolType: string; x: number; y: number }; // Higher level command for AI
+
+export interface CommandResult {
+    scene: Scene;
+    event?: string;
+}
+
+export function applyCommand(currentScene: Scene, command: CanvasCommand): CommandResult {
+    // Deep clone to avoid mutation side effects (in a real app, use Immer)
+    let nextScene = JSON.parse(JSON.stringify(currentScene)) as Scene;
+
+    switch (command.type) {
+        case 'ADD_OBJECT':
+            validateUniqueId(command.object.id, nextScene);
+            validateSceneBounds(command.object, nextScene);
+            nextScene.objects.push(command.object);
+            return { scene: nextScene, event: `Added ${command.object.id}` };
+
+        case 'ADD_TOOL':
+            const tool = createToolObject(command.toolType, command.x, command.y);
+            validateUniqueId(tool.id, nextScene);
+            validateSceneBounds(tool, nextScene);
+            nextScene.objects.push(tool);
+            return { scene: nextScene, event: `Added Tool ${tool.metadata.toolType}` };
+
+        case 'UPDATE_OBJECT':
+            const objIndex = nextScene.objects.findIndex(o => o.id === command.id);
+            if (objIndex === -1) throw new Error(`Object ${command.id} not found`);
+
+            nextScene.objects[objIndex] = {
+                ...nextScene.objects[objIndex],
+                ...command.patch,
+                pose: { ...nextScene.objects[objIndex].pose, ...(command.patch.pose || {}) }
+            };
+            return { scene: nextScene, event: `Updated ${command.id}` };
+
+        case 'MOVE_OBJECT':
+            const mvIndex = nextScene.objects.findIndex(o => o.id === command.id);
+            if (mvIndex === -1) throw new Error(`Object ${command.id} not found`);
+
+            const obj = nextScene.objects[mvIndex];
+            obj.pose.x += command.dx;
+            obj.pose.y += command.dy;
+            validateSceneBounds(obj, nextScene);
+            return { scene: nextScene, event: `Moved ${command.id}` };
+
+        case 'SET_POSE':
+            const poseIndex = nextScene.objects.findIndex(o => o.id === command.id);
+            if (poseIndex === -1) throw new Error(`Object ${command.id} not found`);
+
+            const target = nextScene.objects[poseIndex];
+            target.pose.x = command.x;
+            target.pose.y = command.y;
+            if (command.r !== undefined) target.pose.r = command.r;
+            if (command.scaleX !== undefined) target.pose.scaleX = command.scaleX;
+            if (command.scaleY !== undefined) target.pose.scaleY = command.scaleY;
+
+            validateSceneBounds(target, nextScene);
+            return { scene: nextScene, event: `Posed ${command.id}` };
+
+        case 'DELETE_ENTITY':
+            const initialLen = nextScene.objects.length + nextScene.zones.length;
+            nextScene.objects = nextScene.objects.filter(o => o.id !== command.id);
+            nextScene.zones = nextScene.zones.filter(z => z.id !== command.id);
+
+            if (nextScene.objects.length + nextScene.zones.length === initialLen) {
+                throw new Error(`Entity ${command.id} not found to delete`);
+            }
+            return { scene: nextScene, event: `Deleted ${command.id}` };
+
+        case 'ADD_ZONE':
+            validateUniqueId(command.zone.id, nextScene);
+            validateZone(command.zone);
+            nextScene.zones.push(command.zone);
+            return { scene: nextScene, event: `Added Zone ${command.zone.id}` };
+
+        default:
+            return { scene: nextScene };
+    }
+}
+
+export function applyCommands(currentScene: Scene, commands: CanvasCommand[]): CommandResult {
+    let scene = currentScene;
+    const events: string[] = [];
+
+    for (const cmd of commands) {
+        const result = applyCommand(scene, cmd);
+        scene = result.scene;
+        if (result.event) events.push(result.event);
+    }
+
+    return { scene, event: events.join(', ') };
+}
