@@ -335,7 +335,8 @@ export async function getLocalProducts() {
 
     return await prisma.product.findMany({
         where: { userId }, // Filter by User
-        orderBy: { updatedAt: 'desc' }
+        orderBy: { updatedAt: 'desc' },
+        include: { variants: true }
     });
 }
 
