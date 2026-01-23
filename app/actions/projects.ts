@@ -179,43 +179,48 @@ export async function setProjectDefaultProduct(id: string, productId: string | n
     }
 }
 
-export async function getOrCreateProjectForProduct(product: { id: string; title: string; images: string[] }) {
+export async function getProjectForProduct(productId: string) {
     try {
         const { userId } = await auth();
-        // Since this is called from product page which might be public or protected, 
-        // if no user, we fall back to "user_default" or handle gracefullly. 
-        // For now, let's assume protected.
         const ownerId = userId || "user_default";
 
-        // 1. Try to find existing project linked to this product (and owned by user)
         const existing = await prisma.project.findFirst({
-            where: { defaultProductId: product.id, userId: ownerId },
+            where: { defaultProductId: productId, userId: ownerId },
             include: { generations: { orderBy: { createdAt: 'desc' } } }
+        });
+
+        return existing || null;
+    } catch (e) {
+        console.error("Failed to get project for product:", e);
+        return null;
+    }
+}
+
+export async function createProjectForProduct(productId: string, title: string, imageUrl: string) {
+    try {
+        const { userId } = await auth();
+        if (!userId) throw new Error("Unauthorized");
+
+        const existing = await prisma.project.findFirst({
+            where: { defaultProductId: productId, userId },
         });
 
         if (existing) return existing;
 
-        // 2. Create new project if none exists
-        // Use first product image or a placeholder
-        const flowImageUrl = product.images[0] || "https://placehold.co/600x400?text=No+Image";
-
         const newProject = await prisma.project.create({
             data: {
-                name: product.title,
-                originalImageUrl: flowImageUrl,
-                defaultProductId: product.id,
-                description: `Workspace for ${product.title}`,
-                userId: ownerId
+                name: title,
+                originalImageUrl: imageUrl,
+                defaultProductId: productId,
+                description: `Workspace for ${title}`,
+                userId
             },
-            include: { generations: { orderBy: { createdAt: 'desc' } } }
         });
 
-        // Loophole: We cannot revalidatePath during render (GET).
-        // Since this is lazy creation on view, we skip revalidating the list for now.
-        // revalidatePath('/projects'); 
+        revalidatePath('/projects');
         return newProject;
     } catch (e) {
-        console.error("Failed to get/create project for product:", e);
+        console.error("Failed to create project for product:", e);
         throw e;
     }
 }

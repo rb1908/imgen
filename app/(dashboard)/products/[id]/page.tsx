@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db';
 import { ProductWorkspace } from '@/components/ProductWorkspace';
 import { notFound } from 'next/navigation';
-import { getOrCreateProjectForProduct } from '@/app/actions/projects';
+import { getProjectForProduct } from '@/app/actions/projects';
 import { getTemplates } from '@/app/actions/templates';
 
 
@@ -25,8 +25,8 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
         notFound();
     }
 
-    // 2. Fetch/Create Project (Dependent on Product)
-    const project = await getOrCreateProjectForProduct(product);
+    // 2. Fetch Project (Dependent on Product) - Do NOT create automatically
+    const project = await getProjectForProduct(product.id);
 
     return (
         <ProductWorkspace

@@ -5,6 +5,7 @@ import { Product, Project, Template, Generation } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, X, LayoutTemplate, MoreVertical, Loader2 } from 'lucide-react';
 import { saveAsTemplate } from '@/app/actions/product_templates';
+import { createProjectForProduct } from '@/app/actions/projects';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,9 +34,10 @@ interface ProductWorkspaceProps {
     templates: any[];
 }
 
-export function ProductWorkspace({ product: initialProduct, project, templates }: ProductWorkspaceProps) {
+export function ProductWorkspace({ product: initialProduct, project: initialProject, templates }: ProductWorkspaceProps) {
     const [product, setProduct] = useState<ProductWithRelations>(initialProduct);
-    const [generations, setGenerations] = useState<Generation[]>(project.generations);
+    const [project, setProject] = useState<any>(initialProject);
+    const [generations, setGenerations] = useState<Generation[]>(initialProject?.generations || []);
     const [activeImage, setActiveImage] = useState<string>(product.images[0] || 'https://placehold.co/800x800?text=No+Image');
     const [isGenerating, setIsGenerating] = useState(false);
 
@@ -75,6 +77,12 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
         try {
             // Use referenceImageUrl if provided (AI Studio mode), otherwise activeImage (Editor mode)
             const refImage = referenceImageUrl || activeImage;
+
+            if (!project?.id) {
+                toast.error("No active project");
+                return;
+            }
+
             const result = await generateVariations(project.id, mode, input, refImage);
             const newGens = result as Generation[];
             setGenerations(prev => [...newGens, ...prev]);
@@ -175,7 +183,28 @@ export function ProductWorkspace({ product: initialProduct, project, templates }
             <div className="flex-1 flex flex-col relative w-full overflow-hidden bg-white">
                 <ListingEditor
                     product={product}
-                    onOpenStudio={(url) => {
+                    onOpenStudio={async (url) => {
+                        let currentProjectId = project?.id;
+
+                        if (!currentProjectId) {
+                            try {
+                                toast.loading("Initializing Workspace...");
+                                // Auto-create project if missing
+                                const newProject = await createProjectForProduct(
+                                    product.id,
+                                    product.title,
+                                    product.images[0] || "https://placehold.co/600x400?text=No+Image"
+                                );
+                                setProject(newProject);
+                                currentProjectId = newProject.id;
+                                toast.dismiss();
+                            } catch (e) {
+                                toast.dismiss();
+                                toast.error("Failed to initialize workspace");
+                                return;
+                            }
+                        }
+
                         if (url) {
                             setActiveImage(url);
                             setStartViewMode('viewer');
