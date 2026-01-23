@@ -322,6 +322,9 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
                                             fill={obj.style?.fill || 'black'}
                                             fontFamily={obj.style?.fontFamily || 'Inter'}
                                             opacity={obj.style?.opacity ?? 1}
+                                            align={obj.style?.align || 'left'}
+                                            fontStyle={obj.style?.fontStyle || 'normal'}
+                                            textDecoration={obj.style?.textDecoration || ''}
                                         />
                                     );
                                 }

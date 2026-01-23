@@ -120,6 +120,55 @@ export function SocialEditorProperties() {
                                 onValueChange={(v: number[]) => updateProp('fontSize', v[0])}
                             />
                         </div>
+
+                        <div className="space-y-3">
+                            <Label>Alignment</Label>
+                            <div className="flex bg-zinc-800 rounded-md p-1 gap-1">
+                                {['left', 'center', 'right'].map((align) => (
+                                    <Button
+                                        key={align}
+                                        variant="ghost"
+                                        size="sm"
+                                        className={`flex-1 h-8 ${selectedObject.style?.align === align ? 'bg-zinc-700 text-white' : 'text-neutral-400'}`}
+                                        onClick={() => updateProp('align', align)}
+                                    >
+                                        {align === 'left' && <AlignLeft className="w-4 h-4" />}
+                                        {align === 'center' && <AlignCenter className="w-4 h-4" />}
+                                        {align === 'right' && <AlignRight className="w-4 h-4" />}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <Label>Style</Label>
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className={`flex-1 ${selectedObject.style?.fontStyle === 'bold' ? 'bg-indigo-900 border-indigo-500 text-white' : ''}`}
+                                    onClick={() => updateProp('fontStyle', selectedObject.style?.fontStyle === 'bold' ? 'normal' : 'bold')}
+                                >
+                                    <span className="font-bold">B</span>
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className={`flex-1 ${selectedObject.style?.fontStyle === 'italic' ? 'bg-indigo-900 border-indigo-500 text-white' : ''}`}
+                                    onClick={() => updateProp('fontStyle', selectedObject.style?.fontStyle === 'italic' ? 'normal' : 'italic')}
+                                >
+                                    <span className="italic">I</span>
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className={`flex-1 ${selectedObject.style?.textDecoration === 'underline' ? 'bg-indigo-900 border-indigo-500 text-white' : ''}`}
+                                    onClick={() => updateProp('textDecoration', selectedObject.style?.textDecoration === 'underline' ? '' : 'underline')}
+                                >
+                                    <span className="underline">U</span>
+                                </Button>
+                            </div>
+                        </div>
                     </>
                 )}
 
@@ -136,10 +185,10 @@ export function SocialEditorProperties() {
                 <div className="space-y-3">
                     <Label>Layering</Label>
                     <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="flex-1" onClick={() => dispatch({ type: 'MOVE_OBJECT', id: selectedObject.id, dx: 0, dy: 0 }, 'human')}>
-                            <MoveUp className="w-4 h-4 mr-2" /> Bring Fwd
-                        </Button>
-                        {/* To implement real layering we need REORDER_OBJECT command. For now just placeholder */}
+                        {/* Layers handled in Layers Panel */}
+                        <div className="text-xs text-neutral-500">
+                            Use the Layers Panel to reorder objects.
+                        </div>
                     </div>
                 </div>
 
