@@ -53,8 +53,9 @@ export function SocialEditorTools({ activeTool, onToolSelect }: SocialEditorTool
 
                 <ToolButton
                     icon={<Type />}
-                    label="Add Text"
-                    onClick={handleAddText}
+                    label="Text"
+                    active={activeTool === 'text'}
+                    onClick={() => onToolSelect(activeTool === 'text' ? null : 'text')}
                 />
 
                 <div className="relative">

@@ -11,6 +11,7 @@ import { SocialEditorProperties } from './SocialEditorProperties';
 import { createToolObject } from '@/lib/canvas/toolRegistry';
 
 import { ShapesPanel } from './ShapesPanel';
+import { TextPresetsPanel } from './TextPresetsPanel';
 import { getSnapGuides, GuideLine } from '@/lib/canvas/snapping';
 import { Line as KonvaLine, Rect as KonvaRect, Circle as KonvaCircle, RegularPolygon as KonvaRegularPolygon, Star as KonvaStar } from 'react-konva';
 import { LayersPanel } from './LayersPanel';
@@ -262,6 +263,18 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
                     >
                         <div className="w-[280px] h-full">
                             <ShapesPanel />
+                        </div>
+                    </motion.div>
+                )}
+                {activeTool === 'text' && (
+                    <motion.div
+                        initial={{ width: 0, opacity: 0 }}
+                        animate={{ width: 280, opacity: 1 }}
+                        exit={{ width: 0, opacity: 0 }}
+                        className="border-r border-neutral-800 bg-neutral-900 overflow-hidden z-20"
+                    >
+                        <div className="w-[280px] h-full">
+                            <TextPresetsPanel />
                         </div>
                     </motion.div>
                 )}

@@ -12,7 +12,7 @@ export type CanvasCommand =
     | { type: 'ADD_ZONE'; zone: Zone }
     | { type: 'ADD_ZONE'; zone: Zone }
     | { type: 'ADD_TOOL'; toolType: string; x: number; y: number }
-    | { type: 'ADD_TEXT'; content: string; x: number; y: number; style?: string }
+    | { type: 'ADD_TEXT'; content: string; x: number; y: number; style?: any }
     | { type: 'ADD_IMAGE'; url: string; x: number; y: number }
     | { type: 'REORDER_OBJECTS'; newOrder: string[] };
 
@@ -41,12 +41,19 @@ export function applyCommand(currentScene: Scene, command: CanvasCommand): Comma
 
         case 'ADD_TEXT':
             const textId = `text_${Date.now()}`;
+            // Parse style if it comes as JSON string (legacy) or use as object if updated (but Typescript says string?)
+            // Definition: | { type: 'ADD_TEXT'; content: string; x: number; y: number; style?: any } 
+
+            // Default style
+            const defaultStyle = { fontSize: 40, fill: 'white', fontFamily: 'Inter' };
+            const mergedStyle = { ...defaultStyle, ...(typeof command.style === 'string' ? {} : command.style) }; // If string, ignore for now or parse. Presets send object.
+
             nextScene.objects.push({
                 id: textId,
                 type: 'text',
                 pose: { x: command.x, y: command.y, r: 0, scaleX: 1, scaleY: 1 },
                 content: command.content,
-                style: { fontSize: 40, fill: 'white', fontFamily: 'Inter' },
+                style: mergedStyle,
                 locked: false,
                 metadata: {}
             });
