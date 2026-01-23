@@ -43,8 +43,8 @@ export async function saveAsTemplate(productId: string, templateName: string) {
             }
         });
 
-        revalidatePath('/products'); // Revalidate places where templates might be listed? 
-        // Actually templates are used in Launcher, so we revalidate nothing specifically until we have a template list page.
+        revalidatePath('/products');
+        revalidatePath('/settings/templates');
 
         return { success: true, template };
     } catch (e) {
@@ -66,5 +66,43 @@ export async function getProductTemplates() {
     } catch (e) {
         console.error("Failed to fetch templates:", e);
         return [];
+    }
+}
+
+export async function deleteProductTemplate(id: string) {
+    try {
+        const { userId } = await auth();
+        if (!userId) throw new Error("Unauthorized");
+
+        await prisma.productTemplate.delete({
+            where: { id, userId }
+        });
+
+        revalidatePath('/settings/templates');
+        return { success: true };
+    } catch (e) {
+        console.error("Failed to delete template:", e);
+        return { success: false, error: "Failed to delete template" };
+    }
+}
+
+export async function updateProductTemplate(id: string, name: string, data: any) {
+    try {
+        const { userId } = await auth();
+        if (!userId) throw new Error("Unauthorized");
+
+        const template = await prisma.productTemplate.update({
+            where: { id, userId },
+            data: {
+                name,
+                data
+            }
+        });
+
+        revalidatePath('/settings/templates');
+        return { success: true, template };
+    } catch (e) {
+        console.error("Failed to update template:", e);
+        return { success: false, error: "Failed to update template" };
     }
 }
