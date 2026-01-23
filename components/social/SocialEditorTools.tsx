@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { MousePointer2, Type, Image as ImageIcon, LayoutTemplate, Grid3X3, Smartphone } from 'lucide-react';
+import { MousePointer2, Type, Image as ImageIcon, LayoutTemplate, Grid3X3, Smartphone, Shapes } from 'lucide-react';
 import { useCanvasStore } from '@/lib/canvas/store';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -73,6 +73,13 @@ export function SocialEditorTools({ activeTool, onToolSelect }: SocialEditorTool
                     label="Layers"
                     active={activeTool === 'layers'}
                     onClick={() => onToolSelect(activeTool === 'layers' ? null : 'layers')}
+                />
+
+                <ToolButton
+                    icon={<Shapes />}
+                    label="Shapes"
+                    active={activeTool === 'shapes'}
+                    onClick={() => onToolSelect(activeTool === 'shapes' ? null : 'shapes')}
                 />
 
                 <div className="h-px w-8 bg-border my-2" />

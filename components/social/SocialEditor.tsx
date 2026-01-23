@@ -3,15 +3,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Undo, Redo, Check, ZoomIn, ZoomOut, Hand } from 'lucide-react';
-import { Stage, Layer, Image as KonvaImage, Text as KonvaText, Transformer, Rect as KonvaRect, Group } from 'react-konva';
+import { Stage, Layer, Image as KonvaImage, Text as KonvaText, Transformer, Group } from 'react-konva';
 import useImage from 'use-image';
 import { useCanvasStore } from '@/lib/canvas/store';
 import { SocialEditorTools } from './SocialEditorTools';
 import { SocialEditorProperties } from './SocialEditorProperties';
 import { createToolObject } from '@/lib/canvas/toolRegistry';
 
+import { ShapesPanel } from './ShapesPanel';
 import { getSnapGuides, GuideLine } from '@/lib/canvas/snapping';
-import { Line as KonvaLine } from 'react-konva';
+import { Line as KonvaLine, Rect as KonvaRect, Circle as KonvaCircle, RegularPolygon as KonvaRegularPolygon, Star as KonvaStar } from 'react-konva';
 import { LayersPanel } from './LayersPanel';
 
 
@@ -252,6 +253,18 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
                         </div>
                     </motion.div>
                 )}
+                {activeTool === 'shapes' && (
+                    <motion.div
+                        initial={{ width: 0, opacity: 0 }}
+                        animate={{ width: 280, opacity: 1 }}
+                        exit={{ width: 0, opacity: 0 }}
+                        className="border-r border-neutral-800 bg-neutral-900 overflow-hidden z-20"
+                    >
+                        <div className="w-[280px] h-full">
+                            <ShapesPanel />
+                        </div>
+                    </motion.div>
+                )}
             </AnimatePresence>
 
             {/* Middle: Canvas Area */}
@@ -380,6 +393,40 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
                                             onDragMove={handleObjectDragMove}
                                         />
                                     );
+                                }
+                                if (obj.type === 'shape') {
+                                    const commonProps = {
+                                        key: obj.id,
+                                        id: obj.id,
+                                        draggable: true,
+                                        onClick: () => setSelectedId(obj.id),
+                                        onTap: () => setSelectedId(obj.id),
+                                        onDragEnd: (e: any) => handleObjectDragEnd(e, obj.id),
+                                        onTransformEnd: (e: any) => handleTransformEnd(e, obj.id),
+                                        onDragMove: handleObjectDragMove,
+                                        x: obj.pose.x,
+                                        y: obj.pose.y,
+                                        rotation: obj.pose.r,
+                                        scaleX: obj.pose.scaleX,
+                                        scaleY: obj.pose.scaleY,
+                                        fill: obj.style?.fill || '#3b82f6',
+                                        opacity: obj.style?.opacity ?? 1,
+                                    };
+
+                                    if (obj.content === 'rect') {
+                                        return <KonvaRect {...commonProps} width={obj.style?.width || 100} height={obj.style?.height || 100} />;
+                                    }
+                                    if (obj.content === 'circle') {
+                                        // Konva Circle radius is half of width usually
+                                        return <KonvaCircle {...commonProps} radius={obj.style?.radius || 50} />;
+                                    }
+                                    if (obj.content === 'triangle') {
+                                        return <KonvaRegularPolygon {...commonProps} sides={3} radius={obj.style?.radius || 60} />;
+                                    }
+                                    if (obj.content === 'star') {
+                                        // Star needs inner/outer radius
+                                        return <KonvaStar {...commonProps} numPoints={5} innerRadius={30} outerRadius={60} fill={obj.style?.fill || '#F1C40F'} />;
+                                    }
                                 }
                                 return null;
                             })}
