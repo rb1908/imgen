@@ -38,7 +38,7 @@ export function ProductWorkspace({ product: initialProduct, project: initialProj
     const [product, setProduct] = useState<ProductWithRelations>(initialProduct);
     const [project, setProject] = useState<any>(initialProject);
     const [generations, setGenerations] = useState<Generation[]>(initialProject?.generations || []);
-    const [activeImage, setActiveImage] = useState<string>(product.images[0] || 'https://placehold.co/800x800?text=No+Image');
+    const [activeImage, setActiveImage] = useState<string>(product.images[0] || '/placeholder.svg');
     const [isGenerating, setIsGenerating] = useState(false);
 
     // Template State
@@ -193,7 +193,7 @@ export function ProductWorkspace({ product: initialProduct, project: initialProj
                                 const newProject = await createProjectForProduct(
                                     product.id,
                                     product.title,
-                                    product.images[0] || "https://placehold.co/600x400?text=No+Image"
+                                    product.images[0] || "/placeholder.svg"
                                 );
                                 setProject(newProject);
                                 currentProjectId = newProject.id;

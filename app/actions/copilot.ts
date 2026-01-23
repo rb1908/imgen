@@ -16,26 +16,29 @@ AVAILABLE COMMANDS:
    - Logic: If user asks for an object, try to map it to a toolType. If not found, ignore or pick closest.
    - Default x,y: 540, 540 (center of 1080x1080 canvas) if not specified or implied "center".
 
-2. ADD_TEXT: { type: 'ADD_TEXT', content: string, style?: string, x?: number, y?: number }
-   - Styles: 'modern', 'classic', 'bold'
-   - Default style: 'modern'
+2. ADD_TEXT: { type: 'ADD_TEXT', content: string, style?: any, x?: number, y?: number }
+   - style object keys: fontFamily (Str), fill (Hex), fontSize (Num), align ('left'|'center'|'right').
+   - Default: { fontFamily: 'Inter', fill: '#000000', fontSize: 40 }
    - Default x,y: 540, 540
 
-3. MOVE_OBJECT: { type: 'MOVE_OBJECT', id: string, dx: number, dy: number }
-   - Use this if user says "move it right", "move down".
-   - If ID is unknown, you can't really do this unless context is passed, but for now assuming selected object or implicit context isn't fully available yet. 
-   - *Constraint*: For this v1, mostly focus on ADD commands unless you get specific IDs.
+3. ADD_SHAPE: { type: 'ADD_SHAPE', shape: 'rect'|'circle'|'triangle'|'star', x?: number, y?: number, color?: string }
+   - Default color: '#3b82f6'
+   - Default x,y: 540, 540
 
-4. LOGIC RULES:
+4. MOVE_OBJECT: { type: 'MOVE_OBJECT', id: string, dx: number, dy: number }
+   - Use this if user says "move it right", "move down".
+   - If ID is unknown, you can't really do this unless context is passed.
+
+LOGIC RULES:
    - If the user asks for "knife", return ADD_TOOL with 'tool.knife'.
-   - If the user asks for "text saying Hello", return ADD_TEXT with 'Hello'.
+   - If the user asks for "blue circle", return ADD_SHAPE with { shape: 'circle', color: '#0000FF' }.
+   - If the user asks for "headline saying Sale", return ADD_TEXT with { content: "Sale", style: { fontSize: 80, fontWeight: 'bold' } }.
    - Return ONLY a raw JSON array of commands. No markdown.
 
-EXAMPLE INPUT: "Add a knife and text saying Sale"
+EXAMPLE INPUT: "Add a red star in the corner"
 EXAMPLE OUTPUT:
 [
-  { "type": "ADD_TOOL", "toolType": "tool.knife", "x": 500, "y": 500 },
-  { "type": "ADD_TEXT", "content": "Sale", "x": 500, "y": 600 }
+  { "type": "ADD_SHAPE", "shape": "star", "x": 100, "y": 100, "color": "#FF0000" }
 ]
 `;
 
@@ -61,11 +64,44 @@ export async function generateCanvasCommands(
         const text = result.response.text();
         console.log("Copilot Output:", text);
 
-        const commands = JSON.parse(text);
+        let rawCommands = JSON.parse(text);
 
-        if (!Array.isArray(commands)) {
+        if (!Array.isArray(rawCommands)) {
             throw new Error("AI did not return an array");
         }
+
+        // Transform simplified AI commands to actual CanvasCommands
+        const commands: CanvasCommand[] = rawCommands.map((cmd: any) => {
+            if (cmd.type === 'ADD_SHAPE') {
+                // Transform to ADD_OBJECT
+                return {
+                    type: 'ADD_OBJECT',
+                    object: {
+                        id: `shape_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                        type: 'shape',
+                        pose: {
+                            x: cmd.x || 540,
+                            y: cmd.y || 540,
+                            r: 0,
+                            scaleX: 1,
+                            scaleY: 1
+                        },
+                        content: cmd.shape,
+                        style: {
+                            fill: cmd.color || '#3b82f6',
+                            width: 200,
+                            height: 200,
+                            radius: 100,
+                            stroke: 'transparent',
+                            strokeWidth: 0
+                        },
+                        locked: false,
+                        metadata: {}
+                    }
+                };
+            }
+            return cmd;
+        });
 
         return commands;
 

@@ -423,6 +423,8 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
                                         scaleX: obj.pose.scaleX,
                                         scaleY: obj.pose.scaleY,
                                         fill: obj.style?.fill || '#3b82f6',
+                                        stroke: obj.style?.stroke || 'transparent',
+                                        strokeWidth: obj.style?.strokeWidth || 0,
                                         opacity: obj.style?.opacity ?? 1,
                                     };
 
@@ -438,7 +440,7 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
                                     }
                                     if (obj.content === 'star') {
                                         // Star needs inner/outer radius
-                                        return <KonvaStar {...commonProps} numPoints={5} innerRadius={30} outerRadius={60} fill={obj.style?.fill || '#F1C40F'} />;
+                                        return <KonvaStar {...commonProps} numPoints={5} innerRadius={30} outerRadius={60} />;
                                     }
                                 }
                                 return null;

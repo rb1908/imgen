@@ -1,7 +1,6 @@
 'use server';
 
-// Temporary mock action for UI development
-// This will eventually coordinate `generateSocialImage` and `generateSocialMetadata`
+// Generates social media variants using Gemini AI
 
 export interface SocialPostVariant {
     id: string;
