@@ -10,6 +10,9 @@ import { SocialEditorTools } from './SocialEditorTools';
 import { SocialEditorProperties } from './SocialEditorProperties';
 import { createToolObject } from '@/lib/canvas/toolRegistry';
 
+import { LayersPanel } from './LayersPanel';
+import { motion, AnimatePresence } from 'framer-motion';
+
 interface SocialEditorProps {
     baseImage?: string;
     onSave?: (dataUrl: string) => void;
@@ -44,6 +47,9 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
 
     // Local Interaction State
     const [panningMode, setPanningMode] = useState(false);
+
+    // Tools State
+    const [activeTool, setActiveTool] = useState<string | null>(null);
 
     // Initialize Scene
     useEffect(() => {
@@ -113,10 +119,6 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
     // Wheel Zoom
     const handleWheel = (e: any) => {
         e.evt.preventDefault();
-        // If cmd/ctrl key is pressed or just default behavior, usually default is pan, cmd+scroll is zoom.
-        // Let's make scroll = zoom for "pro" feel or pan vertically.
-        // Figma: Ctrl+Scroll = Zoom. Space+Drag = Pan.
-
         if (e.evt.ctrlKey || e.evt.metaKey) {
             const scaleBy = 1.1;
             const stage = e.target.getStage();
@@ -137,7 +139,6 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
             };
             setPan(newPos);
         } else {
-            // Pan on scroll
             setPan({
                 x: pan.x - e.evt.deltaX,
                 y: pan.y - e.evt.deltaY
@@ -149,9 +150,6 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
         if (stageRef.current && onSave) {
             setSelectedId(null);
             setTimeout(() => {
-                // Export logic needs to account for zoom/pan scaling
-                // Temporarily reset scale to 1:1 for export then restore?
-                // Or create a hidden stage. For V1 simple trick:
                 const oldScale = stageRef.current.scaleX();
                 const oldPos = stageRef.current.position();
 
@@ -160,7 +158,6 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
 
                 const dataUrl = stageRef.current.toDataURL({ pixelRatio: 2 });
 
-                // Restore logic
                 stageRef.current.scale({ x: oldScale, y: oldScale });
                 stageRef.current.position(oldPos);
 
@@ -175,7 +172,6 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
     };
 
     const handleStageDragEnd = (e: any) => {
-        // Sync pan state
         setPan({
             x: e.target.x(),
             y: e.target.y()
@@ -209,9 +205,25 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
         <div className="flex h-full w-full overflow-hidden bg-neutral-950 text-white">
 
             {/* Left Toolbar - Dark */}
-            <div className="border-r border-neutral-800 bg-neutral-900">
-                <SocialEditorTools />
+            <div className="border-r border-neutral-800 bg-neutral-900 z-30">
+                <SocialEditorTools activeTool={activeTool} onToolSelect={setActiveTool} />
             </div>
+
+            {/* Side Panel (Contextual) */}
+            <AnimatePresence>
+                {activeTool === 'layers' && (
+                    <motion.div
+                        initial={{ width: 0, opacity: 0 }}
+                        animate={{ width: 280, opacity: 1 }}
+                        exit={{ width: 0, opacity: 0 }}
+                        className="border-r border-neutral-800 bg-neutral-900 overflow-hidden z-20"
+                    >
+                        <div className="w-[280px] h-full">
+                            <LayersPanel />
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Middle: Canvas Area */}
             <div className="flex-1 relative overflow-hidden flex flex-col bg-neutral-950">

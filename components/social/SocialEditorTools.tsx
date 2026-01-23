@@ -5,7 +5,12 @@ import { MousePointer2, Type, Image as ImageIcon, LayoutTemplate, Grid3X3, Smart
 import { useCanvasStore } from '@/lib/canvas/store';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-export function SocialEditorTools() {
+export interface SocialEditorToolsProps {
+    activeTool: string | null;
+    onToolSelect: (tool: string | null) => void;
+}
+
+export function SocialEditorTools({ activeTool, onToolSelect }: SocialEditorToolsProps) {
     const { dispatch, safeAreaVisible, setSafeAreaVisible, snapEnabled, setSnapEnabled } = useCanvasStore();
 
     const handleAddText = () => {
@@ -18,11 +23,7 @@ export function SocialEditorTools() {
         });
     };
 
-    // Placeholder for Image Upload Trigger (Real implementation needs a hidden input or asset picker)
     const handleAddImage = () => {
-        // Trigger generic "Add Image" - normally opens a dialog
-        // For V1, let's just dispatch a placeholder to show it works, or rely on the "Asset Picker" in properties?
-        // User requested "Image/Logo tool". Ideally clicks button -> opens file picker.
         document.getElementById('editor-image-upload')?.click();
     };
 
@@ -32,10 +33,10 @@ export function SocialEditorTools() {
             const url = URL.createObjectURL(file);
             dispatch({
                 type: 'ADD_IMAGE',
-                url, // Simplified action, assumes Action knows what to do
+                url,
                 x: 540,
                 y: 540
-            } as any); // Type cast for now until we update commands type definition if needed, or use ADD_TOOL with image type
+            } as any);
         }
     };
 
@@ -43,9 +44,18 @@ export function SocialEditorTools() {
         <TooltipProvider>
             <div className="w-16 border-r border-neutral-800 bg-neutral-900 flex flex-col items-center py-4 gap-4 z-10 h-full">
 
-                <ToolButton icon={<MousePointer2 />} label="Select" active />
+                <ToolButton
+                    icon={<MousePointer2 />}
+                    label="Select"
+                    active={activeTool === null}
+                    onClick={() => onToolSelect(null)}
+                />
 
-                <ToolButton icon={<Type />} label="Add Text" onClick={handleAddText} />
+                <ToolButton
+                    icon={<Type />}
+                    label="Add Text"
+                    onClick={handleAddText}
+                />
 
                 <div className="relative">
                     <ToolButton icon={<ImageIcon />} label="Add Image" onClick={handleAddImage} />
@@ -57,6 +67,13 @@ export function SocialEditorTools() {
                         onChange={handleFileChange}
                     />
                 </div>
+
+                <ToolButton
+                    icon={<LayoutTemplate />}
+                    label="Layers"
+                    active={activeTool === 'layers'}
+                    onClick={() => onToolSelect(activeTool === 'layers' ? null : 'layers')}
+                />
 
                 <div className="h-px w-8 bg-border my-2" />
 

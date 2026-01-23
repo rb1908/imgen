@@ -13,7 +13,8 @@ export type CanvasCommand =
     | { type: 'ADD_ZONE'; zone: Zone }
     | { type: 'ADD_TOOL'; toolType: string; x: number; y: number }
     | { type: 'ADD_TEXT'; content: string; x: number; y: number; style?: string }
-    | { type: 'ADD_IMAGE'; url: string; x: number; y: number };
+    | { type: 'ADD_IMAGE'; url: string; x: number; y: number }
+    | { type: 'REORDER_OBJECTS'; newOrder: string[] };
 
 export interface CommandResult {
     scene: Scene;
@@ -114,6 +115,30 @@ export function applyCommand(currentScene: Scene, command: CanvasCommand): Comma
             validateZone(command.zone);
             nextScene.zones.push(command.zone);
             return { scene: nextScene, event: `Added Zone ${command.zone.id}` };
+
+        case 'REORDER_OBJECTS':
+            //Create a map for quick lookup
+            const objMap = new Map(nextScene.objects.map(o => [o.id, o]));
+            const newObjects: CanvasObject[] = [];
+
+            // Add objects based on newOrder
+            for (const id of command.newOrder) {
+                const obj = objMap.get(id);
+                if (obj) {
+                    newObjects.push(obj);
+                    objMap.delete(id);
+                }
+            }
+
+            // If any objects were missing from newOrder, append them (or decide to error)
+            // Ideally newOrder is comprehensive. If not, we keep untracked objects at the end?
+            // Let's assume comprehensive for now, or append remaining.
+            for (const [_, obj] of objMap) {
+                newObjects.push(obj);
+            }
+
+            nextScene.objects = newObjects;
+            return { scene: nextScene, event: 'Reordered Layers' };
 
         default:
             return { scene: nextScene };
