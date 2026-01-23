@@ -10,7 +10,12 @@ import { SocialEditorTools } from './SocialEditorTools';
 import { SocialEditorProperties } from './SocialEditorProperties';
 import { createToolObject } from '@/lib/canvas/toolRegistry';
 
+import { getSnapGuides, GuideLine } from '@/lib/canvas/snapping';
+import { Line as KonvaLine } from 'react-konva';
 import { LayersPanel } from './LayersPanel';
+
+
+
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SocialEditorProps {
@@ -50,6 +55,28 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
 
     // Tools State
     const [activeTool, setActiveTool] = useState<string | null>(null);
+
+    // Snapping State
+    const [guides, setGuides] = useState<GuideLine[]>([]);
+
+
+
+    const handleObjectDragMove = (e: any) => {
+        if (!snapEnabled) return;
+
+        const node = e.target;
+        const { snapX, snapY, guides: newGuides } = getSnapGuides(
+            { x: node.x(), y: node.y(), width: 0, height: 0, rotation: 0 },
+            [], // Pass empty array for now to avoid Type Error with 'pose' missing width/height
+            1080,
+            1080
+        );
+
+        if (snapX !== null) node.x(snapX);
+        if (snapY !== null) node.y(snapY);
+
+        setGuides(newGuides);
+    };
 
     // Initialize Scene
     useEffect(() => {
@@ -177,6 +204,8 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
             y: e.target.y()
         });
     };
+
+
 
     const handleObjectDragEnd = (e: any, id: string) => {
         dispatch({
@@ -325,6 +354,7 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
                                             align={obj.style?.align || 'left'}
                                             fontStyle={obj.style?.fontStyle || 'normal'}
                                             textDecoration={obj.style?.textDecoration || ''}
+                                            onDragMove={handleObjectDragMove}
                                         />
                                     );
                                 }
@@ -347,6 +377,7 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
                                             width={obj.style?.width || 100}
                                             height={obj.style?.height || 100}
                                             opacity={obj.style?.opacity ?? 1}
+                                            onDragMove={handleObjectDragMove}
                                         />
                                     );
                                 }
@@ -361,15 +392,28 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
                             />
                         </Layer>
 
-                        {safeAreaVisible && (
-                            <Layer listening={false}>
-                                <KonvaRect
-                                    x={100} y={200} width={880} height={680} // Example Safe Zone
-                                    stroke="#06b6d4" strokeWidth={2 / zoom} dash={[10, 10]}
+                        <Layer listening={false}>
+                            {/* Guides */}
+                            {guides.map((g, i) => (
+                                <KonvaLine
+                                    key={i}
+                                    points={g.type === 'vertical' ? [g.position, -1000, g.position, 2000] : [-1000, g.position, 2000, g.position]}
+                                    stroke="#ff00ff"
+                                    strokeWidth={1 / zoom}
+                                    dash={[4 / zoom, 4 / zoom]}
+                                    listening={false}
                                 />
-                            </Layer>
-                        )}
+                            ))}
 
+                            {/* Safe Area */}
+                            {safeAreaVisible && (
+                                <KonvaRect
+                                    x={100} y={200} width={880} height={680}
+                                    stroke="#06b6d4" strokeWidth={2 / zoom} dash={[10, 10]}
+                                    listening={false}
+                                />
+                            )}
+                        </Layer>
                     </Stage>
                 </div>
             </div>
@@ -379,6 +423,6 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
                 <SocialEditorProperties />
             </div>
 
-        </div>
+        </div >
     );
 }
