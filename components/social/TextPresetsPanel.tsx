@@ -16,6 +16,7 @@ interface Preset {
 interface PresetGroup {
     category: string;
     items: Preset[];
+    layout?: 'list' | 'grid';
 }
 
 export function TextPresetsPanel() {
@@ -25,6 +26,7 @@ export function TextPresetsPanel() {
     const presetGroups: PresetGroup[] = [
         {
             category: 'Basics',
+            layout: 'list',
             items: [
                 { label: 'Heading', text: 'Add a heading', style: { fontFamily: 'Inter', fontSize: 60, fontWeight: 'bold' } },
                 { label: 'Subheading', text: 'Add a subheading', style: { fontFamily: 'Inter', fontSize: 40, fontWeight: '500' } },
@@ -33,6 +35,7 @@ export function TextPresetsPanel() {
         },
         {
             category: 'Fancy',
+            layout: 'grid',
             items: [
                 { label: 'Script', text: 'Feeling Fancy', style: { fontFamily: 'Great Vibes', fontSize: 80, fill: '#ec4899' } },
                 { label: 'Retro', text: 'Stay Groovy', style: { fontFamily: 'Pacifico', fontSize: 60, fill: '#f97316' } },
@@ -68,24 +71,30 @@ export function TextPresetsPanel() {
                 <div className="flex flex-col gap-2">
                     {presetGroups.map((group, i) => (
                         <CollapsibleSection key={i} title={group.category} defaultOpen={true}>
-                            <div className="flex flex-col gap-3 pt-2">
+                            <div className={cn(
+                                "pt-2",
+                                group.layout === 'grid' ? "grid grid-cols-2 gap-2" : "flex flex-col gap-3"
+                            )}>
                                 {group.items.map((preset, j) => (
                                     <button
                                         key={j}
-                                        className="w-full text-left p-3 rounded hover:bg-neutral-800 transition-colors border border-neutral-800 hover:border-neutral-700 group relative overflow-hidden bg-neutral-950/30"
+                                        className={cn(
+                                            "w-full text-left p-3 rounded hover:bg-neutral-800 transition-colors border border-neutral-800 hover:border-neutral-700 group relative overflow-hidden bg-neutral-950/30",
+                                            group.layout === 'grid' ? "h-24 flex items-center justify-center p-2 text-center" : ""
+                                        )}
                                         onClick={() => handleAddPreset(preset)}
                                     >
                                         <div
                                             style={{
                                                 fontFamily: preset.style?.fontFamily,
-                                                fontSize: Math.min((preset.style?.fontSize as number) || 20, 24),
+                                                fontSize: group.layout === 'grid' ? Math.min((preset.style?.fontSize as number) || 20, 20) : Math.min((preset.style?.fontSize as number) || 20, 24),
                                                 fontWeight: preset.style?.fontWeight,
                                                 fontStyle: preset.style?.fontStyle,
                                                 color: preset.style?.fill || 'white',
                                                 textShadow: preset.style?.shadowBlur ? `0 0 ${preset.style.shadowBlur}px ${preset.style.shadowColor}` : undefined,
                                                 WebkitTextStroke: preset.style?.stroke ? `0.5px ${preset.style.stroke}` : undefined
                                             }}
-                                            className="preview-text truncate"
+                                            className={cn("preview-text w-full", group.layout === 'grid' ? "break-words leading-tight" : "truncate")}
                                         >
                                             {preset.text}
                                         </div>
