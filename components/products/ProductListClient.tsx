@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/PageHeader';
 import { PageScaffold } from '@/components/PageScaffold';
 import { SearchModal } from '@/components/SearchModal';
@@ -24,26 +25,71 @@ import { ArrowUpCircle } from 'lucide-react';
 
 
 export function ProductListClient({ initialProducts }: { initialProducts: Product[] }) {
-    const [products, setProducts] = useState(initialProducts);
-    const [isSyncing, setIsSyncing] = useState(false);
+    // React Query for Data Fetching
+    const { data: products = [], isLoading, isRefetching } = useQuery({
+        queryKey: ['products'],
+        queryFn: async () => {
+            const { getLocalProducts } = await import('@/app/actions/shopify');
+            return getLocalProducts();
+        },
+        initialData: initialProducts,
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
+
+    const queryClient = useQueryClient();
+
+    // Mutations
+    const syncMutation = useMutation({
+        mutationFn: async () => {
+            const { syncShopifyProducts } = await import('@/app/actions/shopify');
+            return syncShopifyProducts();
+        },
+        onSuccess: (data) => {
+            if (data.success) {
+                toast.success(`Synced ${data.count} products`);
+                queryClient.invalidateQueries({ queryKey: ['products'] });
+                setLastSynced(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+            } else {
+                toast.error("Sync failed");
+            }
+        },
+        onError: () => toast.error("Sync error occurred")
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: async (ids: string[]) => {
+            const { deleteProducts } = await import('@/app/actions/shopify');
+            return deleteProducts(ids);
+        },
+        onSuccess: (data, variables) => {
+            if (data.success) {
+                toast.success("Products deleted");
+                queryClient.invalidateQueries({ queryKey: ['products'] });
+                setSelectedIds([]);
+            } else {
+                toast.error("Deletion failed");
+            }
+        },
+        onError: () => toast.error("Delete error occurred")
+    });
+
+    // Local UI State
     const [search, setSearch] = useState('');
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isReviewOpen, setIsReviewOpen] = useState(false);
-
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const router = useRouter();
-
     const [lastSynced, setLastSynced] = useState<string | null>(null);
 
     // Template State
     const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false);
     const [templateName, setTemplateName] = useState("");
     const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-
     const [isSavingTemplate, setIsSavingTemplate] = useState(false);
 
     // Deletion State
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
     const [isDeleting, setIsDeleting] = useState(false);
 
     const openSaveTemplate = (e: React.MouseEvent, productId: string) => {
@@ -56,6 +102,7 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
         if (!templateName.trim() || !selectedProductId) return;
         setIsSavingTemplate(true);
         try {
+            const { saveAsTemplate } = await import('@/app/actions/product_templates');
             const res = await saveAsTemplate(selectedProductId, templateName);
             if (res.success) {
                 toast.success(`Template "${templateName}" saved!`);
@@ -72,33 +119,14 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
         }
     };
 
-    const handleSync = async () => {
-        setIsSyncing(true);
-        const res = await syncShopifyProducts();
-        if (res.success) {
-            toast.success(`Synced ${res.count} products`);
-            setLastSynced(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-            window.location.reload();
-        } else {
-            toast.error("Sync failed");
-        }
-        setIsSyncing(false);
-    };
+    const isSyncing = syncMutation.isPending;
+    const isDeleting = deleteMutation.isPending;
+
+    const handleSync = () => syncMutation.mutate();
 
     const handleDelete = async (ids: string[]) => {
         if (!confirm(`Are you sure you want to delete ${ids.length} product(s)? This only removes them from the app, not Shopify.`)) return;
-
-        setIsDeleting(true);
-        const res = await deleteProducts(ids);
-        if (res.success) {
-            toast.success("Products deleted");
-            setProducts(prev => prev.filter(p => !ids.includes(p.id)));
-            setSelectedIds([]);
-            window.location.reload();
-        } else {
-            toast.error("Deletion failed");
-        }
-        setIsDeleting(false);
+        deleteMutation.mutate(ids);
     };
 
     const toggleSelection = (id: string) => {

@@ -21,6 +21,7 @@ export const viewport = {
 
 
 import { ClerkProvider } from '@clerk/nextjs';
+import { QueryProvider } from '@/components/providers/QueryProvider';
 
 export default function RootLayout({
     children,
@@ -39,8 +40,10 @@ export default function RootLayout({
                 <body
                     className={`${inter.className} antialiased bg-background text-foreground`}
                 >
-                    {children}
-                    <Toaster />
+                    <QueryProvider>
+                        {children}
+                        <Toaster />
+                    </QueryProvider>
                 </body>
             </html>
         </ClerkProvider>
