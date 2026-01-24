@@ -1,6 +1,6 @@
 import { getProject } from '@/app/actions/projects';
 import { getTemplates } from '@/app/actions/templates';
-import { ProjectWorkspace } from '@/components/ProjectWorkspace';
+import { ProjectWorkspace } from '@/components/projects/ProjectWorkspace';
 import { notFound } from 'next/navigation';
 
 export async function ProjectContent({ id }: { id: string }) {

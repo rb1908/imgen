@@ -2,7 +2,7 @@ import { GenerationsSearch } from '@/components/GenerationsSearch';
 import { PageHeader } from '@/components/PageHeader';
 import { PageScaffold } from '@/components/PageScaffold';
 import { getAllGenerations } from '@/app/actions/generations';
-import { GenerationGrid } from '@/components/GenerationGrid';
+import { GenerationGrid } from '@/components/studio/GenerationGrid';
 
 export async function GenerationsContent({ query }: { query?: string }) {
     const generations = await getAllGenerations(100, query);

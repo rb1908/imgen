@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Template } from '@prisma/client';
-import { TemplateItem } from './TemplateItem';
+import { TemplateItem } from '@/components/projects/TemplateItem';
 import { Palette } from 'lucide-react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
