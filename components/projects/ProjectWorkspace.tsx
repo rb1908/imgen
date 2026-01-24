@@ -108,6 +108,121 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
         onError: () => toast.error("Delete failed")
     });
 
+    // Auto-open prompt if templates are selected
+    useEffect(() => {
+        if (selectedTemplateIds.length > 0 && !isPromptOpen) {
+            setIsPromptOpen(true);
+        }
+    }, [selectedTemplateIds]);
+
+    const toggleTemplate = (id: string) => {
+        setSelectedTemplateIds(prev =>
+            prev.includes(id) ? prev.filter(tid => tid !== id) : [...prev, id]
+        );
+    };
+
+    const handleDeleteTemplate = async (id: string) => {
+        if (confirm('Are you sure you want to delete this template?')) {
+            await deleteTemplate(id);
+            toast.success('Template deleted');
+            setSelectedTemplateIds(prev => prev.filter(tid => tid !== id));
+        }
+    };
+
+    // Generation Selection Logic
+    const toggleGenerationSelection = (id: string) => {
+        setSelectedGenerationIds(prev =>
+            prev.includes(id) ? prev.filter(gid => gid !== id) : [...prev, id]
+        );
+    };
+
+    const handleSelectAllGenerations = () => {
+        if (selectedGenerationIds.length === generations.length) {
+            setSelectedGenerationIds([]);
+        } else {
+            setSelectedGenerationIds(generations.map(g => g.id));
+        }
+    };
+
+    const handleBulkAddToProduct = async () => {
+        if (!project.defaultProductId) return;
+        setIsBulkActionLoading(true);
+        try {
+            const { addProductImages } = await import('@/app/actions/product_actions');
+            const selectedImages = generations
+                .filter(g => selectedGenerationIds.includes(g.id))
+                .map(g => g.imageUrl);
+            const res = await addProductImages(project.defaultProductId, selectedImages);
+            if (res.success) {
+                toast.success(`Added ${res.count ?? selectedImages.length} images to product`);
+                setIsSelectionMode(false);
+                setSelectedGenerationIds([]);
+            } else {
+                toast.error("Failed to add images to product");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("An error occurred");
+        } finally {
+            setIsBulkActionLoading(false);
+        }
+    };
+
+    const handleBulkDownload = async () => {
+        setIsBulkActionLoading(true);
+        try {
+            const zip = new JSZip();
+            const selectedGens = generations.filter(g => selectedGenerationIds.includes(g.id));
+            toast.info("Preparing download...");
+            const promises = selectedGens.map(async (gen, i) => {
+                try {
+                    const response = await fetch(gen.imageUrl);
+                    const blob = await response.blob();
+                    const ext = gen.imageUrl.split('.').pop()?.split('?')[0] || 'png';
+                    const refName = (project.name || 'project').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+                    const cleanPrompt = (gen.promptUsed || customPrompt || 'generated').slice(0, 50).replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+                    const filename = `${refName}_${cleanPrompt}_${gen.id.slice(0, 4)}.${ext}`;
+                    zip.file(filename, blob);
+                } catch (e) {
+                    console.error("Failed to download image", gen.id, e);
+                }
+            });
+            await Promise.all(promises);
+            const content = await zip.generateAsync({ type: "blob" });
+            saveAs(content, `${(project.name || 'project').replace(/\s+/g, '-').toLowerCase()}-generations.zip`);
+            setIsSelectionMode(false);
+            setSelectedGenerationIds([]);
+            toast.success("Download started");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to create zip file");
+        } finally {
+            setIsBulkActionLoading(false);
+        }
+    };
+
+    // Sort templates
+    const sortedTemplates = useMemo(() => {
+        return templates;
+    }, [templates]);
+
+    const isAllTemplatesSelected = sortedTemplates.length > 0 && selectedTemplateIds.length === sortedTemplates.length;
+
+    const handleSelectAllTemplatesToggle = () => {
+        if (isAllTemplatesSelected) {
+            setSelectedTemplateIds([]);
+        } else {
+            setSelectedTemplateIds(sortedTemplates.map(t => t.id));
+        }
+    };
+
+    const handleScroll = () => {
+        if (leftPanelRef.current) {
+            const scrollTop = leftPanelRef.current.scrollTop;
+            setIsScrolled(scrollTop > 20);
+        }
+    };
+
     // Pending Generations State (Optimistic UI)
     const [pendingGenerations, setPendingGenerations] = useState<{ id: string; prompt: string }[]>([]);
 
