@@ -221,9 +221,10 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
             </div>
 
             {/* Side Panel (Contextual) */}
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
                 {activeTool === 'layers' && (
                     <motion.div
+                        key="layers-panel"
                         initial={{ width: 0, opacity: 0 }}
                         animate={{ width: 280, opacity: 1 }}
                         exit={{ width: 0, opacity: 0 }}
@@ -236,6 +237,7 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
                 )}
                 {activeTool === 'shapes' && (
                     <motion.div
+                        key="shapes-panel"
                         initial={{ width: 0, opacity: 0 }}
                         animate={{ width: 280, opacity: 1 }}
                         exit={{ width: 0, opacity: 0 }}
@@ -248,6 +250,7 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
                 )}
                 {activeTool === 'text' && (
                     <motion.div
+                        key="text-panel"
                         initial={{ width: 0, opacity: 0 }}
                         animate={{ width: 280, opacity: 1 }}
                         exit={{ width: 0, opacity: 0 }}
@@ -260,6 +263,7 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
                 )}
                 {activeTool === 'images' && (
                     <motion.div
+                        key="images-panel"
                         initial={{ width: 0, opacity: 0 }}
                         animate={{ width: 280, opacity: 1 }}
                         exit={{ width: 0, opacity: 0 }}
@@ -312,7 +316,7 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
                 {/* Infinite Canvas */}
                 <div className="flex-1 relative cursor-dots bg-neutral-950/50" style={{ cursor: panningMode ? 'grab' : 'default' }}>
                     <Stage
-                        width={window.innerWidth - 380}
+                        width={window.innerWidth - 64 - (activeTool ? 280 : 0)}
                         height={window.innerHeight - 120}
                         scaleX={zoom}
                         scaleY={zoom}
