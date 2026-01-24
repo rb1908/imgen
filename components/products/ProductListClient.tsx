@@ -90,7 +90,6 @@ export function ProductListClient({ initialProducts }: { initialProducts: Produc
     // Deletion State
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-    const [isDeleting, setIsDeleting] = useState(false);
 
     const openSaveTemplate = (e: React.MouseEvent, productId: string) => {
         e.stopPropagation(); // Prevent card click
