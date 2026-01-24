@@ -1,5 +1,5 @@
 import { getTemplates } from '@/app/actions/templates';
-import { TemplateManager } from '@/components/TemplateManager';
+import { TemplateManager } from '@/components/projects/TemplateManager';
 
 export async function TemplatesContent() {
     // Artificial delay to demonstrate streaming if needed, but for now just fetch
