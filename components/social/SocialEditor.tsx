@@ -310,13 +310,17 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
                         onDragEnd={handleStageDragEnd}
                         ref={stageRef}
                         onMouseDown={(e) => {
-                            if (e.target === e.target.getStage()) {
+                            // Deselect if clicked on empty stage or background layer
+                            const isBackground = e.target === e.target.getStage() || e.target.name() === 'bg-layer';
+                            if (isBackground) {
                                 setSelectedId(null);
+                                setActiveTool(null);
                             }
                         }}
                     >
                         <Layer>
                             <KonvaRect
+                                name="bg-layer"
                                 x={0} y={0}
                                 width={1080} height={1080}
                                 fill="white"
