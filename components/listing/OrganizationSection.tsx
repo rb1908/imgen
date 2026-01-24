@@ -20,10 +20,10 @@ interface OrganizationSectionProps {
     productOptions: any[];
     // Variants
     variants: any[];
-    onUpdateVariant: (id: string, field: string, value: any) => void;
+    onUpdateVariant: (id: string, field: any, value: any) => void;
     // Metafields
     metafields: any[];
-    onUpdateMetafield: (id: string, field: string, value: string) => void;
+    onUpdateMetafield: (id: string, field: any, value: string) => void;
     onAddMetafield: () => void;
     onRemoveMetafield: (id: string) => void;
 }

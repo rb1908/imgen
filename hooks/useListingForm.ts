@@ -148,11 +148,11 @@ export function useListingForm(product: ProductWithRelations) {
     };
 
     // Helpers
-    const updateVariant = (id: string, field: keyof typeof variants[0], value: any) => {
+    const updateVariant = (id: string, field: string, value: any) => {
         setVariants(prev => prev.map(v => v.id === id ? { ...v, [field]: value } : v));
     };
 
-    const updateMetafield = (id: string, field: keyof typeof metafields[0], value: string) => {
+    const updateMetafield = (id: string, field: string, value: string) => {
         setMetafields(prev => prev.map(m => m.id === id ? { ...m, [field]: value } : m));
     };
 
