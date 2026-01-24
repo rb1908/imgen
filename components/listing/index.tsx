@@ -2,9 +2,9 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { Product } from '@prisma/client';
 import { useListingForm, ProductWithRelations } from '@/hooks/useListingForm';
-import { MediaSection } from './listing/MediaSection';
-import { MainInfoSection } from './listing/MainInfoSection';
-import { OrganizationSection } from './listing/OrganizationSection';
+import { MediaSection } from './MediaSection';
+import { MainInfoSection } from './MainInfoSection';
+import { OrganizationSection } from './OrganizationSection';
 
 interface ListingEditorProps {
     product: ProductWithRelations;

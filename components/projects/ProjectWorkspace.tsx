@@ -4,7 +4,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { Project, Template, Generation } from '@prisma/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { GenerationGrid } from '@/components/GenerationGrid';
+import { GenerationGrid } from '@/components/studio/GenerationGrid';
 import { generateVariations } from '@/app/actions/generate';
 import { deleteGenerations } from '@/app/actions/generations';
 import { toast } from 'sonner';
@@ -28,12 +28,12 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TemplateItem } from './TemplateItem';
 import { TemplateDialog } from './TemplateDialog';
-import { SelectTemplatesDialog } from './SelectTemplatesDialog';
+import { SelectTemplatesDialog } from '@/components/studio/SelectTemplatesDialog';
 import { deleteTemplate } from '@/app/actions/templates';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import { ProductSelector } from './ProductSelector';
-import { PromptBar } from './PromptBar';
+import { ProductSelector } from '@/components/products/ProductSelector';
+import { PromptBar } from '@/components/studio/PromptBar';
 
 interface ProjectWorkspaceProps {
     project: Project & { generations: Generation[] };

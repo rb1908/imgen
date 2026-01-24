@@ -7,9 +7,9 @@ import Link from 'next/link';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getTemplates } from '@/app/actions/templates';
 import { getProductTemplates } from '@/app/actions/product_templates';
-import { TemplateSkeleton } from '@/components/TemplateSkeleton';
-import { TemplatesList } from '@/components/TemplatesList';
-import { ProductTemplatesList } from '@/components/ProductTemplatesList';
+import { TemplateSkeleton } from '@/components/projects/TemplateSkeleton';
+import { TemplatesList } from '@/components/projects/TemplatesList';
+import { ProductTemplatesList } from '@/components/products/ProductTemplatesList';
 
 export const dynamic = 'force-dynamic';
 

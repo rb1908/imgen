@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { ProjectContent } from '@/components/ProjectContent';
+import { ProjectContent } from '@/components/projects/ProjectContent';
 import { ProjectSkeleton } from '@/components/Loaders';
 
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {

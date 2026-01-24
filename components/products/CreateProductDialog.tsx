@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { ListingEditor } from '@/components/listing';
 import {
     Dialog,
     DialogContent,

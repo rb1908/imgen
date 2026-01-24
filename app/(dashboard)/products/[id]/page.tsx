@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { ProductWorkspace } from '@/components/ProductWorkspace';
+import { ProductWorkspace } from '@/components/products/ProductWorkspace';
 import { notFound } from 'next/navigation';
 import { getProjectForProduct } from '@/app/actions/projects';
 import { getTemplates } from '@/app/actions/templates';

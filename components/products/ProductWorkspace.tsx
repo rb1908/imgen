@@ -11,14 +11,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
-import { VisualCanvas } from './VisualCanvas';
-import { ListingEditor } from './ListingEditor';
+import { VisualCanvas } from '@/components/studio/VisualCanvas';
+import { ListingEditor } from '@/components/listing';
 import { generateVariations } from '@/app/actions/generate';
 import { addProductImages, removeProductImage } from '@/app/actions/product_actions';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AIIcon } from './icons/AIIcon';
+import { useCanvasStore } from '@/lib/canvas/store';
+import { AIIcon } from '../icons/AIIcon';
+import { ProductSelector } from './ProductSelector';
 
 // ... imports
 

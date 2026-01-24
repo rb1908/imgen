@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
-import { ProjectsContent } from '@/components/ProjectsContent';
+import { ProjectList } from '@/components/projects/ProjectList';
+import { ProjectsContent } from '@/components/projects/ProjectsContent';
 import { DashboardSkeleton } from '@/components/Loaders';
 
 

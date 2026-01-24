@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sparkles, Plus, Check, Loader2, Wand2, Image as ImageIcon, Stars, ChevronDown, Palette, Upload, ArrowLeft, Paperclip, X, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
-import { AIIcon } from './icons/AIIcon';
+import { AIIcon } from '../icons/AIIcon';
 import { SelectTemplatesDialog } from './SelectTemplatesDialog';
 import { GenerationGrid } from './GenerationGrid';
 import { ImageViewer } from './ImageViewer';
@@ -24,7 +24,7 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from "@/components/ui/drawer";
-import { ImageUploader } from './ImageUploader';
+import { ImageUploader } from '../ImageUploader';
 import { createClient } from '@supabase/supabase-js';
 import { PromptBar } from './PromptBar';
 
