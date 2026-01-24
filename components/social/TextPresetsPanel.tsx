@@ -83,21 +83,21 @@ export function TextPresetsPanel() {
                                             // List Styles:
                                             group.layout !== 'grid' && "p-3 hover:bg-neutral-800 bg-neutral-950/20 border border-transparent hover:border-neutral-700",
                                             // Grid Styles:
-                                            group.layout === 'grid' && "h-24 flex items-center justify-center p-2 text-center bg-neutral-950/40 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-600"
+                                            group.layout === 'grid' && "h-24 flex items-center justify-center p-1 text-center bg-neutral-950/40 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-600"
                                         )}
                                         onClick={() => handleAddPreset(preset)}
                                     >
                                         <div
                                             style={{
                                                 fontFamily: preset.style?.fontFamily,
-                                                fontSize: group.layout === 'grid' ? Math.min((preset.style?.fontSize as number) || 20, 22) : Math.min((preset.style?.fontSize as number) || 20, 24),
+                                                fontSize: group.layout === 'grid' ? Math.min((preset.style?.fontSize as number) || 20, 18) : Math.min((preset.style?.fontSize as number) || 20, 24),
                                                 fontWeight: preset.style?.fontWeight,
                                                 fontStyle: preset.style?.fontStyle,
                                                 color: preset.style?.fill || 'white',
                                                 textShadow: preset.style?.shadowBlur ? `0 0 ${preset.style.shadowBlur}px ${preset.style.shadowColor}` : undefined,
                                                 WebkitTextStroke: preset.style?.stroke ? `0.5px ${preset.style.stroke}` : undefined
                                             }}
-                                            className={cn("preview-text w-full", group.layout === 'grid' ? "whitespace-normal break-words leading-tight" : "truncate")}
+                                            className={cn("preview-text w-full whitespace-normal break-words leading-tight", group.layout === 'grid' ? "px-1" : "")}
                                         >
                                             {preset.text}
                                         </div>
