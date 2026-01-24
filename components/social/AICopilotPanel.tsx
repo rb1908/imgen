@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { useCanvasStore } from '@/lib/canvas/store';
-import { CanvasCommand } from '@/lib/canvas/commands';
+import { useCanvasStore } from '@/lib/engine/store';
+import { CanvasCommand } from '@/lib/engine/commands';
 import { Sparkles, Play, SkipForward, X, Check, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 

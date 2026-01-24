@@ -18,7 +18,7 @@ import { addProductImages, removeProductImage } from '@/app/actions/product_acti
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCanvasStore } from '@/lib/canvas/store';
+import { useCanvasStore } from '@/lib/engine/store';
 import { AIIcon } from '../icons/AIIcon';
 import { ProductSelector } from './ProductSelector';
 

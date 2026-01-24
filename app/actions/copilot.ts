@@ -1,7 +1,7 @@
 'use server';
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { CanvasCommand } from '@/lib/canvas/commands';
+import { CanvasCommand } from '@/lib/engine/commands';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || '';
 const genAI = new GoogleGenerativeAI(apiKey);

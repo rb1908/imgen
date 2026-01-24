@@ -1,6 +1,6 @@
 'use client';
 
-import { useCanvasStore } from '@/lib/canvas/store';
+import { useCanvasStore } from '@/lib/engine/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';

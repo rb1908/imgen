@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { useCanvasStore } from '@/lib/canvas/store';
-import { getSnapGuides, GuideLine } from '@/lib/canvas/snapping';
+import { useCanvasStore } from '@/lib/engine/store';
+import { getSnapGuides, GuideLine } from '@/lib/engine/snapping';
 
 export function useSocialEditor(baseImage?: string) {
     const {

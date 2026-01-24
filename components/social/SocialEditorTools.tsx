@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { MousePointer2, Type, Image as ImageIcon, LayoutTemplate, Grid3X3, Smartphone, Shapes } from 'lucide-react';
-import { useCanvasStore } from '@/lib/canvas/store';
+import { useCanvasStore } from '@/lib/engine/store';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export interface SocialEditorToolsProps {

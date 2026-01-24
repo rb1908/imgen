@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useCanvasStore } from '@/lib/canvas/store';
+import { useCanvasStore } from '@/lib/engine/store';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Image as ImageIcon, Upload, Loader2, Sparkles, FolderOpen, Search, ArrowRight } from 'lucide-react';

@@ -1,6 +1,6 @@
 import { Stage, Layer, Image as KonvaImage, Text as KonvaText, Transformer, Line as KonvaLine, Rect as KonvaRect, Circle as KonvaCircle, RegularPolygon as KonvaRegularPolygon, Star as KonvaStar } from 'react-konva';
 import useImage from 'use-image';
-import { GuideLine } from '@/lib/canvas/snapping';
+import { GuideLine } from '@/lib/engine/snapping';
 
 // Helper: URL Image Component for Konva
 const URLImage = ({ src, x, y, width, height, ...props }: any) => {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useCanvasStore } from '@/lib/canvas/store';
+import { useCanvasStore } from '@/lib/engine/store';
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { ChevronDown, ChevronRight, Type } from 'lucide-react';

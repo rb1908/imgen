@@ -1,6 +1,6 @@
 'use client';
 
-import { useCanvasStore } from '@/lib/canvas/store';
+import { useCanvasStore } from '@/lib/engine/store';
 import { Reorder } from 'framer-motion';
 import { Eye, EyeOff, GripVertical, Lock, Unlock, Image as ImageIcon, Type, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
