@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { GenerationsContent } from '@/components/GenerationsContent';
-import { TemplateSkeleton } from '@/components/TemplateSkeleton';
+import { TemplateSkeleton } from '@/components/projects/TemplateSkeleton';
 import { SearchInput } from '@/components/SearchInput';
 
 
