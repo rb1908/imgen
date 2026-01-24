@@ -8,7 +8,7 @@ import { deleteGenerations } from '@/app/actions/generations';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { TemplateDialog } from './TemplateDialog';
+import { TemplateDialog } from '@/components/projects/TemplateDialog';
 import { ImageViewer } from './ImageViewer';
 import {
     DropdownMenu,
