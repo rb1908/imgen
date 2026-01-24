@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useCanvasStore } from '@/lib/canvas/store';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { ChevronDown, ChevronRight, Type } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -67,34 +67,37 @@ export function TextPresetsPanel() {
                 <Type className="w-4 h-4 text-neutral-400" />
                 Text
             </h3>
-            <ScrollArea className="flex-1 -mx-2 px-2">
-                <div className="flex flex-col gap-2">
+            <ScrollArea className="flex-1 -mx-4 px-4">
+                <div className="flex flex-col gap-2 pb-8">
                     {presetGroups.map((group, i) => (
                         <CollapsibleSection key={i} title={group.category} defaultOpen={true}>
                             <div className={cn(
                                 "pt-2",
-                                group.layout === 'grid' ? "grid grid-cols-2 gap-2" : "flex flex-col gap-3"
+                                group.layout === 'grid' ? "grid grid-cols-2 gap-2" : "flex flex-col gap-2"
                             )}>
                                 {group.items.map((preset, j) => (
                                     <button
                                         key={j}
                                         className={cn(
-                                            "w-full text-left p-3 rounded hover:bg-neutral-800 transition-colors border border-neutral-800 hover:border-neutral-700 group relative overflow-hidden bg-neutral-950/30",
-                                            group.layout === 'grid' ? "h-24 flex items-center justify-center p-2 text-center" : ""
+                                            "w-full text-left rounded transition-colors group relative overflow-hidden",
+                                            // List Styles:
+                                            group.layout !== 'grid' && "p-3 hover:bg-neutral-800 bg-neutral-950/20 border border-transparent hover:border-neutral-700",
+                                            // Grid Styles:
+                                            group.layout === 'grid' && "h-24 flex items-center justify-center p-2 text-center bg-neutral-950/40 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-600"
                                         )}
                                         onClick={() => handleAddPreset(preset)}
                                     >
                                         <div
                                             style={{
                                                 fontFamily: preset.style?.fontFamily,
-                                                fontSize: group.layout === 'grid' ? Math.min((preset.style?.fontSize as number) || 20, 20) : Math.min((preset.style?.fontSize as number) || 20, 24),
+                                                fontSize: group.layout === 'grid' ? Math.min((preset.style?.fontSize as number) || 20, 22) : Math.min((preset.style?.fontSize as number) || 20, 24),
                                                 fontWeight: preset.style?.fontWeight,
                                                 fontStyle: preset.style?.fontStyle,
                                                 color: preset.style?.fill || 'white',
                                                 textShadow: preset.style?.shadowBlur ? `0 0 ${preset.style.shadowBlur}px ${preset.style.shadowColor}` : undefined,
                                                 WebkitTextStroke: preset.style?.stroke ? `0.5px ${preset.style.stroke}` : undefined
                                             }}
-                                            className={cn("preview-text w-full", group.layout === 'grid' ? "break-words leading-tight" : "truncate")}
+                                            className={cn("preview-text w-full", group.layout === 'grid' ? "text-wrap leading-tight" : "truncate")}
                                         >
                                             {preset.text}
                                         </div>
@@ -104,6 +107,8 @@ export function TextPresetsPanel() {
                         </CollapsibleSection>
                     ))}
                 </div>
+                {/* Custom Thinner ScrollBar */}
+                <ScrollBar className="w-1.5" />
             </ScrollArea>
         </div>
     );
