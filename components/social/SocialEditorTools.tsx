@@ -42,7 +42,7 @@ export function SocialEditorTools({ activeTool, onToolSelect }: SocialEditorTool
 
     return (
         <TooltipProvider>
-            <div className="w-16 border-r border-neutral-200 bg-white flex flex-col items-center py-4 gap-4 z-10 h-full">
+            <div className="w-16 border-r border-neutral-800 bg-neutral-900 flex flex-col items-center py-4 gap-4 z-10 h-full">
 
                 <ToolButton
                     icon={<MousePointer2 />}
