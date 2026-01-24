@@ -97,7 +97,7 @@ export function TextPresetsPanel() {
                                                 textShadow: preset.style?.shadowBlur ? `0 0 ${preset.style.shadowBlur}px ${preset.style.shadowColor}` : undefined,
                                                 WebkitTextStroke: preset.style?.stroke ? `0.5px ${preset.style.stroke}` : undefined
                                             }}
-                                            className={cn("preview-text w-full", group.layout === 'grid' ? "text-wrap leading-tight" : "truncate")}
+                                            className={cn("preview-text w-full", group.layout === 'grid' ? "whitespace-normal break-words leading-tight" : "truncate")}
                                         >
                                             {preset.text}
                                         </div>
@@ -107,8 +107,8 @@ export function TextPresetsPanel() {
                         </CollapsibleSection>
                     ))}
                 </div>
-                {/* Custom Thinner ScrollBar */}
-                <ScrollBar className="w-1.5" />
+                {/* Custom Thinner ScrollBar with vertical margin for cleaner look */}
+                <ScrollBar className="w-1.5 h-[95%] my-auto right-1" />
             </ScrollArea>
         </div>
     );
