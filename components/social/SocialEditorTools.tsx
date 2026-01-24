@@ -13,32 +13,7 @@ export interface SocialEditorToolsProps {
 export function SocialEditorTools({ activeTool, onToolSelect }: SocialEditorToolsProps) {
     const { dispatch, safeAreaVisible, setSafeAreaVisible, snapEnabled, setSnapEnabled } = useCanvasStore();
 
-    const handleAddText = () => {
-        dispatch({
-            type: 'ADD_TEXT',
-            content: 'Double Tap to Edit',
-            x: 540,
-            y: 540,
-            style: 'modern'
-        });
-    };
 
-    const handleAddImage = () => {
-        document.getElementById('editor-image-upload')?.click();
-    };
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const url = URL.createObjectURL(file);
-            dispatch({
-                type: 'ADD_IMAGE',
-                url,
-                x: 540,
-                y: 540
-            } as any);
-        }
-    };
 
     return (
         <TooltipProvider>
@@ -58,16 +33,12 @@ export function SocialEditorTools({ activeTool, onToolSelect }: SocialEditorTool
                     onClick={() => onToolSelect(activeTool === 'text' ? null : 'text')}
                 />
 
-                <div className="relative">
-                    <ToolButton icon={<ImageIcon />} label="Add Image" onClick={handleAddImage} />
-                    <input
-                        id="editor-image-upload"
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleFileChange}
-                    />
-                </div>
+                <ToolButton
+                    icon={<ImageIcon />}
+                    label="Images"
+                    active={activeTool === 'images'}
+                    onClick={() => onToolSelect(activeTool === 'images' ? null : 'images')}
+                />
 
                 <ToolButton
                     icon={<LayoutTemplate />}

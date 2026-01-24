@@ -10,6 +10,7 @@ import { SocialEditorTools } from './SocialEditorTools';
 import { SocialEditorToolbar } from './SocialEditorToolbar';
 import { ShapesPanel } from './ShapesPanel';
 import { TextPresetsPanel } from './TextPresetsPanel';
+import { ImagesPanel } from './ImagesPanel';
 import { LayersPanel } from './LayersPanel';
 import { getSnapGuides, GuideLine } from '@/lib/canvas/snapping';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -254,6 +255,18 @@ export function SocialEditor({ baseImage, onSave, isSaving }: SocialEditorProps)
                     >
                         <div className="w-[280px] h-full">
                             <TextPresetsPanel />
+                        </div>
+                    </motion.div>
+                )}
+                {activeTool === 'images' && (
+                    <motion.div
+                        initial={{ width: 0, opacity: 0 }}
+                        animate={{ width: 280, opacity: 1 }}
+                        exit={{ width: 0, opacity: 0 }}
+                        className="border-r border-neutral-800 bg-neutral-900 overflow-hidden z-20"
+                    >
+                        <div className="w-[280px] h-full">
+                            <ImagesPanel />
                         </div>
                     </motion.div>
                 )}
