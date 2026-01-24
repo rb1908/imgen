@@ -1,0 +1,44 @@
+{
+    "extends": "next/core-web-vitals",
+    "plugins": [
+        "import"
+    ],
+    "rules": {
+        "import/no-restricted-paths": [
+            "error",
+            {
+                "basePath": ".",
+                "zones": [
+                    {
+                        "target": "./components/projects",
+                        "from": "./components/social",
+                        "message": "Projects module cannot import from Social module."
+                    },
+                    {
+                        "target": "./components/social",
+                        "from": "./components/projects",
+                        "message": "Social module cannot import from Projects module."
+                    },
+                    {
+                        "target": "./components/products",
+                        "from": "./components/social",
+                        "message": "Products module cannot import from Social module."
+                    },
+                    {
+                        "target": "./components/social",
+                        "from": "./components/products",
+                        "message": "Social module cannot import from Products module."
+                    }
+                ]
+            }
+        ]
+    },
+    "settings": {
+        "import/resolver": {
+            "typescript": {
+                "alwaysTryTypes": true,
+                "project": "./tsconfig.json"
+            }
+        }
+    }
+}
