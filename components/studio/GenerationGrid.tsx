@@ -252,6 +252,20 @@ export function GenerationGrid({
                                             >
                                                 <Maximize2 className="w-4 h-4" />
                                             </Button>
+                                            {onEdit && (
+                                                <Button
+                                                    size="icon"
+                                                    variant="secondary"
+                                                    className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onEdit(img.url);
+                                                    }}
+                                                    title="Edit in Studio"
+                                                >
+                                                    <Palette className="w-4 h-4" />
+                                                </Button>
+                                            )}
                                             <Button
                                                 size="icon"
                                                 variant="secondary"
@@ -393,6 +407,7 @@ export function GenerationGrid({
                 } : undefined)}
                 canDelete={true}
                 canAddToProduct={!!onAddToProduct || !!defaultProductId}
+                onEdit={onEdit}
             />
 
             {/* Save Template Dialog */}

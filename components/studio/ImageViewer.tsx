@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, X, Download, Trash2, ShoppingBag } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Download, Trash2, ShoppingBag, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ImageViewerProps {
@@ -14,10 +14,7 @@ interface ImageViewerProps {
     onNavigate: (url: string) => void;
     onDelete?: (url: string) => Promise<void>;
     onDownload?: (url: string) => void;
-    onAddToProduct?: (url: string) => Promise<void>;
-    canDelete?: boolean;
-    canAddToProduct?: boolean;
-    isSaved?: boolean;
+    onEdit?: (url: string) => void;
 }
 
 export function ImageViewer({
@@ -29,6 +26,7 @@ export function ImageViewer({
     onDelete,
     onDownload,
     onAddToProduct,
+    onEdit,
     canDelete = false,
     canAddToProduct = false,
     isSaved = false
@@ -169,6 +167,16 @@ export function ImageViewer({
 
                 {/* Toolbar */}
                 <div className="absolute bottom-4 right-4 hidden md:flex pointer-events-auto gap-2">
+                    {onEdit && (
+                        <Button
+                            className="rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md shadow-lg"
+                            onClick={() => onEdit(currentImage)}
+                        >
+                            <Palette className="w-4 h-4 mr-2" />
+                            Edit
+                        </Button>
+                    )}
+
                     {/* Add to Product / Remove from Product logic if passed */}
                     {onAddToProduct && !isSaved && (
                         <Button
