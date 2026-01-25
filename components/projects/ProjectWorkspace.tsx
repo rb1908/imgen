@@ -130,28 +130,8 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
         }
     };
 
-    const createDraftMutation = useMutation({
-        mutationFn: async (imageUrl: string) => {
-            const { createDraft } = await import('@/app/actions/social');
-            return await createDraft({
-                imageUrl,
-                platform: 'instagram',
-                caption: `Generated from ${project.name}`
-            });
-        },
-        onSuccess: (res) => {
-            if (res.success && res.draftId) {
-                toast.success("Created draft! Redirecting...");
-                router.push(`/social/editor/${res.draftId}`);
-            } else {
-                toast.error("Failed to create draft");
-            }
-        },
-        onError: () => toast.error("An error occurred creating draft")
-    });
-
-    const handleEdit = (imageUrl: string) => {
-        createDraftMutation.mutate(imageUrl);
+    const handleEdit = (id: string) => {
+        router.push(`/studio/image/${id}`);
     };
 
     // Generation Selection Logic

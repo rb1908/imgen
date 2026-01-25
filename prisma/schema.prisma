@@ -70,6 +70,8 @@ model SocialPost {
 model Generation {
   id            String   @id @default(uuid())
   imageUrl      String
+  customizedImageUrl String? // If edited, this holds the final output
+  canvasState   Json?    // The JSON state of the editor for re-editing
   promptUsed    String?  // Snapshot of the prompt used (from template or ad-hoc)
   
   projectId     String

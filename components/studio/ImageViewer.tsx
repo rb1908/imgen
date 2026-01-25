@@ -15,6 +15,10 @@ interface ImageViewerProps {
     onDelete?: (url: string) => Promise<void>;
     onDownload?: (url: string) => void;
     onEdit?: (url: string) => void;
+    onAddToProduct?: (url: string) => Promise<void>;
+    canAddToProduct?: boolean;
+    canDelete?: boolean;
+    isSaved?: boolean;
 }
 
 export function ImageViewer({

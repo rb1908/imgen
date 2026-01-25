@@ -28,7 +28,7 @@ export interface GenerationGridProps {
     referenceImageUrl?: string;
     defaultProductId?: string | null;
     onAddToProduct?: (url: string) => Promise<void>;
-    onEdit?: (url: string) => void;
+    onEdit?: (id: string) => void;
 }
 
 // Internal Pending Card Component
@@ -259,7 +259,7 @@ export function GenerationGrid({
                                                     className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        onEdit(img.url);
+                                                        onEdit(img.id);
                                                     }}
                                                     title="Edit in Studio"
                                                 >
@@ -339,7 +339,7 @@ export function GenerationGrid({
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={(e) => {
                                                     e.stopPropagation();
-                                                    if (onEdit) onEdit(img.url);
+                                                    if (onEdit) onEdit(img.id);
                                                 }}>
                                                     <Palette className="mr-2 h-4 w-4" />
                                                     <span>Edit in Studio</span>
@@ -407,7 +407,10 @@ export function GenerationGrid({
                 } : undefined)}
                 canDelete={true}
                 canAddToProduct={!!onAddToProduct || !!defaultProductId}
-                onEdit={onEdit}
+                onEdit={(url) => {
+                    const img = images.find(i => i.url === url);
+                    if (img && onEdit) onEdit(img.id);
+                }}
             />
 
             {/* Save Template Dialog */}

@@ -19,6 +19,7 @@ interface CanvasStore {
 
     // Actions
     initScene: (width: number, height: number, backgroundUrl?: string) => void;
+    loadScene: (scene: Scene) => void;
     dispatch: (command: CanvasCommand | CanvasCommand[], actor?: 'human' | 'ai') => void;
     undo: () => void;
     redo: () => void;
@@ -54,6 +55,15 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     initScene: (width, height, backgroundUrl) => {
         set({
             scene: { ...createDefaultScene(width, height), backgroundUrl },
+            historyPast: [],
+            historyFuture: [],
+            actionLog: []
+        });
+    },
+
+    loadScene: (scene) => {
+        set({
+            scene,
             historyPast: [],
             historyFuture: [],
             actionLog: []

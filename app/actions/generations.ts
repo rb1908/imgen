@@ -77,3 +77,51 @@ export async function deleteGenerations(ids: string[]) {
         return { success: false, error: 'Failed to delete generations' };
     }
 }
+
+export async function updateGeneration(id: string, updates: { customizedImageUrl?: string; canvasState?: Record<string, unknown> }) {
+    try {
+        const { userId } = await auth();
+        if (!userId) throw new Error("Unauthorized");
+
+        const generation = await prisma.generation.findFirst({
+            where: { id, project: { userId } }
+        });
+
+        if (!generation) throw new Error("Generation not found or unauthorized");
+
+        await prisma.generation.update({
+            where: { id },
+            data: {
+                ...updates,
+                canvasState: updates.canvasState as any // Prisma Json handling
+            }
+        });
+
+        revalidatePath('/generations');
+        revalidateTag(`project-${generation.projectId}`, {});
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to update generation:", error);
+        return { success: false, error: 'Failed to update generation' };
+    }
+}
+
+export async function getGenerationById(id: string) {
+    try {
+        const { userId } = await auth();
+        if (!userId) return null;
+
+        const generation = await prisma.generation.findFirst({
+            where: { id, project: { userId } },
+            include: {
+                project: true,
+                template: true
+            }
+        });
+
+        return generation;
+    } catch (error) {
+        console.error("Failed to fetch generation:", error);
+        return null;
+    }
+}
