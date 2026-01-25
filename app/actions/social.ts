@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 
 export interface SocialDraft {
     id: string;
-    content: any; // Json
+    content: Record<string, unknown>; // Json
     platform: string;
     status: string;
     caption?: string;
@@ -14,25 +14,35 @@ export interface SocialDraft {
     updatedAt: Date;
 }
 
-export async function createDraft(input: {
-    imageUrl: string;
-    caption?: string;
-    platform: string;
-    content?: any; // For storing overlay state later
-}) {
+import { z } from "zod";
+
+const CreateDraftSchema = z.object({
+    imageUrl: z.string().url(),
+    caption: z.string().optional(),
+    platform: z.string(),
+    content: z.record(z.string(), z.unknown()).optional(),
+});
+
+export async function createDraft(input: z.infer<typeof CreateDraftSchema>) {
     const { userId } = await auth();
     if (!userId) return { success: false, error: "Unauthorized" };
+
+    const result = CreateDraftSchema.safeParse(input);
+    if (!result.success) {
+        return { success: false, error: "Invalid input" };
+    }
+    const data = result.data;
 
     try {
         const draft = await db.socialPost.create({
             data: {
                 userId,
-                platform: input.platform,
+                platform: data.platform,
                 status: 'draft',
-                content: input.content || {
-                    imageUrl: input.imageUrl,
-                    caption: input.caption || ""
-                },
+                content: (data.content || {
+                    imageUrl: data.imageUrl,
+                    caption: data.caption || ""
+                }) as any,
             }
         });
 
@@ -60,15 +70,29 @@ export async function getDrafts() {
     }
 }
 
-export async function updateDraft(id: string, updates: { content?: any; status?: string }) {
+const UpdateDraftSchema = z.object({
+    id: z.string(),
+    updates: z.object({
+        content: z.record(z.string(), z.unknown()).optional(),
+        status: z.string().optional(),
+    }),
+});
+
+export async function updateDraft(id: string, updates: { content?: Record<string, unknown>; status?: string }) {
     const { userId } = await auth();
     if (!userId) return { success: false, error: "Unauthorized" };
+
+    const result = UpdateDraftSchema.safeParse({ id, updates });
+    if (!result.success) {
+        return { success: false, error: "Invalid input" };
+    }
 
     try {
         await db.socialPost.update({
             where: { id, userId },
             data: {
                 ...updates,
+                content: updates.content as any,
             }
         });
 

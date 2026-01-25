@@ -4,13 +4,11 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Project, Template, Generation } from '@prisma/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { GenerationGrid } from '@/components/studio/GenerationGrid';
 import { generateVariations } from '@/app/actions/generate';
 import { deleteGenerations } from '@/app/actions/generations';
 import { toast } from 'sonner';
-import { Loader2, Sparkles, Wand2, ArrowLeft, RefreshCcw, CheckCircle2, ChevronDown, ChevronUp, Palette, X, Trash2, Download, CheckSquare, Square, ShoppingBag, Menu, Plus } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
+import { Loader2, Sparkles, ArrowLeft, ShoppingBag, X, Trash2, Download } from 'lucide-react';
 import {
     Drawer,
     DrawerClose,
@@ -20,7 +18,7 @@ import {
     DrawerHeader,
     DrawerTitle,
     DrawerTrigger,
-} from "@/components/ui/drawer"
+} from "@/components/ui/drawer";
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
@@ -36,12 +34,15 @@ import { saveAs } from 'file-saver';
 import { ProductSelector } from '@/components/products/ProductSelector';
 import { PromptBar } from '@/components/studio/PromptBar';
 
+import { useRouter } from 'next/navigation';
+
 interface ProjectWorkspaceProps {
     project: Project & { generations: Generation[] };
     templates: Template[];
 }
 
 export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) {
+    const router = useRouter();
     const [selectedTemplateIds, setSelectedTemplateIds] = useState<string[]>([]);
     const [customPrompt, setCustomPrompt] = useState('');
     const [generationStatus, setGenerationStatus] = useState<'idle' | 'generating'>('idle');
@@ -78,7 +79,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
     // Mutations
     const generateMutation = useMutation({
-        mutationFn: async ({ taskId, type, val }: { taskId: string, type: 'template' | 'custom', val: any }) => {
+        mutationFn: async ({ taskId, type, val }: { taskId: string, type: 'template' | 'custom', val: string }) => {
             const input = type === 'template' ? [val] : val;
             return await generateVariations(project.id, type, input);
         },
@@ -113,7 +114,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
         if (selectedTemplateIds.length > 0 && !isPromptOpen) {
             setIsPromptOpen(true);
         }
-    }, [selectedTemplateIds]);
+    }, [selectedTemplateIds, isPromptOpen]);
 
     const toggleTemplate = (id: string) => {
         setSelectedTemplateIds(prev =>
@@ -127,6 +128,30 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
             toast.success('Template deleted');
             setSelectedTemplateIds(prev => prev.filter(tid => tid !== id));
         }
+    };
+
+    const createDraftMutation = useMutation({
+        mutationFn: async (imageUrl: string) => {
+            const { createDraft } = await import('@/app/actions/social');
+            return await createDraft({
+                imageUrl,
+                platform: 'instagram',
+                caption: `Generated from ${project.name}`
+            });
+        },
+        onSuccess: (res) => {
+            if (res.success && res.draftId) {
+                toast.success("Created draft! Redirecting...");
+                router.push(`/social/editor/${res.draftId}`);
+            } else {
+                toast.error("Failed to create draft");
+            }
+        },
+        onError: () => toast.error("An error occurred creating draft")
+    });
+
+    const handleEdit = (imageUrl: string) => {
+        createDraftMutation.mutate(imageUrl);
     };
 
     // Generation Selection Logic
@@ -385,6 +410,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         referenceName={project.name || 'project'}
                         defaultProductId={project.defaultProductId}
                         pendingImages={pendingGenerations}
+                        onEdit={handleEdit}
                     />
                 </div >
             </div >

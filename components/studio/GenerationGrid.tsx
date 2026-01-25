@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 import { GeneratedImage } from '@/app/types';
-import { Loader2, Download, Maximize2, Plus, ChevronLeft, ChevronRight, X, ShoppingBag, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Loader2, Download, Maximize2, Plus, ChevronLeft, ChevronRight, X, ShoppingBag, MoreHorizontal, Trash2, Palette } from 'lucide-react';
 import { deleteGenerations } from '@/app/actions/generations';
 import { toast } from 'sonner';
 import Image from 'next/image';
@@ -28,6 +28,7 @@ export interface GenerationGridProps {
     referenceImageUrl?: string;
     defaultProductId?: string | null;
     onAddToProduct?: (url: string) => Promise<void>;
+    onEdit?: (url: string) => void;
 }
 
 // Internal Pending Card Component
@@ -77,7 +78,8 @@ export function GenerationGrid({
     referenceImageUrl,
     referenceName = 'project',
     defaultProductId,
-    onAddToProduct
+    onAddToProduct,
+    onEdit
 }: GenerationGridProps) {
     const [expandedImage, setExpandedImage] = useState<GeneratedImage & { referenceName?: string } | null>(null);
     const [imageToSave, setImageToSave] = useState<GeneratedImage | null>(null);
@@ -320,6 +322,13 @@ export function GenerationGrid({
                                                 }}>
                                                     <Maximize2 className="mr-2 h-4 w-4" />
                                                     <span>View</span>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (onEdit) onEdit(img.url);
+                                                }}>
+                                                    <Palette className="mr-2 h-4 w-4" />
+                                                    <span>Edit in Studio</span>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={(e) => {
                                                     e.stopPropagation();
