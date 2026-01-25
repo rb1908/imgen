@@ -1,4 +1,5 @@
 'use server';
+// Force rebuild for prisma client update
 
 import { prisma } from '@/lib/db';
 import { Generation } from '@prisma/client';
@@ -102,7 +103,7 @@ export async function updateGeneration(id: string, updates: { customizedImageUrl
         return { success: true };
     } catch (error) {
         console.error("Failed to update generation:", error);
-        return { success: false, error: 'Failed to update generation' };
+        return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
 }
 
