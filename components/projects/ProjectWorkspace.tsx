@@ -170,12 +170,42 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
         onError: () => toast.error("Delete failed")
     });
 
-    // Auto-open prompt if templates are selected
-    useEffect(() => {
-        if (selectedTemplateIds.length > 0 && !isPromptOpen) {
-            setIsPromptOpen(true);
+    // --- COPILOT HANDLERS ---
+    const handlePanelGenerate = async (prompt: string) => {
+        // 1. Close Copilot (as requested)
+        setIsCopilotOpen(false);
+        // 2. Set Prompt
+        setCustomPrompt(prompt);
+        // 3. Trigger Generation (We need to wait for state update or pass directly)
+        // Since handleGenerate uses 'customPrompt' state, we need to hack it or refactor handleGenerate to accept an arg.
+        // Let's refactor handleGenerate quickly or just set state and use a useEffect? 
+        // Better: refactor handleGenerate to accept optional override.
+        await handleGenerate(prompt);
+    };
+
+    const handlePanelSendMessage = async (text: string) => {
+        if (!sessionId) return;
+
+        // Optimistic
+        const tempMsg: any = {
+            id: 'temp-' + Date.now(),
+            role: 'user',
+            content: text,
+            sessionId,
+            createdAt: new Date(),
+        };
+        setChatMessages(prev => [...prev, tempMsg]);
+        setIsChatLoading(true);
+
+        try {
+            const botMsg = await sendMessage(sessionId, text);
+            setChatMessages(prev => [...prev, botMsg as any]);
+        } catch (e) {
+            toast.error("Failed to send");
+        } finally {
+            setIsChatLoading(false);
         }
-    }, [selectedTemplateIds, isPromptOpen]);
+    };
 
     const toggleTemplate = (id: string) => {
         setSelectedTemplateIds(prev =>
@@ -292,23 +322,22 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
     // Pending Generations State (Optimistic UI)
     const [pendingGenerations, setPendingGenerations] = useState<{ id: string; prompt: string }[]>([]);
 
-    const handleGenerate = async () => {
+    const handleGenerate = async (overridePrompt?: string) => {
+        const promptToUse = overridePrompt || customPrompt;
+
         const isTemplateMode = selectedTemplateIds.length > 0;
 
         if (isTemplateMode && selectedTemplateIds.length === 0) {
             toast.error("Select at least one template");
             return;
         }
-        if (!isTemplateMode && !customPrompt.trim()) {
+        if (!isTemplateMode && !promptToUse.trim()) {
             toast.error("Enter a prompt");
             return;
         }
 
-        // GLOBAL MODE SWITCH: If Copilot is Open, treat as Chat
-        if (isCopilotOpen) {
-            await handleChat();
-            return;
-        }
+        // Note: We removed the "Global Mode Switch" check here because the Chat Panel has its own explicit "Generate" button now.
+        // If users hit "Enter" in the floating bar, it means GENERATE (because floating bar is hidden when chat is open).
 
         setGenerationStatus('generating');
         setIsPromptOpen(false);
@@ -330,8 +359,8 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
             tasks = [{
                 id: `pending-${Math.random()}`,
                 type: 'custom',
-                value: customPrompt,
-                promptDisplay: customPrompt
+                value: promptToUse,
+                promptDisplay: promptToUse
             }];
         }
 
@@ -422,58 +451,73 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
 
 
-            {/* Main Content - Unified Grid */}
-            <div className="flex-1 min-h-0 px-4 pb-32 relative overflow-y-auto">
-                {/* Generation Grid (Desktop & Mobile Unified) */}
-                <div className="max-w-[1800px] mx-auto">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-semibold flex items-center gap-2">
-                            <Sparkles className="w-5 h-5 text-primary" />
-                            Results
-                        </h2>
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">{generations.length} images</span>
-                            {generations.length > 0 && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                        if (isSelectionMode) {
-                                            setIsSelectionMode(false);
-                                            setSelectedGenerationIds([]);
-                                        } else {
-                                            setIsSelectionMode(true);
-                                        }
-                                    }}
-                                >
-                                    {isSelectionMode ? 'Cancel' : 'Select Multiple'}
-                                </Button>
-                            )}
-                        </div>
-                    </div>
+            {/* Main Content - Unified Grid + Copilot Split */}
+            <div className="flex-1 min-h-0 flex flex-row overflow-hidden relative">
 
-                    <GenerationGrid
-                        images={generations.map(g => ({
-                            id: g.id,
-                            url: g.customizedImageUrl || g.imageUrl,
-                            templateId: g.templateId || 'custom',
-                            originalImage: g.promptUsed || 'Custom Generation',
-                            prompt: g.promptUsed || customPrompt || 'Custom Generation',
-                            createdAt: g.createdAt
-                        }))}
-                        isGenerating={generationStatus === 'generating'}
-                        selectionMode={isSelectionMode}
-                        selectedIds={selectedGenerationIds}
-                        onToggle={toggleGenerationSelection}
-                        referenceImageUrl={activeReferenceImage}
-                        referenceName={project.name || 'project'}
-                        defaultProductId={project.defaultProductId}
-                        pendingImages={pendingGenerations}
-                        onEdit={handleEdit}
-                        onUseAsReference={handleUseAsReference}
-                    />
-                </div >
-            </div >
+                {/* Grid Container */}
+                <div className="flex-1 overflow-y-auto px-4 pb-32 transition-all duration-300">
+                    <div className="max-w-[1800px] mx-auto pt-6"> {/* Added pt-6 for spacing */}
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-semibold flex items-center gap-2">
+                                <Sparkles className="w-5 h-5 text-primary" />
+                                Results
+                            </h2>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm text-muted-foreground">{generations.length} images</span>
+                                {generations.length > 0 && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                            if (isSelectionMode) {
+                                                setIsSelectionMode(false);
+                                                setSelectedGenerationIds([]);
+                                            } else {
+                                                setIsSelectionMode(true);
+                                            }
+                                        }}
+                                    >
+                                        {isSelectionMode ? 'Cancel' : 'Select Multiple'}
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+
+                        <GenerationGrid
+                            images={generations.map(g => ({
+                                id: g.id,
+                                url: g.customizedImageUrl || g.imageUrl,
+                                templateId: g.templateId || 'custom',
+                                originalImage: g.promptUsed || 'Custom Generation',
+                                prompt: g.promptUsed || customPrompt || 'Custom Generation',
+                                createdAt: g.createdAt
+                            }))}
+                            isGenerating={generationStatus === 'generating'}
+                            selectionMode={isSelectionMode}
+                            selectedIds={selectedGenerationIds}
+                            onToggle={toggleGenerationSelection}
+                            referenceImageUrl={activeReferenceImage}
+                            referenceName={project.name || 'project'}
+                            defaultProductId={project.defaultProductId}
+                            pendingImages={pendingGenerations}
+                            onEdit={handleEdit}
+                            onUseAsReference={handleUseAsReference}
+                        />
+                    </div>
+                </div>
+
+                {/* Copilot Side Panel (Relative Flex Item) */}
+                <CopilotPanel
+                    isOpen={isCopilotOpen}
+                    onClose={() => setIsCopilotOpen(false)}
+                    projectId={project.id}
+                    messages={chatMessages}
+                    loading={isChatLoading}
+                    onSendMessage={handlePanelSendMessage}
+                    onGenerate={handlePanelGenerate}
+                />
+
+            </div>
 
 
             {/* Bulk Selection Action Bar */}
@@ -544,8 +588,8 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 )}
             </AnimatePresence>
 
-            {/* Collapsible Prompt Bar */}
-            {!isSelectionMode && (
+            {/* Collapsible Prompt Bar (Hidden if Copilot Open) */}
+            {!isSelectionMode && !isCopilotOpen && (
                 <PromptBar
                     isOpen={isPromptOpen}
                     onOpenChange={setIsPromptOpen}
@@ -593,25 +637,6 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 onSelectAll={handleSelectAllTemplatesToggle}
                 onEdit={setEditingTemplate}
                 onDelete={handleDeleteTemplate}
-            />
-
-            <SelectTemplatesDialog
-                open={isTemplatePickerOpen}
-                onOpenChange={setIsTemplatePickerOpen}
-                templates={sortedTemplates}
-                selectedIds={selectedTemplateIds}
-                onToggle={toggleTemplate}
-                onSelectAll={handleSelectAllTemplatesToggle}
-                onEdit={setEditingTemplate}
-                onDelete={handleDeleteTemplate}
-            />
-
-            <CopilotPanel
-                isOpen={isCopilotOpen}
-                onClose={() => setIsCopilotOpen(false)}
-                projectId={project.id}
-                messages={chatMessages}
-                loading={isChatLoading}
             />
         </div >
     );
