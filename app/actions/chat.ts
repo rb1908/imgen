@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/db';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { auth } from "@clerk/nextjs/server";
-import { revalidateTag } from 'next/cache';
+import { revalidatePath } from 'next/cache';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || '';
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -110,6 +110,6 @@ export async function sendMessage(sessionId: string, prompt: string, imageContex
         }
     });
 
-    revalidateTag(`chat-${sessionId}`);
+    revalidatePath(`/studio`);
     return botMsg;
 }
