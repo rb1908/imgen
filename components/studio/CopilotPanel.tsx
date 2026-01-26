@@ -25,7 +25,11 @@ export function CopilotPanel({
     messages,
     loading = false,
     onSendMessage,
-    onGenerate
+    onGenerate,
+    activeReferenceImage,
+    selectedTemplateCount = 0,
+    onClearReference,
+    onClearTemplates
 }: CopilotPanelProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [input, setInput] = useState('');
@@ -136,6 +140,41 @@ export function CopilotPanel({
 
             {/* Input Area */}
             <div className="p-4 bg-white border-t border-zinc-200">
+
+                {/* Context Chips (Moved inside Input Area) */}
+                {(activeReferenceImage || selectedTemplateCount > 0) && (
+                    <div className="flex items-center gap-2 mb-2 animate-in slide-in-from-bottom-2 fade-in">
+                        {activeReferenceImage && (
+                            <div className="flex items-center gap-2 bg-zinc-100 border border-zinc-200 rounded-full pl-1 pr-2 py-1 shadow-sm max-w-[150px]">
+                                <div className="relative w-5 h-5 rounded-full overflow-hidden border border-zinc-200 bg-white">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={activeReferenceImage} className="object-cover w-full h-full" alt="Ref" />
+                                </div>
+                                <span className="text-[10px] font-medium text-zinc-700 truncate">Reference</span>
+                                <button
+                                    onClick={onClearReference}
+                                    className="ml-1 hover:bg-zinc-200 rounded-full p-0.5"
+                                >
+                                    <X className="w-3 h-3 text-zinc-400" />
+                                </button>
+                            </div>
+                        )}
+
+                        {selectedTemplateCount > 0 && (
+                            <div className="flex items-center gap-1 bg-zinc-100 border border-zinc-200 text-[10px] px-2 py-1 rounded-full shadow-sm">
+                                <Sparkles className="w-3 h-3 text-indigo-500" />
+                                <span className="font-medium text-zinc-700">{selectedTemplateCount} Templates</span>
+                                <button
+                                    onClick={onClearTemplates}
+                                    className="ml-1 hover:bg-zinc-200 rounded-full p-0.5"
+                                >
+                                    <X className="w-3 h-3 text-zinc-400" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 <div className="relative bg-zinc-50 border border-zinc-200 rounded-xl focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all p-2">
                     <Textarea
                         ref={textareaRef}

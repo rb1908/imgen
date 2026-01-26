@@ -515,6 +515,10 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                     loading={isChatLoading}
                     onSendMessage={handlePanelSendMessage}
                     onGenerate={handlePanelGenerate}
+                    activeReferenceImage={activeReferenceImage}
+                    selectedTemplateCount={selectedTemplateIds.length}
+                    onClearReference={() => setActiveReferenceImage(project.originalImageUrl)}
+                    onClearTemplates={() => setSelectedTemplateIds([])}
                 />
 
             </div>
