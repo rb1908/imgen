@@ -85,7 +85,12 @@ export function ProductWorkspace({ product: initialProduct, project: initialProj
                 return;
             }
 
-            const result = await generateVariations(project.id, mode, input, refImage);
+            const result = await generateVariations({
+                projectId: project.id,
+                mode,
+                input,
+                overrideImageUrl: refImage
+            });
             const newGens = result as Generation[];
             setGenerations(prev => [...newGens, ...prev]);
 
