@@ -12,10 +12,11 @@ interface StudioEditorProps {
     baseImage?: string;
     initialState?: Scene | null;
     onSave?: (dataUrl: string, state: Scene) => void;
+    onSaveCopy?: (dataUrl: string, state: Scene) => void;
     isSaving?: boolean;
 }
 
-export function StudioEditor({ baseImage, initialState, onSave, isSaving }: StudioEditorProps) {
+export function StudioEditor({ baseImage, initialState, onSave, onSaveCopy, isSaving }: StudioEditorProps) {
     const {
         scene, selectedId, setSelectedId,
         zoom, setZoom, pan, setPan,
@@ -51,6 +52,26 @@ export function StudioEditor({ baseImage, initialState, onSave, isSaving }: Stud
         }
     };
 
+    const handleSaveCopy = () => {
+        if (stageRef.current && onSaveCopy) {
+            setSelectedId(null);
+            setTimeout(() => {
+                const oldScale = stageRef.current.scaleX();
+                const oldPos = stageRef.current.position();
+
+                stageRef.current.scale({ x: 1, y: 1 });
+                stageRef.current.position({ x: 0, y: 0 });
+
+                const dataUrl = stageRef.current.toDataURL({ pixelRatio: 2 });
+
+                stageRef.current.scale({ x: oldScale, y: oldScale });
+                stageRef.current.position(oldPos);
+
+                onSaveCopy(dataUrl, scene);
+            }, 50);
+        }
+    };
+
     return (
         <div className="flex h-full w-full overflow-hidden bg-neutral-950 text-white">
 
@@ -76,6 +97,7 @@ export function StudioEditor({ baseImage, initialState, onSave, isSaving }: Stud
                     sceneWidth={scene.width}
                     sceneHeight={scene.height}
                     onSave={handleSave}
+                    onSaveCopy={onSaveCopy ? handleSaveCopy : undefined}
                     isSaving={!!isSaving}
                 />
 

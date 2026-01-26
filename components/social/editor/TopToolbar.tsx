@@ -1,5 +1,11 @@
 import { Button } from '@/components/ui/button';
-import { Undo, Redo, ZoomIn, ZoomOut, Check } from 'lucide-react';
+import { Undo, Redo, ZoomIn, ZoomOut, Check, Copy, ChevronDown } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface TopToolbarProps {
     undo: () => void;
@@ -11,6 +17,7 @@ interface TopToolbarProps {
     sceneWidth: number;
     sceneHeight: number;
     onSave: () => void;
+    onSaveCopy?: () => void;
     isSaving: boolean;
 }
 
@@ -18,7 +25,7 @@ export function TopToolbar({
     undo, redo, canUndo, canRedo,
     zoom, setZoom,
     sceneWidth, sceneHeight,
-    onSave, isSaving
+    onSave, onSaveCopy, isSaving
 }: TopToolbarProps) {
     return (
         <div className="h-14 border-b border-neutral-800 bg-neutral-900 flex items-center justify-between px-4 z-20 shadow-sm">
@@ -44,10 +51,37 @@ export function TopToolbar({
                     <ZoomIn className="w-4 h-4" />
                 </Button>
                 <div className="w-px h-4 bg-neutral-800 mx-2" />
-                <Button size="sm" className="bg-white text-black hover:bg-neutral-200" onClick={onSave} disabled={isSaving}>
-                    <Check className="w-4 h-4 mr-2" />
-                    {isSaving ? "Saving..." : "Save"}
-                </Button>
+
+                <div className="flex items-center">
+                    <Button
+                        size="sm"
+                        className="bg-white text-black hover:bg-neutral-200 rounded-r-none border-r border-neutral-300"
+                        onClick={onSave}
+                        disabled={isSaving}
+                    >
+                        <Check className="w-4 h-4 mr-2" />
+                        {isSaving ? "Saving..." : "Save"}
+                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button size="sm" className="bg-white text-black hover:bg-neutral-200 rounded-l-none px-2" disabled={isSaving}>
+                                <ChevronDown className="w-4 h-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={onSave} disabled={isSaving}>
+                                <Check className="mr-2 h-4 w-4" />
+                                <span>Save Changes</span>
+                            </DropdownMenuItem>
+                            {onSaveCopy && (
+                                <DropdownMenuItem onClick={onSaveCopy} disabled={isSaving}>
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    <span>Save as Copy</span>
+                                </DropdownMenuItem>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </div>
         </div>
     );

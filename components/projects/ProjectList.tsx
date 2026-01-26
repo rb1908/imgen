@@ -25,7 +25,7 @@ import {
 
 interface ProjectListProps {
     initialProjects: (Project & {
-        generations: { imageUrl: string, createdAt: Date }[];
+        generations: { imageUrl: string, customizedImageUrl: string | null, createdAt: Date }[];
         _count: { generations: number };
     })[];
 }
@@ -42,7 +42,7 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
     // Renaming State
-    const [renamingProject, setRenamingProject] = useState<Project & { generations: { imageUrl: string, createdAt: Date }[], _count: { generations: number } } | null>(null);
+    const [renamingProject, setRenamingProject] = useState<Project & { generations: { imageUrl: string, customizedImageUrl: string | null, createdAt: Date }[], _count: { generations: number } } | null>(null);
     const [newName, setNewName] = useState("");
 
     // Upload State
@@ -155,7 +155,7 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
         }
     };
 
-    const startRenaming = (project: Project & { generations: { imageUrl: string, createdAt: Date }[], _count: { generations: number } }, e: React.MouseEvent) => {
+    const startRenaming = (project: Project & { generations: { imageUrl: string, customizedImageUrl: string | null, createdAt: Date }[], _count: { generations: number } }, e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
         setRenamingProject(project);
@@ -297,7 +297,7 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                                             {project.generations.length > 0 && (
                                                 <div className="relative h-full bg-muted/50 border-l border-white/10">
                                                     <Image
-                                                        src={project.generations[0].imageUrl}
+                                                        src={project.generations[0].customizedImageUrl || project.generations[0].imageUrl}
                                                         alt="Gen 1"
                                                         fill
                                                         className="object-cover"

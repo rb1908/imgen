@@ -97,6 +97,9 @@ export async function getProjects() {
                     orderBy: { createdAt: 'desc' },
                     select: {
                         imageUrl: true,
+                        customizedImageUrl: true,
+                        canvasState: true,
+                        promptUsed: true,
                         createdAt: true
                     }
                 }

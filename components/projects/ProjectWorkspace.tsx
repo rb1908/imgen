@@ -376,7 +376,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                     <GenerationGrid
                         images={generations.map(g => ({
                             id: g.id,
-                            url: g.imageUrl,
+                            url: g.customizedImageUrl || g.imageUrl,
                             templateId: g.templateId || 'custom',
                             originalImage: g.promptUsed || 'Custom Generation',
                             prompt: g.promptUsed || customPrompt || 'Custom Generation',

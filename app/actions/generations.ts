@@ -99,6 +99,7 @@ export async function updateGeneration(id: string, updates: { customizedImageUrl
         });
 
         revalidatePath('/generations');
+        revalidatePath('/projects');
         revalidateTag(`project-${generation.projectId}`, {});
         return { success: true };
     } catch (error) {
@@ -124,5 +125,47 @@ export async function getGenerationById(id: string) {
     } catch (error) {
         console.error("Failed to fetch generation:", error);
         return null;
+    }
+}
+
+export async function cloneGeneration(
+    originalId: string,
+    overrides: {
+        customizedImageUrl: string;
+        canvasState: Record<string, unknown>;
+    }
+) {
+    try {
+        const { userId } = await auth();
+        if (!userId) throw new Error("Unauthorized");
+
+        const original = await prisma.generation.findFirst({
+            where: { id: originalId, project: { userId } }
+        });
+
+        if (!original) throw new Error("Original generation not found");
+
+        const newGeneration = await prisma.generation.create({
+            data: {
+                // Copy basic fields
+                imageUrl: original.imageUrl,
+                promptUsed: original.promptUsed,
+                projectId: original.projectId,
+                templateId: original.templateId,
+
+                // Apply new edits
+                customizedImageUrl: overrides.customizedImageUrl,
+                canvasState: overrides.canvasState as any,
+            }
+        });
+
+        revalidatePath('/generations');
+        revalidatePath('/projects');
+        revalidateTag(`project-${original.projectId}`, {});
+
+        return { success: true, generationId: newGeneration.id };
+    } catch (error) {
+        console.error("Failed to clone generation:", error);
+        return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
 }
