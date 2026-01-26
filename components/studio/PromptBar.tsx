@@ -96,26 +96,7 @@ export function PromptBar({
                     <div className="bg-[#f4f4f4] rounded-[26px] p-2 pl-4 pr-2 flex flex-col gap-1 w-full max-w-2xl shadow-lg border border-zinc-200/50">
 
                         {/* Top: Reference Images / Context Badges (Chips) */}
-                        {(children || selectedTemplateCount > 0) && (
-                            <div className="flex items-center gap-2 flex-wrap px-1 pt-1 mb-1">
-                                {/* Render Children (Reference Image Chips) directly here */}
-                                {children}
 
-                                {/* Template Chip */}
-                                {selectedTemplateCount > 0 && (
-                                    <div className="flex items-center gap-1 bg-white border border-zinc-200 text-xs px-2 py-1 rounded-full shadow-sm animate-in fade-in zoom-in">
-                                        <Palette className="w-3 h-3 text-indigo-500" />
-                                        <span className="font-medium text-zinc-700">{selectedTemplateCount} Templates</span>
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); onClearTemplates(); }}
-                                            className="ml-1 hover:bg-zinc-100 rounded-full p-0.5"
-                                        >
-                                            <X className="w-3 h-3 text-zinc-400" />
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
 
                         {/* Middle: Text Input */}
                         <div className="relative">
@@ -142,7 +123,7 @@ export function PromptBar({
                         {/* Bottom: Actions Row */}
                         <div className="flex items-center justify-between mt-1 pt-1">
                             {/* Left: Templates / Attachments - Floating Action Look */}
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 items-center">
                                 <Button
                                     variant="ghost"
                                     size="icon"
@@ -152,6 +133,26 @@ export function PromptBar({
                                 >
                                     <Palette className="w-5 h-5" />
                                 </Button>
+
+                                {/* Context Chips (Moved to Bottom) */}
+                                {(children || selectedTemplateCount > 0) && (
+                                    <div className="flex items-center gap-2 animate-in fade-in zoom-in slide-in-from-bottom-2">
+                                        {children}
+
+                                        {selectedTemplateCount > 0 && (
+                                            <div className="flex items-center gap-1 bg-white border border-zinc-200 text-xs px-2 py-1 rounded-full shadow-sm">
+                                                <Palette className="w-3 h-3 text-indigo-500" />
+                                                <span className="font-medium text-zinc-700">{selectedTemplateCount}</span>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); onClearTemplates(); }}
+                                                    className="ml-1 hover:bg-zinc-100 rounded-full p-0.5"
+                                                >
+                                                    <X className="w-3 h-3 text-zinc-400" />
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Right: Enhance + Generate */}

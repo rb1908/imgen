@@ -195,8 +195,15 @@ export function GenerationGrid({
                                     </div>
                                 )}
 
+                                {/* Active Reference Badge */}
+                                {referenceImageUrl === img.url && (
+                                    <div className="absolute top-2 left-2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg z-20 border border-white/20">
+                                        ACTIVE REF
+                                    </div>
+                                )}
+
                                 {/* New Badge */}
-                                {!selectionMode && img.createdAt && (new Date().getTime() - new Date(img.createdAt).getTime() < 24 * 60 * 60 * 1000) && (
+                                {!selectionMode && referenceImageUrl !== img.url && img.createdAt && (new Date().getTime() - new Date(img.createdAt).getTime() < 24 * 60 * 60 * 1000) && (
                                     <div className="absolute top-2 left-2 bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg z-10 animate-pulse">
                                         NEW
                                     </div>
