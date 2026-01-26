@@ -87,9 +87,11 @@ export function CopilotPanel({
                                     ? "bg-zinc-100 text-zinc-800 rounded-tr-sm"
                                     : "bg-white border border-zinc-100 shadow-sm text-zinc-700 rounded-tl-sm"
                             )}>
-                                <ReactMarkdown className="prose prose-sm max-w-none prose-p:leading-tight prose-pre:bg-zinc-50 prose-pre:p-2">
-                                    {msg.content}
-                                </ReactMarkdown>
+                                <div className="prose prose-sm max-w-none prose-p:leading-tight prose-pre:bg-zinc-50 prose-pre:p-2">
+                                    <ReactMarkdown>
+                                        {msg.content}
+                                    </ReactMarkdown>
+                                </div>
                             </div>
                         </div>
                     ))}
