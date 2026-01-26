@@ -9,12 +9,17 @@ import { auth } from "@clerk/nextjs/server";
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || '';
 const genAI = new GoogleGenerativeAI(apiKey);
 
-export async function generateVariations(
-    projectId: string,
-    mode: 'template' | 'custom',
-    input: string[] | string, // templateIds[] OR customPrompt
-    overrideImageUrl?: string
-) {
+export async function generateVariations({
+    projectId,
+    mode,
+    input, // templateIds[] OR customPrompt
+    overrideImageUrl
+}: {
+    projectId: string;
+    mode: 'template' | 'custom';
+    input: string[] | string;
+    overrideImageUrl?: string;
+}) {
     try {
         const { userId } = await auth();
         if (!userId) throw new Error("Unauthorized");
@@ -174,6 +179,6 @@ export async function generateVariations(
 
     } catch (error) {
         console.error("[Fatal Generate Error]:", error);
-        throw error; // Re-throw to show 500, but now we have logs
+        throw error;
     }
 }

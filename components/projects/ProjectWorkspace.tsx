@@ -90,7 +90,12 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
     const generateMutation = useMutation({
         mutationFn: async ({ taskId, type, val }: { taskId: string, type: 'template' | 'custom', val: string }) => {
             const input = type === 'template' ? [val] : val;
-            return await generateVariations(project.id, type, input);
+            return await generateVariations({
+                projectId: project.id,
+                mode: type,
+                input: input,
+                overrideImageUrl: activeReferenceImage
+            });
         },
         onSuccess: () => {
             // Invalidate to fetch the new images
