@@ -36,19 +36,47 @@ export async function generateVariations({
         let base64Data = "";
         let mimeType = "image/png"; // default
 
+        // Retry helper
+        const fetchImageWithRetry = async (url: string, retries = 3): Promise<{ buffer: Buffer, type: string }> => {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    // console.log(`[Fetch] Attempt ${i + 1} for ${url}`);
+                    const res = await fetch(url, {
+                        signal: AbortSignal.timeout(10000), // 10s timeout
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                        }
+                    });
+                    if (!res.ok) throw new Error(`Status ${res.status}`);
+
+                    const arrayBuffer = await res.arrayBuffer();
+                    const contentType = res.headers.get("content-type") || "image/png";
+                    return { buffer: Buffer.from(arrayBuffer), type: contentType };
+                } catch (e) {
+                    // console.warn(`[Fetch] Attempt ${i + 1} failed:`, e);
+                    if (i === retries - 1) throw e;
+                    await new Promise(r => setTimeout(r, 1000 * (i + 1))); // backoff
+                }
+            }
+            throw new Error("All retries failed");
+        };
+
         if (dataUrl.startsWith("data:")) {
             // Legacy Base64
             base64Data = dataUrl.split(',')[1];
             mimeType = dataUrl.split(';')[0].split(':')[1];
         } else if (dataUrl.startsWith("http")) {
-            // New Supabase Storage URL -> Fetch Buffer
-            const imageRes = await fetch(dataUrl);
-            if (!imageRes.ok) throw new Error("Failed to fetch source image");
-            const arrayBuffer = await imageRes.arrayBuffer();
-            base64Data = Buffer.from(arrayBuffer).toString('base64');
-            mimeType = imageRes.headers.get("content-type") || "image/png";
+            // New Supabase Storage URL -> Fetch Buffer with retry
+            try {
+                const { buffer, type } = await fetchImageWithRetry(dataUrl);
+                base64Data = buffer.toString('base64');
+                mimeType = type;
+            } catch (e) {
+                console.error("[Fatal] Failed to download reference image:", dataUrl, e);
+                throw new Error("Could not download the reference image. Please try selecting a different one.");
+            }
         } else {
-            throw new Error("Invalid image format");
+            throw new Error(`Invalid image format: ${dataUrl.substring(0, 20)}...`);
         }
 
         // Prepare tasks
