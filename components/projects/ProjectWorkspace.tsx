@@ -82,7 +82,6 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
     const handleUseAsReference = (url: string) => {
         setActiveReferenceImage(url);
-        toast.success("Reference image updated for next generation");
         if (!isPromptOpen) setIsPromptOpen(true);
     };
 
