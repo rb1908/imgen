@@ -17,6 +17,11 @@ interface CopilotPanelProps {
     loading?: boolean;
     onSendMessage: (text: string) => Promise<void>;
     onGenerate: (text: string) => void; // Handoff to grid
+    // Context Props
+    activeReferenceImage?: string | null;
+    selectedTemplateCount?: number;
+    onClearReference?: () => void;
+    onClearTemplates?: () => void;
 }
 
 export function CopilotPanel({
