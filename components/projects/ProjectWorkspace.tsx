@@ -496,18 +496,15 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                     className="md:pl-72"
                 >
                     {activeReferenceImage !== project.originalImageUrl && (
-                        <div className="hidden md:flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-full pl-1 pr-3 py-1 animate-in slide-in-from-bottom-2">
-                            <div className="relative w-8 h-8 rounded-full overflow-hidden border border-white shadow-sm">
+                        <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-full pl-1 pr-2 py-1 animate-in slide-in-from-bottom-2 shadow-sm">
+                            <div className="relative w-6 h-6 rounded-full overflow-hidden border border-zinc-100">
                                 <Image src={activeReferenceImage} fill className="object-cover" alt="Ref" />
                             </div>
-                            <div className="flex flex-col">
-                                <span className="text-[10px] text-indigo-400 font-semibold leading-none uppercase tracking-wider">Using Reference</span>
-                                <span className="text-xs font-medium text-indigo-700 leading-none">Custom Image</span>
-                            </div>
+                            <span className="text-xs font-medium text-zinc-700">Custom Reference</span>
                             <Button
                                 size="icon"
                                 variant="ghost"
-                                className="h-5 w-5 rounded-full ml-1 hover:bg-indigo-100 text-indigo-400 hover:text-indigo-700"
+                                className="h-4 w-4 rounded-full ml-1 hover:bg-zinc-100 text-zinc-400 hover:text-black"
                                 onClick={() => setActiveReferenceImage(project.originalImageUrl)}
                                 title="Clear Reference"
                             >
