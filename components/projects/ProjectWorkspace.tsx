@@ -77,6 +77,15 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
     const [isScrolled, setIsScrolled] = useState(false);
     const leftPanelRef = useRef<HTMLDivElement>(null);
 
+    // Active Reference Image State (Defaults to Project Original)
+    const [activeReferenceImage, setActiveReferenceImage] = useState(project.originalImageUrl);
+
+    const handleUseAsReference = (url: string) => {
+        setActiveReferenceImage(url);
+        toast.success("Reference image updated for next generation");
+        if (!isPromptOpen) setIsPromptOpen(true);
+    };
+
     // Mutations
     const generateMutation = useMutation({
         mutationFn: async ({ taskId, type, val }: { taskId: string, type: 'template' | 'custom', val: string }) => {
@@ -305,6 +314,8 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
 
 
+
+
     return (
         <div className="h-full flex flex-col gap-6 relative bg-white text-zinc-900">
             {/* Header */}
@@ -322,7 +333,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                                 className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0"
                             >
                                 <Image
-                                    src={project.originalImageUrl}
+                                    src={activeReferenceImage}
                                     alt="Mini Thumbnail"
                                     fill
                                     className="object-cover"
@@ -386,11 +397,12 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         selectionMode={isSelectionMode}
                         selectedIds={selectedGenerationIds}
                         onToggle={toggleGenerationSelection}
-                        referenceImageUrl={project.originalImageUrl}
+                        referenceImageUrl={activeReferenceImage}
                         referenceName={project.name || 'project'}
                         defaultProductId={project.defaultProductId}
                         pendingImages={pendingGenerations}
                         onEdit={handleEdit}
+                        onUseAsReference={handleUseAsReference}
                     />
                 </div >
             </div >
@@ -477,7 +489,28 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                     onOpenTemplatePicker={() => setIsTemplatePickerOpen(true)}
                     onClearTemplates={() => setSelectedTemplateIds([])}
                     className="md:pl-72"
-                />
+                >
+                    {activeReferenceImage !== project.originalImageUrl && (
+                        <div className="hidden md:flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-full pl-1 pr-3 py-1 animate-in slide-in-from-bottom-2">
+                            <div className="relative w-8 h-8 rounded-full overflow-hidden border border-white shadow-sm">
+                                <Image src={activeReferenceImage} fill className="object-cover" alt="Ref" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] text-indigo-400 font-semibold leading-none uppercase tracking-wider">Using Reference</span>
+                                <span className="text-xs font-medium text-indigo-700 leading-none">Custom Image</span>
+                            </div>
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-5 w-5 rounded-full ml-1 hover:bg-indigo-100 text-indigo-400 hover:text-indigo-700"
+                                onClick={() => setActiveReferenceImage(project.originalImageUrl)}
+                                title="Clear Reference"
+                            >
+                                <X className="w-3 h-3" />
+                            </Button>
+                        </div>
+                    )}
+                </PromptBar>
             )}
 
             <TemplateDialog

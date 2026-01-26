@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 import { GeneratedImage } from '@/app/types';
-import { Loader2, Download, Maximize2, Plus, ChevronLeft, ChevronRight, X, ShoppingBag, MoreHorizontal, Trash2, Palette } from 'lucide-react';
+import { Loader2, Download, Maximize2, Plus, ChevronLeft, ChevronRight, X, ShoppingBag, MoreHorizontal, Trash2, Palette, ArrowUpRight } from 'lucide-react';
 import { deleteGenerations } from '@/app/actions/generations';
 import { toast } from 'sonner';
 import Image from 'next/image';
@@ -29,6 +29,7 @@ export interface GenerationGridProps {
     defaultProductId?: string | null;
     onAddToProduct?: (url: string) => Promise<void>;
     onEdit?: (id: string) => void;
+    onUseAsReference?: (url: string) => void;
 }
 
 // Internal Pending Card Component
@@ -79,7 +80,8 @@ export function GenerationGrid({
     referenceName = 'project',
     defaultProductId,
     onAddToProduct,
-    onEdit
+    onEdit,
+    onUseAsReference
 }: GenerationGridProps) {
     const [expandedImage, setExpandedImage] = useState<GeneratedImage & { referenceName?: string } | null>(null);
     const [imageToSave, setImageToSave] = useState<GeneratedImage | null>(null);
@@ -203,93 +205,94 @@ export function GenerationGrid({
                                 {/* Standard Hover Actions - Hidden in Selection Mode */}
                                 {!selectionMode && (
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
-                                        <div className="flex gap-2 justify-end">
-                                            {(defaultProductId || onAddToProduct) && (
-                                                <Button
-                                                    size="icon"
-                                                    variant="secondary"
-                                                    className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
-                                                    onClick={async (e) => {
-                                                        e.stopPropagation();
-                                                        if (onAddToProduct) {
-                                                            await onAddToProduct(img.url);
-                                                        } else if (defaultProductId) {
-                                                            const { addProductImage } = await import('@/app/actions/product_actions');
-                                                            const { toast } = await import('sonner');
-                                                            const res = await addProductImage(defaultProductId, img.url);
-                                                            if (res.success) {
-                                                                toast.success("Added to product listing");
-                                                            } else {
-                                                                toast.error("Failed to add to listing");
-                                                            }
-                                                        }
-                                                    }}
-                                                    title="Add to Product"
-                                                >
-                                                    <ShoppingBag className="w-4 h-4" />
-                                                </Button>
-                                            )}
+                                        <Button
+                                            size="icon"
+                                            variant="secondary"
+                                            className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                            disabled={!defaultProductId && !onAddToProduct}
+                                            onClick={async (e) => {
+                                                e.stopPropagation();
+                                                if (onAddToProduct) {
+                                                    await onAddToProduct(img.url);
+                                                } else if (defaultProductId) {
+                                                    const { addProductImage } = await import('@/app/actions/product_actions');
+                                                    const { toast } = await import('sonner');
+                                                    const res = await addProductImage(defaultProductId, img.url);
+                                                    if (res.success) {
+                                                        toast.success("Added to product listing");
+                                                    } else {
+                                                        toast.error("Failed to add to listing");
+                                                    }
+                                                }
+                                            }}
+                                            title={defaultProductId ? "Add to Product" : "Link a product to enable"}
+                                        >
+                                            <ShoppingBag className="w-4 h-4" />
+                                        </Button>
+
+                                        <Button
+                                            size="icon"
+                                            variant="secondary"
+                                            className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (onUseAsReference) onUseAsReference(img.url);
+                                            }}
+                                            title="Use as Reference"
+                                        >
+                                            <ArrowUpRight className="w-4 h-4" />
+                                        </Button>
+
+                                        <Button
+                                            size="icon"
+                                            variant="secondary"
+                                            className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setImageToSave(img);
+                                            }}
+                                            title="Save as Template"
+                                        >
+                                            <Plus className="w-4 h-4" />
+                                        </Button>
+
+                                        {onEdit && (
                                             <Button
                                                 size="icon"
                                                 variant="secondary"
                                                 className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    setImageToSave(img);
+                                                    onEdit(img.id);
                                                 }}
-                                                title="Save as Template"
+                                                title="Edit in Studio"
                                             >
-                                                <Plus className="w-4 h-4" />
+                                                <Palette className="w-4 h-4" />
                                             </Button>
-                                            <Button
-                                                size="icon"
-                                                variant="secondary"
-                                                className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setExpandedImage({ ...img, referenceName: refName });
-                                                }}
-                                            >
-                                                <Maximize2 className="w-4 h-4" />
-                                            </Button>
-                                            {onEdit && (
-                                                <Button
-                                                    size="icon"
-                                                    variant="secondary"
-                                                    className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        onEdit(img.id);
-                                                    }}
-                                                    title="Edit in Studio"
-                                                >
-                                                    <Palette className="w-4 h-4" />
-                                                </Button>
-                                            )}
-                                            <Button
-                                                size="icon"
-                                                variant="secondary"
-                                                className="h-8 w-8 rounded-full bg-white/10 hover:bg-red-500/80 text-white border-none backdrop-blur-md transition-colors"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDelete(img.id);
-                                                }}
-                                                title="Delete"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                size="icon"
-                                                variant="secondary"
-                                                className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDownload(img.url, img.id, img.prompt, refName);
-                                                }}
-                                            >
-                                                <Download className="w-4 h-4" />
-                                            </Button>
-                                        </div>
+                                        )}
+                                        <Button
+                                            size="icon"
+                                            variant="secondary"
+                                            className="h-8 w-8 rounded-full bg-white/10 hover:bg-red-500/80 text-white border-none backdrop-blur-md transition-colors"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDelete(img.id);
+                                            }}
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            size="icon"
+                                            variant="secondary"
+                                            className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-md"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDownload(img.url, img.id, img.prompt, refName);
+                                            }}
+                                        >
+                                            <Download className="w-4 h-4" />
+                                        </Button>
                                     </div>
                                 )}
 
@@ -367,17 +370,13 @@ export function GenerationGrid({
                                 )}
                             </div>
 
-                            {/* Subtle Filename Display */}
-                            <div className="px-1">
-                                <p className="text-[10px] text-muted-foreground truncate font-mono opacity-70 group-hover:opacity-100 transition-opacity">
-                                    {filenameDisplay}
-                                </p>
-                            </div>
+
                         </div>
                     );
                 })}
-            </div>
+            </div >
 
+            {/* Expand Modal -> ImageViewer */}
             {/* Expand Modal -> ImageViewer */}
             <ImageViewer
                 isOpen={!!expandedImage}
