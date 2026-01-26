@@ -7,8 +7,11 @@ import { Button } from '@/components/ui/button';
 import { GenerationGrid } from '@/components/studio/GenerationGrid';
 import { generateVariations } from '@/app/actions/generate';
 import { deleteGenerations } from '@/app/actions/generations';
+import { getOrCreateSession, sendMessage } from '@/app/actions/chat'; // New Actions
 import { toast } from 'sonner';
-import { Loader2, Sparkles, ArrowLeft, ShoppingBag, X, Trash2, Download } from 'lucide-react';
+import { Loader2, Sparkles, ArrowLeft, ShoppingBag, X, Trash2, Download, MessageSquare } from 'lucide-react'; // Added MessageSquare
+import { ChatMessage } from '@prisma/client'; // Type
+import { CopilotPanel } from '@/components/studio/CopilotPanel'; // Component
 import {
     Drawer,
     DrawerClose,
@@ -83,6 +86,51 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
     const handleUseAsReference = (url: string) => {
         setActiveReferenceImage(url);
         if (!isPromptOpen) setIsPromptOpen(true);
+    };
+
+    // --- COPILOT STATE ---
+    const [isCopilotOpen, setIsCopilotOpen] = useState(false);
+    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+    const [sessionId, setSessionId] = useState<string | null>(null);
+    const [isChatLoading, setIsChatLoading] = useState(false);
+
+    // Load Chat Session
+    useEffect(() => {
+        if (project.id) {
+            getOrCreateSession(project.id).then(s => {
+                setSessionId(s.id);
+                // @ts-ignore
+                setChatMessages(s.messages);
+            }).catch(e => console.error("Failed to load session", e));
+        }
+    }, [project.id]);
+
+    const handleChat = async () => {
+        if (!customPrompt.trim() || !sessionId) return;
+        const prompt = customPrompt;
+        setCustomPrompt(''); // Clear global input
+
+        // Optimistic User Message
+        const tempMsg: any = {
+            id: 'temp-' + Date.now(),
+            role: 'user',
+            content: prompt,
+            sessionId,
+            createdAt: new Date(),
+        };
+        setChatMessages(prev => [...prev, tempMsg]);
+        setIsChatLoading(true);
+
+        try {
+            // Send to backend
+            const botMsg = await sendMessage(sessionId, prompt);
+            setChatMessages(prev => [...prev, botMsg as any]);
+        } catch (e) {
+            toast.error("Failed to send message to Copilot");
+            // Remove temp message? Or keep as error state.
+        } finally {
+            setIsChatLoading(false);
+        }
     };
 
     // Mutations
@@ -256,6 +304,12 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
             return;
         }
 
+        // GLOBAL MODE SWITCH: If Copilot is Open, treat as Chat
+        if (isCopilotOpen) {
+            await handleChat();
+            return;
+        }
+
         setGenerationStatus('generating');
         setIsPromptOpen(false);
 
@@ -350,6 +404,16 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         <h1 className="text-lg font-bold tracking-tight truncate">{project.name || 'Untitled Project'}</h1>
                         <div className="hidden md:block w-px h-6 bg-border mx-2" />
                         <ProductSelector projectId={project.id} initialDefaultProductId={project.defaultProductId} />
+
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setIsCopilotOpen(!isCopilotOpen)}
+                            className={cn("h-9 w-9 rounded-full text-zinc-500 hover:text-indigo-600 hover:bg-indigo-50", isCopilotOpen && "text-indigo-600 bg-indigo-50")}
+                            title="Toggle Copilot"
+                        >
+                            <MessageSquare className="w-5 h-5" />
+                        </Button>
                     </div>
 
                 </div>
@@ -531,7 +595,24 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 onDelete={handleDeleteTemplate}
             />
 
+            <SelectTemplatesDialog
+                open={isTemplatePickerOpen}
+                onOpenChange={setIsTemplatePickerOpen}
+                templates={sortedTemplates}
+                selectedIds={selectedTemplateIds}
+                onToggle={toggleTemplate}
+                onSelectAll={handleSelectAllTemplatesToggle}
+                onEdit={setEditingTemplate}
+                onDelete={handleDeleteTemplate}
+            />
 
+            <CopilotPanel
+                isOpen={isCopilotOpen}
+                onClose={() => setIsCopilotOpen(false)}
+                projectId={project.id}
+                messages={chatMessages}
+                loading={isChatLoading}
+            />
         </div >
     );
 }

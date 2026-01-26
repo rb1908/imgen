@@ -22,6 +22,7 @@ model Project {
   updatedAt       DateTime     @updatedAt
 
   generations     Generation[]
+  chatSessions    ChatSession[]
 
   @@index([userId])
 }
@@ -195,5 +196,38 @@ model ProductTemplate {
   updatedAt   DateTime @updatedAt
   userId      String   @default("user_default")
 
+  
   @@index([userId])
+}
+
+model ChatSession {
+  id          String        @id @default(uuid())
+  projectId   String?
+  project     Project?      @relation(fields: [projectId], references: [id])
+  userId      String
+  
+  messages    ChatMessage[]
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([projectId])
+  @@index([userId])
+}
+
+model ChatMessage {
+  id          String      @id @default(uuid())
+  sessionId   String
+  session     ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  role        String      // "user" or "model"
+  content     String      // Text content
+  
+  // Attachments (e.g. referencing a Generation ID created by this message, or an image sent by user)
+  attachmentUrl String?   
+  generationId  String?   // If this message produced a generation
+  
+  createdAt   DateTime    @default(now())
+
+  @@index([sessionId])
 }
