@@ -11,7 +11,7 @@ import { getOrCreateSession, sendMessage } from '@/app/actions/chat'; // New Act
 import { toast } from 'sonner';
 import { Loader2, Sparkles, ArrowLeft, ShoppingBag, X, Trash2, Download, MessageSquare } from 'lucide-react'; // Added MessageSquare
 import { ChatMessage } from '@prisma/client'; // Type
-import { ChatMessage } from '@prisma/client'; // Type
+
 import {
     Drawer,
     DrawerClose,
