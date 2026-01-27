@@ -82,6 +82,11 @@ export function VisualCanvas({
     // Prompt Bar State (For AI Studio)
     const [isPromptOpen, setIsPromptOpen] = useState(false);
 
+    // Side Panel Params
+    const [aspectRatio, setAspectRatio] = useState('16:9');
+    const [resolution, setResolution] = useState('Standard');
+    const [batchSize, setBatchSize] = useState(1);
+
     // Listing Images (Product Images)
     const listingImages = productImages.map(url => ({ url, type: 'product' as const }));
 
@@ -100,18 +105,8 @@ export function VisualCanvas({
 
     const handleImageClick = (url: string) => {
         onActiveImageChange(url);
-        // If in AI Studio, maybe selecting an image enters "Editor" mode for that image? 
-        // Or AI Studio is just a feed and clicking opens a detailed view?
-        // User said: "AI Studio where all past ai generated images are shown. even any image generated... show generation bubble as well."
-        // Let's assume clicking an image in AI Studio just previews it or sets it as reference?
-        // Default behavior: Switch to Editor View (same as Gallery)
-        // If we are in AI Studio, and click an image, maybe we just view it?
-        // For simplicity, let's allow "viewing" via the standard Editor Mode, but we need a way to go BACK to AI Studio.
-
         if (isAIStudioOpen) {
-            // Maybe we stay in AI Studio but have a lightbox? 
-            // Or reuse Editor. Let's reuse Editor but with a "Back to AI Studio" button.
-            // Currently Editor has "Back to Gallery".
+            // ...
         }
         setViewMode('viewer');
     };
@@ -137,13 +132,27 @@ export function VisualCanvas({
 
     const handleGenerateClick = () => {
         if (selectedTemplateIds.length > 0) {
-            // Templates usually don't need a reference unless specified, but for now we only support reference in Custom mode ideally
-            // or pass it along? The action supports it.
+            // Templates
             onGenerate('template', selectedTemplateIds, referenceImageUrl || undefined);
         } else {
-            onGenerate('custom', customPrompt, referenceImageUrl || undefined);
+            // Custom with Params
+            const paramSuffix = ` --ar ${aspectRatio} --quality ${resolution}`;
+            const finalPrompt = customPrompt + paramSuffix;
+
+            // Allow batching by sending prompt multiple times? 
+            // The onGenerate prop in VisualCanvas signature seems to accept 'string[] | string'.
+            // If we want batching, we should send string[]?
+            // "onGenerate: (mode: 'template' | 'custom', input: string[] | string, referenceImageUrl?: string) => Promise<void>;"
+
+            if (batchSize > 1) {
+                // Send array of same prompt
+                const prompts = Array(batchSize).fill(finalPrompt);
+                onGenerate('custom', prompts, referenceImageUrl || undefined);
+            } else {
+                onGenerate('custom', finalPrompt, referenceImageUrl || undefined);
+            }
         }
-        // setIsPromptOpen(false); // Can collapse or stay open
+        // setIsPromptOpen(false); 
     };
 
     const handleUploadReference = async (file: File) => {
@@ -168,10 +177,6 @@ export function VisualCanvas({
     if (isAIStudioOpen) {
         return (
             <div className="relative h-full w-full bg-white flex flex-col pt-6 pb-32 px-6 text-zinc-900 overflow-y-auto">
-                {/* ... content redundant to copy here fully, better to modify previous if block or wrap this ... */}
-                {/* Wait, the previous code had 'if (isAIStudioOpen && viewMode === 'gallery')'.
-                     Now we removed 'editor'. So just 'if (isAIStudioOpen)'.
-                 */}
                 <div className="max-w-7xl mx-auto w-full space-y-8">
                     {/* Header */}
                     <div className="flex items-center gap-4">
@@ -192,7 +197,7 @@ export function VisualCanvas({
                         </div>
                     </div>
 
-                    {/* Generation Grid (Handles its own viewing internally now via GenerationGrid's state) */}
+                    {/* Generation Grid */}
                     <GenerationGrid
                         images={allGenerations.map(g => ({
                             id: g.id,
@@ -221,8 +226,15 @@ export function VisualCanvas({
                     selectedTemplateCount={selectedTemplateIds.length}
                     onOpenTemplatePicker={() => setIsTemplatePickerOpen(true)}
                     onClearTemplates={() => setSelectedTemplateIds([])}
+                    // New Params
+                    aspectRatio={aspectRatio}
+                    onAspectRatioChange={setAspectRatio}
+                    resolution={resolution}
+                    onResolutionChange={setResolution}
+                    amount={batchSize}
+                    onAmountChange={setBatchSize}
                 >
-                    {/* Reference UI - Keeping existing logic */}
+                    {/* Reference UI */}
                     {referenceImageUrl && (
                         <div className="relative h-10 w-10 rounded-lg overflow-hidden border border-zinc-200 shadow-sm group">
                             <Image src={referenceImageUrl} alt="Ref" fill className="object-cover" />
