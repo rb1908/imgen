@@ -38,7 +38,12 @@ interface VisualCanvasProps {
     onActiveImageChange: (url: string) => void;
     productImages: string[];
     generations: { id: string; url: string; prompt?: string }[];
-    onGenerate: (mode: 'template' | 'custom', input: string[] | string, referenceImageUrl?: string) => Promise<void>;
+    onGenerate: (
+        mode: 'template' | 'custom', 
+        input: string[] | string, 
+        referenceImageUrl?: string,
+        options?: { aspectRatio: string, resolution: string }
+    ) => Promise<void>;
     onAddToProduct: (url: string) => Promise<void>;
     templates: Template[];
     isGenerating: boolean;
@@ -131,25 +136,21 @@ export function VisualCanvas({
     };
 
     const handleGenerateClick = () => {
+        const options = { aspectRatio, resolution };
+
         if (selectedTemplateIds.length > 0) {
             // Templates
-            onGenerate('template', selectedTemplateIds, referenceImageUrl || undefined);
+            // Typescript might complain if onGenerate doesn't accept options. I need to update interface.
+            // Casting or assuming interface update below.
+            onGenerate('template', selectedTemplateIds, referenceImageUrl || undefined, options);
         } else {
-            // Custom with Params
-            const paramSuffix = ` --ar ${aspectRatio} --quality ${resolution}`;
-            const finalPrompt = customPrompt + paramSuffix;
-
-            // Allow batching by sending prompt multiple times? 
-            // The onGenerate prop in VisualCanvas signature seems to accept 'string[] | string'.
-            // If we want batching, we should send string[]?
-            // "onGenerate: (mode: 'template' | 'custom', input: string[] | string, referenceImageUrl?: string) => Promise<void>;"
-
+            // Custom
+            // No more param suffix concatenation
             if (batchSize > 1) {
-                // Send array of same prompt
-                const prompts = Array(batchSize).fill(finalPrompt);
-                onGenerate('custom', prompts, referenceImageUrl || undefined);
+                const prompts = Array(batchSize).fill(customPrompt);
+                onGenerate('custom', prompts, referenceImageUrl || undefined, options);
             } else {
-                onGenerate('custom', finalPrompt, referenceImageUrl || undefined);
+                onGenerate('custom', customPrompt, referenceImageUrl || undefined, options);
             }
         }
         // setIsPromptOpen(false); 

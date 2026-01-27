@@ -241,9 +241,9 @@ export function PromptBar({
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-300">
-                                            <SelectItem value="Standard">Standard</SelectItem>
-                                            <SelectItem value="High">High Detail</SelectItem>
-                                            <SelectItem value="4K">4K Ultra</SelectItem>
+                                            <SelectItem value="1K">1K</SelectItem>
+                                            <SelectItem value="2K">2K</SelectItem>
+                                            <SelectItem value="4K">4K</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>

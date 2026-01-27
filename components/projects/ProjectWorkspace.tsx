@@ -262,25 +262,14 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
         }
 
         setGenerationStatus('generating');
-        // prompt bar stays open or closes? Side panel usually stays open for iteration, but user might want to see results.
-        // Let's keep it open or user can close it. Usually better to close so they see the grid appearing.
         setIsPromptOpen(false);
-
-        // Construct Param Suffix
-        const paramSuffix = ` --ar ${aspectRatio} --quality ${resolution}`;
-        const finalCustomPrompt = customPrompt + paramSuffix;
 
         // 1. Identify tasks
         let tasks: { id: string, type: 'template' | 'custom', value: string, promptDisplay: string }[] = [];
 
         if (isTemplateMode) {
-            // For templates, we generate 1 per template, ignoring batch size for now (or maybe apply batch size to each?)
-            // Usually batch size applies to the *active batch*.
-            // If templates are selected, we probably don't want 4x each template. 
-            // Let's assume Batch Size applies to CUSTOM prompts mainly.
+            // For templates, we generate 1 per template
             tasks = selectedTemplateIds.flatMap(tid => {
-                // If user wants batch size for templates, we'd loop here. 
-                // Let's do it 1x for templates to be safe, or user will burn credits.
                 const t = templates.find(temp => temp.id === tid);
                 return [{
                     id: `pending-${Math.random()}`,
@@ -294,8 +283,8 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
             tasks = Array.from({ length: batchSize }).map(() => ({
                 id: `pending-${Math.random()}`,
                 type: 'custom' as const,
-                value: finalCustomPrompt,
-                promptDisplay: customPrompt // Show clean prompt in UI
+                value: customPrompt, // Pass raw prompt
+                promptDisplay: customPrompt
             }));
         }
 
@@ -307,7 +296,12 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
         try {
             await Promise.all(tasks.map(async (task) => {
                 try {
-                    await generateMutation.mutateAsync({ taskId: task.id, type: task.type, val: task.value });
+                    await generateMutation.mutateAsync({
+                        taskId: task.id,
+                        type: task.type,
+                        val: task.value,
+                        options: { aspectRatio, resolution } // Passing options
+                    });
                 } catch (e) {
                     console.error(e);
                 } finally {
@@ -316,11 +310,7 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
             }));
 
             if (!isTemplateMode) {
-                // Keep prompt for iteration? or clear? Side panel usually keeps it. 
-                // User requirement: "Remix of AI Copilot..." implied iteration.
-                // But generally clearing ensures fresh start. Let's keep it for "Pro" feel, 
-                // so they can tweak AR and hit generate again.
-                // setCustomPrompt(''); 
+                // Keep prompt for iteration
             }
             toast.success("Generation complete");
 
