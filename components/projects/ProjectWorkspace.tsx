@@ -7,11 +7,8 @@ import { Button } from '@/components/ui/button';
 import { GenerationGrid } from '@/components/studio/GenerationGrid';
 import { generateVariations } from '@/app/actions/generate';
 import { deleteGenerations } from '@/app/actions/generations';
-import { getOrCreateSession, sendMessage } from '@/app/actions/chat'; // New Actions
 import { toast } from 'sonner';
-import { Loader2, Sparkles, ArrowLeft, ShoppingBag, X, Trash2, Download, MessageSquare } from 'lucide-react'; // Added MessageSquare
-import { ChatMessage } from '@prisma/client'; // Type
-
+import { Loader2, Sparkles, ArrowLeft, ShoppingBag, X, Trash2, Download } from 'lucide-react';
 import {
     Drawer,
     DrawerClose,
@@ -88,51 +85,6 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
         if (!isPromptOpen) setIsPromptOpen(true);
     };
 
-    // --- COPILOT STATE ---
-    const [isCopilotOpen, setIsCopilotOpen] = useState(false);
-    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-    const [sessionId, setSessionId] = useState<string | null>(null);
-    const [isChatLoading, setIsChatLoading] = useState(false);
-
-    // Load Chat Session
-    useEffect(() => {
-        if (project.id) {
-            getOrCreateSession(project.id).then(s => {
-                setSessionId(s.id);
-                // @ts-ignore
-                setChatMessages(s.messages);
-            }).catch(e => console.error("Failed to load session", e));
-        }
-    }, [project.id]);
-
-    const handleChat = async () => {
-        if (!customPrompt.trim() || !sessionId) return;
-        const prompt = customPrompt;
-        setCustomPrompt(''); // Clear global input
-
-        // Optimistic User Message
-        const tempMsg: any = {
-            id: 'temp-' + Date.now(),
-            role: 'user',
-            content: prompt,
-            sessionId,
-            createdAt: new Date(),
-        };
-        setChatMessages(prev => [...prev, tempMsg]);
-        setIsChatLoading(true);
-
-        try {
-            // Send to backend
-            const botMsg = await sendMessage(sessionId, prompt);
-            setChatMessages(prev => [...prev, botMsg as any]);
-        } catch (e) {
-            toast.error("Failed to send message to Copilot");
-            // Remove temp message? Or keep as error state.
-        } finally {
-            setIsChatLoading(false);
-        }
-    };
-
     // Mutations
     const generateMutation = useMutation({
         mutationFn: async ({ taskId, type, val }: { taskId: string, type: 'template' | 'custom', val: string }) => {
@@ -170,42 +122,12 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
         onError: () => toast.error("Delete failed")
     });
 
-    // --- COPILOT HANDLERS ---
-    const handlePanelGenerate = async (prompt: string) => {
-        // 1. Close Copilot (as requested)
-        setIsCopilotOpen(false);
-        // 2. Set Prompt
-        setCustomPrompt(prompt);
-        // 3. Trigger Generation (We need to wait for state update or pass directly)
-        // Since handleGenerate uses 'customPrompt' state, we need to hack it or refactor handleGenerate to accept an arg.
-        // Let's refactor handleGenerate quickly or just set state and use a useEffect? 
-        // Better: refactor handleGenerate to accept optional override.
-        await handleGenerate(prompt);
-    };
-
-    const handlePanelSendMessage = async (text: string) => {
-        if (!sessionId) return;
-
-        // Optimistic
-        const tempMsg: any = {
-            id: 'temp-' + Date.now(),
-            role: 'user',
-            content: text,
-            sessionId,
-            createdAt: new Date(),
-        };
-        setChatMessages(prev => [...prev, tempMsg]);
-        setIsChatLoading(true);
-
-        try {
-            const botMsg = await sendMessage(sessionId, text);
-            setChatMessages(prev => [...prev, botMsg as any]);
-        } catch (e) {
-            toast.error("Failed to send");
-        } finally {
-            setIsChatLoading(false);
+    // Auto-open prompt if templates are selected
+    useEffect(() => {
+        if (selectedTemplateIds.length > 0 && !isPromptOpen) {
+            setIsPromptOpen(true);
         }
-    };
+    }, [selectedTemplateIds, isPromptOpen]);
 
     const toggleTemplate = (id: string) => {
         setSelectedTemplateIds(prev =>
@@ -322,22 +244,17 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
     // Pending Generations State (Optimistic UI)
     const [pendingGenerations, setPendingGenerations] = useState<{ id: string; prompt: string }[]>([]);
 
-    const handleGenerate = async (overridePrompt?: string) => {
-        const promptToUse = overridePrompt || customPrompt;
-
+    const handleGenerate = async () => {
         const isTemplateMode = selectedTemplateIds.length > 0;
 
         if (isTemplateMode && selectedTemplateIds.length === 0) {
             toast.error("Select at least one template");
             return;
         }
-        if (!isTemplateMode && !promptToUse.trim()) {
+        if (!isTemplateMode && !customPrompt.trim()) {
             toast.error("Enter a prompt");
             return;
         }
-
-        // Note: We removed the "Global Mode Switch" check here because the Chat Panel has its own explicit "Generate" button now.
-        // If users hit "Enter" in the floating bar, it means GENERATE (because floating bar is hidden when chat is open).
 
         setGenerationStatus('generating');
         setIsPromptOpen(false);
@@ -359,8 +276,8 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
             tasks = [{
                 id: `pending-${Math.random()}`,
                 type: 'custom',
-                value: promptToUse,
-                promptDisplay: promptToUse
+                value: customPrompt,
+                promptDisplay: customPrompt
             }];
         }
 
@@ -433,16 +350,6 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         <h1 className="text-lg font-bold tracking-tight truncate">{project.name || 'Untitled Project'}</h1>
                         <div className="hidden md:block w-px h-6 bg-border mx-2" />
                         <ProductSelector projectId={project.id} initialDefaultProductId={project.defaultProductId} />
-
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setIsCopilotOpen(!isCopilotOpen)}
-                            className={cn("h-9 w-9 rounded-full text-zinc-500 hover:text-indigo-600 hover:bg-indigo-50", isCopilotOpen && "text-indigo-600 bg-indigo-50")}
-                            title="Toggle Copilot"
-                        >
-                            <MessageSquare className="w-5 h-5" />
-                        </Button>
                     </div>
 
                 </div>
@@ -451,62 +358,58 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
 
 
-            {/* Main Content - Full Width Grid */}
-            <div className="flex-1 min-h-0 relative overflow-hidden">
-
-                {/* Grid Container */}
-                <div className="h-full overflow-y-auto px-4 pb-32 transition-all duration-300">
-                    <div className="max-w-[1800px] mx-auto pt-6"> {/* Added pt-6 for spacing */}
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-primary" />
-                                Results
-                            </h2>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-muted-foreground">{generations.length} images</span>
-                                {generations.length > 0 && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => {
-                                            if (isSelectionMode) {
-                                                setIsSelectionMode(false);
-                                                setSelectedGenerationIds([]);
-                                            } else {
-                                                setIsSelectionMode(true);
-                                            }
-                                        }}
-                                    >
-                                        {isSelectionMode ? 'Cancel' : 'Select Multiple'}
-                                    </Button>
-                                )}
-                            </div>
+            {/* Main Content - Unified Grid */}
+            <div className="flex-1 min-h-0 px-4 pb-32 relative overflow-y-auto">
+                {/* Generation Grid (Desktop & Mobile Unified) */}
+                <div className="max-w-[1800px] mx-auto">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold flex items-center gap-2">
+                            <Sparkles className="w-5 h-5 text-primary" />
+                            Results
+                        </h2>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">{generations.length} images</span>
+                            {generations.length > 0 && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        if (isSelectionMode) {
+                                            setIsSelectionMode(false);
+                                            setSelectedGenerationIds([]);
+                                        } else {
+                                            setIsSelectionMode(true);
+                                        }
+                                    }}
+                                >
+                                    {isSelectionMode ? 'Cancel' : 'Select Multiple'}
+                                </Button>
+                            )}
                         </div>
-
-                        <GenerationGrid
-                            images={generations.map(g => ({
-                                id: g.id,
-                                url: g.customizedImageUrl || g.imageUrl,
-                                templateId: g.templateId || 'custom',
-                                originalImage: g.promptUsed || 'Custom Generation',
-                                prompt: g.promptUsed || customPrompt || 'Custom Generation',
-                                createdAt: g.createdAt
-                            }))}
-                            isGenerating={generationStatus === 'generating'}
-                            selectionMode={isSelectionMode}
-                            selectedIds={selectedGenerationIds}
-                            onToggle={toggleGenerationSelection}
-                            referenceImageUrl={activeReferenceImage}
-                            referenceName={project.name || 'project'}
-                            defaultProductId={project.defaultProductId}
-                            pendingImages={pendingGenerations}
-                            onEdit={handleEdit}
-                            onUseAsReference={handleUseAsReference}
-                        />
                     </div>
-                </div>
 
-            </div>
+                    <GenerationGrid
+                        images={generations.map(g => ({
+                            id: g.id,
+                            url: g.customizedImageUrl || g.imageUrl,
+                            templateId: g.templateId || 'custom',
+                            originalImage: g.promptUsed || 'Custom Generation',
+                            prompt: g.promptUsed || customPrompt || 'Custom Generation',
+                            createdAt: g.createdAt
+                        }))}
+                        isGenerating={generationStatus === 'generating'}
+                        selectionMode={isSelectionMode}
+                        selectedIds={selectedGenerationIds}
+                        onToggle={toggleGenerationSelection}
+                        referenceImageUrl={activeReferenceImage}
+                        referenceName={project.name || 'project'}
+                        defaultProductId={project.defaultProductId}
+                        pendingImages={pendingGenerations}
+                        onEdit={handleEdit}
+                        onUseAsReference={handleUseAsReference}
+                    />
+                </div >
+            </div >
 
 
             {/* Bulk Selection Action Bar */}
@@ -577,48 +480,39 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 )}
             </AnimatePresence>
 
-            {/* Collapsible Prompt Bar (Hidden if Copilot Open) */}
-            {/* Collapsible Prompt Bar (Always Rendered, Expands for Chat) */}
-            <div className={cn("contents")}>
-                {!isSelectionMode && (
-                    <PromptBar
-                        isOpen={isPromptOpen}
-                        onOpenChange={setIsPromptOpen}
-                        prompt={customPrompt}
-                        onPromptChange={setCustomPrompt}
-                        onGenerate={handleGenerate}
-                        isGenerating={generationStatus === 'generating'}
-                        selectedTemplateCount={selectedTemplateIds.length}
-                        onOpenTemplatePicker={() => setIsTemplatePickerOpen(true)}
-                        onClearTemplates={() => setSelectedTemplateIds([])}
-                        className={cn("transition-all duration-300", isCopilotOpen ? "md:max-w-3xl" : "md:pl-72")}
-
-                        // Chat Integration
-                        messages={chatMessages}
-                        onSendMessage={handlePanelSendMessage}
-                        isChatOpen={isCopilotOpen}
-                        onToggleChat={() => setIsCopilotOpen(!isCopilotOpen)}
-                    >
-                        {activeReferenceImage !== project.originalImageUrl && (
-                            <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-full pl-1 pr-2 py-1 animate-in slide-in-from-bottom-2 shadow-sm">
-                                <div className="relative w-6 h-6 rounded-full overflow-hidden border border-zinc-100">
-                                    <Image src={activeReferenceImage} fill className="object-cover" alt="Ref" />
-                                </div>
-                                <span className="text-xs font-medium text-zinc-700">Custom Reference</span>
-                                <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    className="h-4 w-4 rounded-full ml-1 hover:bg-zinc-100 text-zinc-400 hover:text-black"
-                                    onClick={() => setActiveReferenceImage(project.originalImageUrl)}
-                                    title="Clear Reference"
-                                >
-                                    <X className="w-3 h-3" />
-                                </Button>
+            {/* Collapsible Prompt Bar */}
+            {!isSelectionMode && (
+                <PromptBar
+                    isOpen={isPromptOpen}
+                    onOpenChange={setIsPromptOpen}
+                    prompt={customPrompt}
+                    onPromptChange={setCustomPrompt}
+                    onGenerate={handleGenerate}
+                    isGenerating={generationStatus === 'generating'}
+                    selectedTemplateCount={selectedTemplateIds.length}
+                    onOpenTemplatePicker={() => setIsTemplatePickerOpen(true)}
+                    onClearTemplates={() => setSelectedTemplateIds([])}
+                    className="md:pl-72"
+                >
+                    {activeReferenceImage !== project.originalImageUrl && (
+                        <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-full pl-1 pr-2 py-1 animate-in slide-in-from-bottom-2 shadow-sm">
+                            <div className="relative w-6 h-6 rounded-full overflow-hidden border border-zinc-100">
+                                <Image src={activeReferenceImage} fill className="object-cover" alt="Ref" />
                             </div>
-                        )}
-                    </PromptBar>
-                )}
-            </div>
+                            <span className="text-xs font-medium text-zinc-700">Custom Reference</span>
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-4 w-4 rounded-full ml-1 hover:bg-zinc-100 text-zinc-400 hover:text-black"
+                                onClick={() => setActiveReferenceImage(project.originalImageUrl)}
+                                title="Clear Reference"
+                            >
+                                <X className="w-3 h-3" />
+                            </Button>
+                        </div>
+                    )}
+                </PromptBar>
+            )}
 
             <TemplateDialog
                 open={!!editingTemplate}
@@ -636,6 +530,8 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 onEdit={setEditingTemplate}
                 onDelete={handleDeleteTemplate}
             />
+
+
         </div >
     );
 }
