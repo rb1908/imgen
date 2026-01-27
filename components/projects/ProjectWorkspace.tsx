@@ -11,7 +11,7 @@ import { getOrCreateSession, sendMessage } from '@/app/actions/chat'; // New Act
 import { toast } from 'sonner';
 import { Loader2, Sparkles, ArrowLeft, ShoppingBag, X, Trash2, Download, MessageSquare } from 'lucide-react'; // Added MessageSquare
 import { ChatMessage } from '@prisma/client'; // Type
-import { CopilotPanel } from '@/components/studio/CopilotPanel'; // Component
+import { ChatMessage } from '@prisma/client'; // Type
 import {
     Drawer,
     DrawerClose,
@@ -451,11 +451,11 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
 
 
 
-            {/* Main Content - Unified Grid + Copilot Split */}
-            <div className="flex-1 min-h-0 flex flex-row overflow-hidden relative">
+            {/* Main Content - Full Width Grid */}
+            <div className="flex-1 min-h-0 relative overflow-hidden">
 
                 {/* Grid Container */}
-                <div className="flex-1 overflow-y-auto px-4 pb-32 transition-all duration-300">
+                <div className="h-full overflow-y-auto px-4 pb-32 transition-all duration-300">
                     <div className="max-w-[1800px] mx-auto pt-6"> {/* Added pt-6 for spacing */}
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -505,21 +505,6 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         />
                     </div>
                 </div>
-
-                {/* Copilot Side Panel (Relative Flex Item) */}
-                <CopilotPanel
-                    isOpen={isCopilotOpen}
-                    onClose={() => setIsCopilotOpen(false)}
-                    projectId={project.id}
-                    messages={chatMessages}
-                    loading={isChatLoading}
-                    onSendMessage={handlePanelSendMessage}
-                    onGenerate={handlePanelGenerate}
-                    activeReferenceImage={activeReferenceImage}
-                    selectedTemplateCount={selectedTemplateIds.length}
-                    onClearReference={() => setActiveReferenceImage(project.originalImageUrl)}
-                    onClearTemplates={() => setSelectedTemplateIds([])}
-                />
 
             </div>
 
@@ -593,9 +578,9 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
             </AnimatePresence>
 
             {/* Collapsible Prompt Bar (Hidden if Copilot Open) */}
-            {/* Collapsible Prompt Bar (Hidden if Copilot Open) */}
-            <div className={cn("contents", isCopilotOpen && "hidden pointer-events-none")}>
-                {!isSelectionMode && !isCopilotOpen && (
+            {/* Collapsible Prompt Bar (Always Rendered, Expands for Chat) */}
+            <div className={cn("contents")}>
+                {!isSelectionMode && (
                     <PromptBar
                         isOpen={isPromptOpen}
                         onOpenChange={setIsPromptOpen}
@@ -606,7 +591,13 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         selectedTemplateCount={selectedTemplateIds.length}
                         onOpenTemplatePicker={() => setIsTemplatePickerOpen(true)}
                         onClearTemplates={() => setSelectedTemplateIds([])}
-                        className="md:pl-72"
+                        className={cn("transition-all duration-300", isCopilotOpen ? "md:max-w-3xl" : "md:pl-72")}
+
+                        // Chat Integration
+                        messages={chatMessages}
+                        onSendMessage={handlePanelSendMessage}
+                        isChatOpen={isCopilotOpen}
+                        onToggleChat={() => setIsCopilotOpen(!isCopilotOpen)}
                     >
                         {activeReferenceImage !== project.originalImageUrl && (
                             <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-full pl-1 pr-2 py-1 animate-in slide-in-from-bottom-2 shadow-sm">
