@@ -13,23 +13,17 @@ export async function generateVariations({
     projectId,
     mode,
     input, // templateIds[] OR customPrompt
-    overrideImageUrl,
-    options
+    overrideImageUrl
 }: {
     projectId: string;
     mode: 'template' | 'custom';
     input: string[] | string;
     overrideImageUrl?: string;
-    options?: {
-        aspectRatio?: string;
-        resolution?: string;
-    }
 }) {
     try {
         const { userId } = await auth();
         if (!userId) throw new Error("Unauthorized");
 
-        // ... (existing code for project fetching) ...
         // 1. Get Project & Image (and verify ownership)
         const project = await prisma.project.findUnique({
             where: { id: projectId, userId }
@@ -37,12 +31,12 @@ export async function generateVariations({
 
         if (!project) throw new Error('Project not found');
 
-        // 2. Prepare Image Data
+        // 2. Prepare Image Data (Support both Base64 DB strings and Supabase URLs)
         const dataUrl = overrideImageUrl || project.originalImageUrl;
         let base64Data = "";
-        let mimeType = "image/png";
+        let mimeType = "image/png"; // default
 
-        // ... (fetchImageWithRetry helper) ...
+        // Retry helper
         const fetchImageWithRetry = async (url: string, retries = 3): Promise<{ buffer: Buffer, type: string }> => {
             for (let i = 0; i < retries; i++) {
                 try {
@@ -88,34 +82,17 @@ export async function generateVariations({
         // Prepare tasks
         const tasks: { prompt: string, templateId?: string }[] = [];
 
-        // Format prompt with options if present
-        const formatPrompt = (basePrompt: string) => {
-            let final = `message = "${basePrompt}"`;
-            if (options?.aspectRatio) final += `\naspect_ratio = "${options.aspectRatio}"`;
-            if (options?.resolution) final += `\nresolution = "${options.resolution}"`;
-            return final;
-        };
-
-        // If mode is 'custom' and input is array (from batching), handle array
         if (mode === 'template' && Array.isArray(input)) {
             const templates = await prisma.template.findMany({
                 where: { id: { in: input } }
             });
             templates.forEach((t) => {
                 if (t.prompt) {
-                    // Templates use their own prompt, but maybe we should append options?
-                    // User requested specific format for custom prompts mainly, but let's apply to all.
-                    // Actually, if input is template, the 'message' is the template prompt.
-                    tasks.push({ prompt: formatPrompt(t.prompt), templateId: t.id });
+                    tasks.push({ prompt: t.prompt, templateId: t.id });
                 }
             });
-        } else if (mode === 'custom') {
-            if (Array.isArray(input)) {
-                // Batching sends array of strings
-                input.forEach(p => tasks.push({ prompt: formatPrompt(p) }));
-            } else {
-                tasks.push({ prompt: formatPrompt(input) });
-            }
+        } else if (mode === 'custom' && typeof input === 'string') {
+            tasks.push({ prompt: input });
         }
 
         if (tasks.length === 0) throw new Error("No properties to generate");
@@ -127,7 +104,7 @@ export async function generateVariations({
 
             for (const modelName of modelsToTry) {
                 try {
-                    console.log(`[Generate] Attempting with ${modelName} for formatted prompt`);
+                    console.log(`[Generate] Attempting with ${modelName} for prompt: "${task.prompt.substring(0, 20)}..."`);
                     const imageModel = genAI.getGenerativeModel({ model: modelName });
 
                     const result = await imageModel.generateContent([

@@ -62,11 +62,6 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
         staleTime: 1000 * 60, // 1 minute
     });
 
-    // Side Panel Params
-    const [aspectRatio, setAspectRatio] = useState('16:9');
-    const [resolution, setResolution] = useState('Standard');
-    const [batchSize, setBatchSize] = useState(1);
-
     const generations = activeProject.generations;
 
     // Generation Selection State
@@ -268,40 +263,33 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
         let tasks: { id: string, type: 'template' | 'custom', value: string, promptDisplay: string }[] = [];
 
         if (isTemplateMode) {
-            // For templates, we generate 1 per template
-            tasks = selectedTemplateIds.flatMap(tid => {
+            tasks = selectedTemplateIds.map(tid => {
                 const t = templates.find(temp => temp.id === tid);
-                return [{
+                return {
                     id: `pending-${Math.random()}`,
-                    type: 'template' as const,
+                    type: 'template',
                     value: tid,
                     promptDisplay: t?.name || 'Template'
-                }];
+                };
             });
         } else {
-            // Custom Prompt - Apply Batch Size
-            tasks = Array.from({ length: batchSize }).map(() => ({
+            tasks = [{
                 id: `pending-${Math.random()}`,
-                type: 'custom' as const,
-                value: customPrompt, // Pass raw prompt
+                type: 'custom',
+                value: customPrompt,
                 promptDisplay: customPrompt
-            }));
+            }];
         }
 
         // 2. Set Pending State
         setPendingGenerations(tasks.map(t => ({ id: t.id, prompt: t.promptDisplay })));
         toast.info(`Started ${tasks.length} generation${tasks.length > 1 ? 's' : ''}...`);
 
-        // 3. Execution (Parallel)
+        // 3. Execution
         try {
             await Promise.all(tasks.map(async (task) => {
                 try {
-                    await generateMutation.mutateAsync({
-                        taskId: task.id,
-                        type: task.type,
-                        val: task.value,
-                        options: { aspectRatio, resolution } // Passing options
-                    });
+                    await generateMutation.mutateAsync({ taskId: task.id, type: task.type, val: task.value });
                 } catch (e) {
                     console.error(e);
                 } finally {
@@ -309,45 +297,95 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                 }
             }));
 
-            if (!isTemplateMode) {
-                // Keep prompt for iteration
-            }
-            toast.success("Generation complete");
+            if (!isTemplateMode) setCustomPrompt('');
+            toast.success("All generations finished!");
 
         } finally {
             setGenerationStatus('idle');
+            // Cleanup handled in finally block of item iteration
         }
     };
 
-    // ... (rest of interactions)
+    const handleBulkDelete = async () => {
+        if (!confirm(`Delete ${selectedGenerationIds.length} images?`)) return;
+        setIsBulkActionLoading(true);
+        try {
+            await deleteMutation.mutateAsync(selectedGenerationIds);
+        } finally {
+            setIsBulkActionLoading(false);
+        }
+    };
+
+
+
+
 
     return (
         <div className="h-full flex flex-col gap-6 relative bg-white text-zinc-900">
-            {/* Header ... */}
+            {/* Header */}
             <div className="flex-none flex items-center gap-4 px-4 border-b h-14 transition-all">
                 <Link href="/" className="p-2 hover:bg-accent rounded-full text-muted-foreground transition-colors">
                     <ArrowLeft className="w-5 h-5" />
                 </Link>
-                {/* ... Header Content ... */}
                 <div className="flex items-center gap-4 overflow-hidden">
-                    {/* ... */}
-                    <h1 className="text-lg font-bold tracking-tight truncate">{project.name || 'Untitled Project'}</h1>
-                    <div className="hidden md:block w-px h-6 bg-border mx-2" />
-                    <ProductSelector projectId={project.id} initialDefaultProductId={project.defaultProductId} />
+                    <AnimatePresence>
+                        {isScrolled && (
+                            <motion.div
+                                initial={{ opacity: 0, x: -20, width: 0 }}
+                                animate={{ opacity: 1, x: 0, width: 40 }}
+                                exit={{ opacity: 0, x: -20, width: 0 }}
+                                className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0"
+                            >
+                                <Image
+                                    src={activeReferenceImage}
+                                    alt="Mini Thumbnail"
+                                    fill
+                                    className="object-cover"
+                                />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <div className="min-w-0 flex items-center gap-4">
+                        <h1 className="text-lg font-bold tracking-tight truncate">{project.name || 'Untitled Project'}</h1>
+                        <div className="hidden md:block w-px h-6 bg-border mx-2" />
+                        <ProductSelector projectId={project.id} initialDefaultProductId={project.defaultProductId} />
+                    </div>
+
                 </div>
             </div>
 
-            {/* Main Content */}
+
+
+
+            {/* Main Content - Unified Grid */}
             <div className="flex-1 min-h-0 px-4 pb-32 relative overflow-y-auto">
-                {/* ... Grid ... */}
+                {/* Generation Grid (Desktop & Mobile Unified) */}
                 <div className="max-w-[1800px] mx-auto">
-                    {/* ... Results Header ... */}
-                    <div className="flex items-center justify-between mb-4 mt-6">
+                    <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-semibold flex items-center gap-2">
                             <Sparkles className="w-5 h-5 text-primary" />
                             Results
                         </h2>
-                        {/* ... */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">{generations.length} images</span>
+                            {generations.length > 0 && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        if (isSelectionMode) {
+                                            setIsSelectionMode(false);
+                                            setSelectedGenerationIds([]);
+                                        } else {
+                                            setIsSelectionMode(true);
+                                        }
+                                    }}
+                                >
+                                    {isSelectionMode ? 'Cancel' : 'Select Multiple'}
+                                </Button>
+                            )}
+                        </div>
                     </div>
 
                     <GenerationGrid
@@ -370,20 +408,79 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                         onEdit={handleEdit}
                         onUseAsReference={handleUseAsReference}
                     />
-                </div>
-            </div>
+                </div >
+            </div >
 
-            {/* Bulk Selection Action Bar ... */}
+
+            {/* Bulk Selection Action Bar */}
             <AnimatePresence>
                 {isSelectionMode && (
-                    // ... (Keep existing Bulk Action Bar)
-                    <motion.div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 p-2 bg-zinc-900/90 backdrop-blur-md text-white rounded-full shadow-xl border border-white/10">
-                        {/* ... */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 p-2 bg-zinc-900/90 backdrop-blur-md text-white rounded-full shadow-xl border border-white/10"
+                    >
+                        <div className="pl-4 pr-2 text-sm font-medium whitespace-nowrap">
+                            {selectedGenerationIds.length} Selected
+                        </div>
+
+                        <div className="h-4 w-px bg-white/20 mx-1" />
+
+                        {project.defaultProductId && (
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={handleBulkAddToProduct}
+                                disabled={selectedGenerationIds.length === 0 || isBulkActionLoading}
+                                className="h-8 rounded-full hover:bg-white/10 text-white"
+                                title="Add to Product"
+                            >
+                                <ShoppingBag className="w-4 h-4 mr-2" />
+                                Add
+                            </Button>
+                        )}
+
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={handleBulkDownload}
+                            disabled={selectedGenerationIds.length === 0 || isBulkActionLoading}
+                            className="h-8 rounded-full hover:bg-white/10 text-white"
+                            title="Download ZIP"
+                        >
+                            <Download className="w-4 h-4" />
+                        </Button>
+
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={handleBulkDelete}
+                            disabled={selectedGenerationIds.length === 0 || isBulkActionLoading}
+                            className="h-8 rounded-full hover:bg-red-500/20 text-red-300 hover:text-red-200"
+                            title="Delete"
+                        >
+                            {isBulkActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                        </Button>
+
+                        <div className="h-4 w-px bg-white/20 mx-1" />
+
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => {
+                                setIsSelectionMode(false);
+                                setSelectedGenerationIds([]);
+                            }}
+                            className="h-8 w-8 rounded-full hover:bg-white/10 text-white/70 hover:text-white"
+                        >
+                            <X className="w-4 h-4" />
+                        </Button>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Side Panel Prompt Bar */}
+            {/* Collapsible Prompt Bar */}
             {!isSelectionMode && (
                 <PromptBar
                     isOpen={isPromptOpen}
@@ -395,38 +492,23 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
                     selectedTemplateCount={selectedTemplateIds.length}
                     onOpenTemplatePicker={() => setIsTemplatePickerOpen(true)}
                     onClearTemplates={() => setSelectedTemplateIds([])}
-                    className="border-l border-zinc-200" // Optional extra styling
-
-                    // New Params
-                    aspectRatio={aspectRatio}
-                    onAspectRatioChange={setAspectRatio}
-                    resolution={resolution}
-                    onResolutionChange={setResolution}
-                    amount={batchSize}
-                    onAmountChange={setBatchSize}
+                    className="md:pl-72"
                 >
-                    {/* Reference Chip (Passed visually to the panel) */}
-                    {activeReferenceImage !== project.originalImageUrl ? (
-                        <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-zinc-700 group">
-                            <Image src={activeReferenceImage} fill className="object-cover" alt="Ref" />
-                            <button
-                                onClick={(e) => { e.stopPropagation(); setActiveReferenceImage(project.originalImageUrl); }}
-                                className="absolute top-2 right-2 bg-black/50 hover:bg-red-500/80 text-white p-1 rounded-full backdrop-blur transition-colors opacity-0 group-hover:opacity-100"
+                    {activeReferenceImage !== project.originalImageUrl && (
+                        <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-full pl-1 pr-2 py-1 animate-in slide-in-from-bottom-2 shadow-sm">
+                            <div className="relative w-6 h-6 rounded-full overflow-hidden border border-zinc-100">
+                                <Image src={activeReferenceImage} fill className="object-cover" alt="Ref" />
+                            </div>
+                            <span className="text-xs font-medium text-zinc-700">Custom Reference</span>
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-4 w-4 rounded-full ml-1 hover:bg-zinc-100 text-zinc-400 hover:text-black"
+                                onClick={() => setActiveReferenceImage(project.originalImageUrl)}
+                                title="Clear Reference"
                             >
-                                <X className="w-4 h-4" />
-                            </button>
-                            <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 backdrop-blur rounded text-[10px] text-white font-medium">
-                                Custom Reference
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-zinc-700 bg-zinc-800/50">
-                            <Image src={project.originalImageUrl} fill className="object-contain p-4 opacity-50 grayscale" alt="Original" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-xs text-zinc-400 font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur">
-                                    Project Original (Default)
-                                </span>
-                            </div>
+                                <X className="w-3 h-3" />
+                            </Button>
                         </div>
                     )}
                 </PromptBar>
