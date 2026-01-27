@@ -249,11 +249,6 @@ export function ProjectWorkspace({ project, templates }: ProjectWorkspaceProps) 
     // Pending Generations State (Optimistic UI)
     const [pendingGenerations, setPendingGenerations] = useState<{ id: string; prompt: string }[]>([]);
 
-    // Side Panel Params
-    const [aspectRatio, setAspectRatio] = useState('16:9');
-    const [resolution, setResolution] = useState('Standard');
-    const [batchSize, setBatchSize] = useState(1);
-
     const handleGenerate = async () => {
         const isTemplateMode = selectedTemplateIds.length > 0;
 
