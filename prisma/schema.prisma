@@ -197,3 +197,18 @@ model ProductTemplate {
 
   @@index([userId])
 }
+
+model InstagramIntegration {
+  id            String   @id @default(uuid())
+  accessToken   String   // Long-lived token (60 days)
+  instagramId   String   // Instagram Business Account ID
+  pageId        String   // Facebook Page ID
+  pageName      String?
+  username      String?  // Instagram handle
+  
+  userId        String?  // Linked Clerk User
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+}

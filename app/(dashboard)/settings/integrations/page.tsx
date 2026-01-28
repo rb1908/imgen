@@ -1,7 +1,9 @@
 
 import { getEtsyStatus, disconnectEtsy } from '@/app/actions/etsy';
 import { getShopifyStatus, disconnectShopify } from '@/app/actions/shopify';
+import { checkInstagramConnection, disconnectInstagram } from '@/app/actions/instagram';
 import { ShopifyConnect } from '@/components/ShopifyConnect';
+import { InstagramConnect } from '@/components/InstagramConnect';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -11,16 +13,18 @@ import { PageHeader } from '@/components/PageHeader';
 export const dynamic = 'force-dynamic';
 
 export default async function IntegrationsPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
-    const [etsyStatus, shopifyStatus] = await Promise.all([
+    const [etsyStatus, shopifyStatus, instagramStatus] = await Promise.all([
         getEtsyStatus(),
-        getShopifyStatus()
+        getShopifyStatus(),
+        checkInstagramConnection()
     ]);
 
     const isConnected = etsyStatus.connected && !etsyStatus.isExpired;
     const isExpired = etsyStatus.connected && etsyStatus.isExpired;
     const isShopifyConnected = shopifyStatus.connected;
+    const isInstagramConnected = !!instagramStatus;
 
-    const { error, etsy, shopify } = await searchParams;
+    const { error, etsy, shopify, settings } = await searchParams;
 
     return (
         <PageScaffold>
@@ -121,6 +125,16 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
                                 )}
                             </div>
                         </div>
+
+                        {/* Instagram Integration */}
+                        <InstagramConnect
+                            isConnected={isInstagramConnected}
+                            username={instagramStatus?.username || undefined}
+                            onDisconnect={async () => {
+                                'use server';
+                                await disconnectInstagram();
+                            }}
+                        />
                     </div>
                 </div>
             </div>
